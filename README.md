@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Switchr** is a marketplace we're building for our CSE 4214 project. We designed it so users can buy, sell, or trade used electronics directly with each other. The main idea came from wanting to create a simple platform where people could exchange tech items without going through big retailers. You can trade phones, laptops, tablets, headphones, chargers—basically any consumer electronics you want to swap.
+**Switchr** is a marketplace we're building for our CSE 4214 project. We designed it so users can buy, sell, or trade used electronics directly with each other. The main idea came from wanting to create a simple platform where people could exchange tech items without going through big retailers. You can trade phones, laptops, tablets, headphones, chargers, basically any consumer electronics you want to swap.
 
 Also, instead of just buying and selling with cash, users can trade items back and forth. If the values aren't equal, they can add some simulated cash to balance it out. It's like swapping with your friends, but online.
 
