@@ -74,7 +74,7 @@ Buyers - People looking to find electronics without breaking the bank. They can 
 
 Sellers - People who have electronics they want to get rid of. They list items with descriptions and photos, then respond to offers from buyers.
 
-Traders - The people who really get into swapping. They use our tools to compare item values and propose fair trades, sometimes throwing in some cash to even things out [1].
+Traders - The people who really get into swapping. They use our tools to compare item values and propose fair trades, sometimes throwing in some cash to even things out.
 
 Admins - Our team keeping the platform clean and safe. They approve new accounts, remove sketchy listings, and handle reports from users
 
@@ -130,7 +130,7 @@ Admins - Our team keeping the platform clean and safe. They approve new accounts
 - Filter by category, condition, price, listing type
 - Click into any listing to see full details
 - Make purchase offers
-- Propose trades with items from your own inventory [1]
+- Propose trades with items from your own inventory
 - See all your offers (incoming and outgoing)
 - Accept, reject, or counter offers
 
