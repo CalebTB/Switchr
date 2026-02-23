@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36" version="29.4.0">
+  <diagram name="Profile Edit - Use Case Diagram" id="59IkBHUyqniEYhibyd6j">
+    <mxGraphModel dx="2221" dy="867" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;labelBackgroundColor=none;" value="Use Case Diagram – US-3: Profile Edit" vertex="1">
+          <mxGeometry height="40" width="800" x="150" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="sys" parent="1" style="swimlane;startSize=30;fillColor=none;fontSize=14;fontStyle=1;labelBackgroundColor=none;" value="&lt;&lt;system&gt;&gt; Switchr" vertex="1">
+          <mxGeometry height="700" width="760" x="220" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="note" parent="sys" style="text;html=1;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=11;fontStyle=2;labelBackgroundColor=none;" value="Scenario: User navigates to profile &amp;gt; User clicks edit &amp;gt; User updates fields &amp;gt; System validates → System saves changes" vertex="1">
+          <mxGeometry height="30" width="680" x="40" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_nav" parent="sys" style="ellipse;whiteSpace=wrap;html=1;fillColor=none;fontSize=12;labelBackgroundColor=none;" value="Navigate to &#39;My Profile&#39; Section" vertex="1">
+          <mxGeometry height="60" width="200" x="75" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_main" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=13;fontStyle=1;labelBackgroundColor=none;" value="Edit Profile Information" vertex="1">
+          <mxGeometry height="60" width="200" x="295" y="372" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_edit1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;labelBackgroundColor=none;" value="Edit Display Name, Bio, and Profile Photo" vertex="1">
+          <mxGeometry height="60" width="210" x="600" y="212" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_edit2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;labelBackgroundColor=none;" value="Update Email Address" vertex="1">
+          <mxGeometry height="60" width="210" x="600" y="327" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_val" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;labelBackgroundColor=none;" value="System Validates Input Before Saving" vertex="1">
+          <mxGeometry height="60" width="210" x="600" y="432" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_save" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;labelBackgroundColor=none;" value="System Saves Changes" vertex="1">
+          <mxGeometry height="60" width="210" x="600" y="532" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_success" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;labelBackgroundColor=none;" value="System Displays Success Message After Update" vertex="1">
+          <mxGeometry height="60" width="210" x="600" y="632" as="geometry" />
+        </mxCell>
+        <mxCell id="e_nav" edge="1" parent="1" source="WOHUa8gyxX394fbodEuk-8" style="endArrow=none;exitX=1;exitY=0.3333333333333333;exitDx=0;exitDy=0;exitPerimeter=0;labelBackgroundColor=none;fontColor=default;" target="uc_nav">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="115" y="311.609636203799" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_main" edge="1" parent="1" source="WOHUa8gyxX394fbodEuk-8" style="endArrow=none;exitX=1;exitY=0.3333333333333333;exitDx=0;exitDy=0;exitPerimeter=0;labelBackgroundColor=none;fontColor=default;" target="uc_main">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="115" y="330.99107478894234" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="uc_edit1" style="dashed=1;endArrow=open;fontSize=11;labelBackgroundColor=none;fontColor=default;" target="uc_main" value="&lt;&lt;extend&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="uc_edit2" style="dashed=1;endArrow=open;fontSize=11;labelBackgroundColor=none;fontColor=default;" target="uc_main" value="&lt;&lt;extend&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="uc_main" style="dashed=1;endArrow=open;fontSize=11;labelBackgroundColor=none;fontColor=default;" target="uc_val" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="uc_main" style="dashed=1;endArrow=open;fontSize=11;labelBackgroundColor=none;fontColor=default;" target="uc_save" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="uc_main" style="dashed=1;endArrow=open;fontSize=11;labelBackgroundColor=none;fontColor=default;" target="uc_success" value="&lt;&lt;include&gt;&gt;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="WOHUa8gyxX394fbodEuk-8" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelBackgroundColor=none;" value="Actor" vertex="1">
+          <mxGeometry height="60" width="30" x="78" y="320" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
