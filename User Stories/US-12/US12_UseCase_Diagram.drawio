@@ -1,0 +1,83 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36" version="29.5.2">
+  <diagram name="US-12 Use Case" id="-VTMgGROIwwNong7l-U0">
+    <mxGraphModel dx="1426" dy="743" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="ZArSsv81gUOG34Y4sGNe-0" />
+        <mxCell id="ZArSsv81gUOG34Y4sGNe-1" parent="ZArSsv81gUOG34Y4sGNe-0" />
+        <mxCell id="ZArSsv81gUOG34Y4sGNe-2" parent="ZArSsv81gUOG34Y4sGNe-1" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;" value="Switchr System" vertex="1">
+          <mxGeometry height="314" width="450" x="270" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="ZArSsv81gUOG34Y4sGNe-3" edge="1" parent="ZArSsv81gUOG34Y4sGNe-1" source="ZArSsv81gUOG34Y4sGNe-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;endArrow=none;endFill=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="ZArSsv81gUOG34Y4sGNe-7">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="290" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ZArSsv81gUOG34Y4sGNe-4" parent="ZArSsv81gUOG34Y4sGNe-1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Seller" vertex="1">
+          <mxGeometry height="60" width="30" x="170" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="ZArSsv81gUOG34Y4sGNe-7" parent="ZArSsv81gUOG34Y4sGNe-1" style="ellipse;whiteSpace=wrap;html=1;" value="Manage Offers" vertex="1">
+          <mxGeometry height="50" width="91" x="368" y="345" as="geometry" />
+        </mxCell>
+        <mxCell id="ZArSsv81gUOG34Y4sGNe-24" parent="ZArSsv81gUOG34Y4sGNe-1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="US-12: Manage Offers - Use Case Diagram" vertex="1">
+          <mxGeometry height="26" width="255" x="334" y="164" as="geometry" />
+        </mxCell>
+        <mxCell id="INwEO1VZucRDgJkQwwD9-4" parent="ZArSsv81gUOG34Y4sGNe-1" style="ellipse;whiteSpace=wrap;html=1;" value="View Incoming &amp;amp; Outgoing Offers" vertex="1">
+          <mxGeometry height="66" width="104" x="361.5" y="234.5" as="geometry" />
+        </mxCell>
+        <mxCell id="1neXx_UoQWCNBK1x6zKo-0" edge="1" parent="ZArSsv81gUOG34Y4sGNe-1" source="ZArSsv81gUOG34Y4sGNe-7" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;dashed=1;" target="INwEO1VZucRDgJkQwwD9-4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="438" y="497" as="sourcePoint" />
+            <mxPoint x="508" y="547" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1neXx_UoQWCNBK1x6zKo-1" connectable="0" parent="1neXx_UoQWCNBK1x6zKo-0" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.2" as="geometry">
+            <mxPoint x="12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1neXx_UoQWCNBK1x6zKo-2" parent="ZArSsv81gUOG34Y4sGNe-1" style="ellipse;whiteSpace=wrap;html=1;" value="View Offer Details" vertex="1">
+          <mxGeometry height="39" width="104" x="567" y="291" as="geometry" />
+        </mxCell>
+        <mxCell id="1neXx_UoQWCNBK1x6zKo-3" edge="1" parent="ZArSsv81gUOG34Y4sGNe-1" source="ZArSsv81gUOG34Y4sGNe-7" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" target="1neXx_UoQWCNBK1x6zKo-2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="424" y="355" as="sourcePoint" />
+            <mxPoint x="424" y="306" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1neXx_UoQWCNBK1x6zKo-4" connectable="0" parent="1neXx_UoQWCNBK1x6zKo-3" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.2" as="geometry">
+            <mxPoint x="12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1neXx_UoQWCNBK1x6zKo-5" parent="ZArSsv81gUOG34Y4sGNe-1" style="ellipse;whiteSpace=wrap;html=1;" value="Respond to Offer" vertex="1">
+          <mxGeometry height="39" width="104" x="567" y="415" as="geometry" />
+        </mxCell>
+        <mxCell id="1neXx_UoQWCNBK1x6zKo-6" edge="1" parent="ZArSsv81gUOG34Y4sGNe-1" source="ZArSsv81gUOG34Y4sGNe-7" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" target="1neXx_UoQWCNBK1x6zKo-5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="456" y="362" as="sourcePoint" />
+            <mxPoint x="567" y="297" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1neXx_UoQWCNBK1x6zKo-7" connectable="0" parent="1neXx_UoQWCNBK1x6zKo-6" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.2" as="geometry">
+            <mxPoint x="12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1neXx_UoQWCNBK1x6zKo-8" parent="ZArSsv81gUOG34Y4sGNe-1" style="ellipse;whiteSpace=wrap;html=1;" value="Notify Buyer/Trader" vertex="1">
+          <mxGeometry height="39" width="104" x="361.5" y="454" as="geometry" />
+        </mxCell>
+        <mxCell id="1neXx_UoQWCNBK1x6zKo-9" edge="1" parent="ZArSsv81gUOG34Y4sGNe-1" source="ZArSsv81gUOG34Y4sGNe-7" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;dashed=1;" target="1neXx_UoQWCNBK1x6zKo-8">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="469" y="380" as="sourcePoint" />
+            <mxPoint x="577" y="307" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1neXx_UoQWCNBK1x6zKo-10" connectable="0" parent="1neXx_UoQWCNBK1x6zKo-9" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" vertex="1">
+          <mxGeometry relative="1" x="-0.2" as="geometry">
+            <mxPoint x="12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

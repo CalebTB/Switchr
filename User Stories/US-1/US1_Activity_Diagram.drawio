@@ -1,0 +1,102 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0" version="29.3.8">
+  <diagram name="US-1 Activity Diagram" id="activity-1">
+    <mxGraphModel dx="2066" dy="1159" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;fontStyle=1" value="US-1: User Login - Activity Diagram" vertex="1">
+          <mxGeometry height="30" width="300" x="350" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="start" parent="1" style="ellipse;html=1;shape=startState;gradientColor=none;fillColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="85" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="act1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;" value="Enter Credentials" vertex="1">
+          <mxGeometry height="50" width="120" x="40" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="act2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;" value="Validate Input Format" vertex="1">
+          <mxGeometry height="50" width="120" x="200" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="dec1" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=1;" value="Valid Input?" vertex="1">
+          <mxGeometry height="80" width="100" x="210" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="act3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;" value="Validate Credentials" vertex="1">
+          <mxGeometry height="50" width="120" x="400" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="dec2" parent="1" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=1;" value="Valid Credentials?" vertex="1">
+          <mxGeometry height="80" width="120" x="400" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="act4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;" value="Generate Session Token" vertex="1">
+          <mxGeometry height="50" width="120" x="550" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="act5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;" value="Store Token" vertex="1">
+          <mxGeometry height="50" width="120" x="710" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="act6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;" value="Redirect to Homepage" vertex="1">
+          <mxGeometry height="50" width="120" x="710" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="act7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;" value="Display Error Message" vertex="1">
+          <mxGeometry height="50" width="120" x="400" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="end" parent="1" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="755" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="start" style="endArrow=classic;html=1;strokeWidth=1;" target="act1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="act1" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="act2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="act2" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="dec1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="dec1" style="endArrow=classic;html=1;strokeWidth=1;fontColor=#82b366;edgeStyle=orthogonalEdgeStyle;" target="act3" value="Yes">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="360" y="290" />
+              <mxPoint x="360" y="175" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="act3" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="dec2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="dec2" style="endArrow=classic;html=1;strokeWidth=1;fontColor=#82b366;edgeStyle=orthogonalEdgeStyle;" target="act4" value="Yes">
+          <mxGeometry relative="1" x="-0.2174" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="act4" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="act5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="act5" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="act6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="act6" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="end" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="dec1" style="endArrow=classic;html=1;strokeWidth=1;fontColor=#b85450;edgeStyle=orthogonalEdgeStyle;" value="No">
+          <mxGeometry relative="1" x="-0.5652" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="260" y="420" />
+            </Array>
+            <mxPoint x="400" y="420" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="dec2" style="endArrow=classic;html=1;strokeWidth=1;fontColor=#b85450;" target="act7" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" style="endArrow=classic;html=1;strokeWidth=1;dashed=1;edgeStyle=orthogonalEdgeStyle;" target="act1" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="440" />
+              <mxPoint x="100" y="440" />
+            </Array>
+            <mxPoint x="400" y="450" as="sourcePoint" />
+            <mxPoint x="100" y="210" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

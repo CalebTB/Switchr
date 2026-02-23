@@ -1,0 +1,42 @@
+<mxGraphModel dx="749" dy="749" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" value="Use Case Diagram – US-2: User Logout" vertex="1">
+      <mxGeometry height="40" width="700" x="200" y="20" as="geometry" />
+    </mxCell>
+    <mxCell id="sys" parent="1" style="swimlane;startSize=30;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1" value="&lt;&lt;system&gt;&gt; Switchr" vertex="1">
+      <mxGeometry height="560" width="650" x="230" y="80" as="geometry" />
+    </mxCell>
+    <mxCell id="uc1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=13;fontStyle=1" value="Logout of Account" vertex="1">
+      <mxGeometry height="60" width="200" x="320" y="270" as="geometry" />
+    </mxCell>
+    <mxCell id="uc2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12" value="System Ends Session" vertex="1">
+      <mxGeometry height="60" width="200" x="600" y="140" as="geometry" />
+    </mxCell>
+    <mxCell id="uc3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12" value="System Redirects to Homepage" vertex="1">
+      <mxGeometry height="60" width="200" x="600" y="280" as="geometry" />
+    </mxCell>
+    <mxCell id="uc4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12" value="Block Access to Protected Pages After Logout" vertex="1">
+      <mxGeometry height="60" width="200" x="600" y="420" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" edge="1" parent="1" source="uc1" style="dashed=1;endArrow=open;fontSize=11" target="uc2" value="&lt;&lt;include&gt;&gt;">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" edge="1" parent="1" source="uc1" style="dashed=1;endArrow=open;fontSize=11" target="uc3" value="&lt;&lt;include&gt;&gt;">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" edge="1" parent="1" source="uc1" style="dashed=1;endArrow=open;fontSize=11" target="uc4" value="&lt;&lt;include&gt;&gt;">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="scenarionote" parent="1" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=11;fontStyle=2;strokeColor=default;" value="Scenario: User clicks logout &amp;gt; System ends session &amp;gt; System redirects to homepage" vertex="1">
+      <mxGeometry height="30" width="580" x="270" y="570" as="geometry" />
+    </mxCell>
+    <mxCell id="DRc7QN5nAPxtR1-aF3gN-2" edge="1" parent="1" source="DRc7QN5nAPxtR1-aF3gN-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="uc1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="DRc7QN5nAPxtR1-aF3gN-1" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="User" vertex="1">
+      <mxGeometry height="60" width="30" x="100" y="270" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>
