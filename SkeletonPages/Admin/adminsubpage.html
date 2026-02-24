@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Switchr Admin - Pending Approvals</title>
+</head>
+
+<body>
+
+    <!-- Header / Navigation -->
+    <header>
+        <h2>Switchr Admin</h2>
+
+        <nav>
+            <a href="admin.html">Dashboard</a> |
+            <a href="adminsubpage.html">Pending Approvals</a> |
+            <a href="#">Reports</a> |
+            <a href="#">Users</a>
+        </nav>
+
+        <div>
+            <span>Logged in as: admin@switchr.com</span> |
+            <a href="#">Logout</a>
+        </div>
+
+        <hr>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+
+        <h1>Pending Listing Approvals</h1>
+
+        <p><a href="admin.html">&lt; Back to Dashboard</a></p>
+
+        <br>
+
+        <!-- Listing Review Section -->
+        <section style="border: 1px solid black; padding: 10px;">
+
+            <h3>Review Listing</h3>
+
+            <!-- Listing Details -->
+            <article style="border: 1px solid gray; padding: 10px; margin-bottom: 20px;">
+                
+                <div style="display: flex; gap: 20px;">
+                    
+                    <!-- Images -->
+                    <div>
+                        <div style="width: 200px; height: 150px; border: 1px dashed black; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                            IMG 1
+                        </div>
+                        <div style="display: flex; gap: 5px;">
+                            <div style="width: 60px; height: 45px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
+                                IMG 2
+                            </div>
+                            <div style="width: 60px; height: 45px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
+                                IMG 3
+                            </div>
+                            <div style="width: 60px; height: 45px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
+                                IMG 4
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Details -->
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0;">Samsung Galaxy S22</h4>
+                        <p style="margin: 5px 0;">Category: Phones</p>
+                        <p style="margin: 5px 0;">Condition: Good</p>
+                        <p style="margin: 5px 0;">Price: $450</p>
+                        <p style="margin: 5px 0;">Type: For Sale</p>
+                        
+                        <br>
+                        
+                        <p><strong>Description:</strong></p>
+                        <p style="border: 1px solid gray; padding: 10px;">
+                            Samsung Galaxy S22 in good condition. Minor scratches on screen, 
+                            battery health at 89%. Comes with original charger and box. 
+                            No cracks or major damage. Unlocked for all carriers.
+                        </p>
+                    </div>
+
+                    <!-- Seller Info -->
+                    <div style="width: 200px; border: 1px solid gray; padding: 10px;">
+                        <h4 style="margin: 0;">Seller Info</h4>
+                        <p style="margin: 5px 0;">Username: john_doe</p>
+                        <p style="margin: 5px 0;">Email: john@email.com</p>
+                        <p style="margin: 5px 0;">Member since: Jan 2024</p>
+                        <p style="margin: 5px 0;">Total Listings: 12</p>
+                        <p style="margin: 5px 0;">Status: Active</p>
+                        <a href="#">View Profile</a>
+                    </div>
+
+                </div>
+
+                <hr>
+
+                <!-- Admin Actions -->
+                <div>
+                    <h4>Admin Actions</h4>
+                    
+                    <label><strong>Decision:</strong></label><br>
+                    <select>
+                        <option>-- Select --</option>
+                        <option>Approve</option>
+                        <option>Deny</option>
+                    </select>
+
+                    <br><br>
+
+                    <label><strong>Reason (if denied):</strong></label><br>
+                    <textarea rows="3" cols="50" placeholder="Enter reason for denial..."></textarea>
+
+                    <br><br>
+
+                    <button type="button">Submit Decision</button>
+                </div>
+
+            </article>
+
+        </section>
+
+        <br>
+
+        <!-- Queue of Other Pending Listings -->
+        <section style="border: 1px solid black; padding: 10px;">
+            <h3>Other Pending Listings (6)</h3>
+
+            <!-- Pending Item 1 -->
+            <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <div style="width: 80px; height: 60px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
+                        IMG
+                    </div>
+
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0;">iPad Pro 11"</h4>
+                        <p style="margin: 5px 0;">Seller: jane_smith | Submitted: 5 hours ago</p>
+                    </div>
+
+                    <div>
+                        <a href="#">Review</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Pending Item 2 -->
+            <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <div style="width: 80px; height: 60px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
+                        IMG
+                    </div>
+
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0;">AirPods Pro 2</h4>
+                        <p style="margin: 5px 0;">Seller: mike_tech | Submitted: 1 day ago</p>
+                    </div>
+
+                    <div>
+                        <a href="#">Review</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Pending Item 3 -->
+            <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <div style="width: 80px; height: 60px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
+                        IMG
+                    </div>
+
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0;">Dell XPS 15 Laptop</h4>
+                        <p style="margin: 5px 0;">Seller: tech_seller | Submitted: 1 day ago</p>
+                    </div>
+
+                    <div>
+                        <a href="#">Review</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- Pending Item 4 -->
+            <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <div style="width: 80px; height: 60px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
+                        IMG
+                    </div>
+
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0;">Nintendo Switch OLED</h4>
+                        <p style="margin: 5px 0;">Seller: gamer99 | Submitted: 2 days ago</p>
+                    </div>
+
+                    <div>
+                        <a href="#">Review</a>
+                    </div>
+                </div>
+            </article>
+
+        </section>
+
+    </main>
+
+    <footer style="margin-top: 20px; border-top: 1px solid black; padding: 10px;">
+        
+        <p>
+            <a href="#">Terms</a> |
+            <a href="#">Privacy</a> |
+            <a href="#">Help</a>
+        </p>
+    
+        <p style="font-size: 12px;">
+            Switchr Admin Panel - Skeleton Version
+        </p>
+    
+    </footer>
+
+</body>
+
+</html>
