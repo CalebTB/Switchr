@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Switchr Admin Dashboard</title>
+</head>
+
+<body>
+
+    <!-- Header / Navigation -->
+    <header>
+        <h2>Switchr Admin</h2>
+
+        <nav>
+            <a href="admin.html">Dashboard</a> |
+            <a href="adminsubpage.html">Pending Approvals</a> |
+            <a href="#">Reports</a> |
+            <a href="#">Users</a>
+        </nav>
+
+        <div>
+            <span>Logged in as: admin@switchr.com</span> |
+            <a href="#">Logout</a>
+        </div>
+
+        <hr>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+
+        <h1>Admin Dashboard</h1>
+
+        <!-- Platform Stats -->
+        <section style="border: 1px solid black; padding: 10px; margin-bottom: 20px;">
+            <h3>Platform Overview</h3>
+
+            <p>Total Users: <strong>156</strong></p>
+            <p>Active Listings: <strong>89</strong></p>
+            <p>Transactions This Week: <strong>34</strong></p>
+            <p>Pending Approvals: <strong>7</strong></p>
+            <p>Open Reports: <strong>3</strong></p>
+        </section>
+
+        <!-- Two-column layout -->
+        <div style="display: flex; gap: 20px;">
+
+            <!-- Pending Approvals -->
+            <section style="flex: 1; border: 1px solid black; padding: 10px;">
+                <h3>Pending Listing Approvals</h3>
+                <p><a href="adminsubpage.html">View All (7)</a></p>
+
+                <!-- Pending Item 1 -->
+                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
+                    <div style="display: flex; gap: 10px;">
+                        <div style="width: 80px; height: 60px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
+                            IMG
+                        </div>
+
+                        <div>
+                            <h4 style="margin: 0;">Samsung Galaxy S22</h4>
+                            <p style="margin: 5px 0;">Seller: john_doe</p>
+                            <p style="margin: 5px 0;">Submitted: 2 hours ago</p>
+                            <a href="adminsubpage.html">Review</a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Pending Item 2 -->
+                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
+                    <div style="display: flex; gap: 10px;">
+                        <div style="width: 80px; height: 60px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
+                            IMG
+                        </div>
+
+                        <div>
+                            <h4 style="margin: 0;">iPad Pro 11"</h4>
+                            <p style="margin: 5px 0;">Seller: jane_smith</p>
+                            <p style="margin: 5px 0;">Submitted: 5 hours ago</p>
+                            <a href="adminsubpage.html">Review</a>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Pending Item 3 -->
+                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
+                    <div style="display: flex; gap: 10px;">
+                        <div style="width: 80px; height: 60px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
+                            IMG
+                        </div>
+
+                        <div>
+                            <h4 style="margin: 0;">AirPods Pro 2</h4>
+                            <p style="margin: 5px 0;">Seller: mike_tech</p>
+                            <p style="margin: 5px 0;">Submitted: 1 day ago</p>
+                            <a href="adminsubpage.html">Review</a>
+                        </div>
+                    </div>
+                </article>
+
+            </section>
+
+            <!-- Reports Queue -->
+            <section style="flex: 1; border: 1px solid black; padding: 10px;">
+                <h3>Recent Reports</h3>
+                <p><a href="#">View All (3)</a></p>
+
+                <!-- Report 1 -->
+                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
+                    <h4 style="margin: 0;">Report #1042</h4>
+                    <p style="margin: 5px 0;">Type: Suspicious Listing</p>
+                    <p style="margin: 5px 0;">Reported by: user123</p>
+                    <p style="margin: 5px 0;">Status: Pending Review</p>
+                    <a href="#">View Report</a>
+                </article>
+
+                <!-- Report 2 -->
+                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
+                    <h4 style="margin: 0;">Report #1041</h4>
+                    <p style="margin: 5px 0;">Type: User Misconduct</p>
+                    <p style="margin: 5px 0;">Reported by: seller_pro</p>
+                    <p style="margin: 5px 0;">Status: Pending Review</p>
+                    <a href="#">View Report</a>
+                </article>
+
+                <!-- Report 3 -->
+                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
+                    <h4 style="margin: 0;">Report #1040</h4>
+                    <p style="margin: 5px 0;">Type: Prohibited Item</p>
+                    <p style="margin: 5px 0;">Reported by: buyer_22</p>
+                    <p style="margin: 5px 0;">Status: Pending Review</p>
+                    <a href="#">View Report</a>
+                </article>
+
+            </section>
+
+        </div>
+
+        <br>
+
+        <!-- User Search -->
+        <section style="border: 1px solid black; padding: 10px;">
+            <h3>User Search</h3>
+
+            <form>
+                <input type="text" placeholder="Search by username or email...">
+                <button type="submit">Search</button>
+            </form>
+
+            <br>
+
+            <table border="1" cellpadding="5" cellspacing="0">
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                <tr>
+                    <td>john_doe</td>
+                    <td>john@email.com</td>
+                    <td>Seller</td>
+                    <td>Active</td>
+                    <td><a href="#">View</a> | <a href="#">Suspend</a></td>
+                </tr>
+                <tr>
+                    <td>jane_smith</td>
+                    <td>jane@email.com</td>
+                    <td>Buyer</td>
+                    <td>Active</td>
+                    <td><a href="#">View</a> | <a href="#">Suspend</a></td>
+                </tr>
+                <tr>
+                    <td>bad_actor</td>
+                    <td>bad@email.com</td>
+                    <td>Seller</td>
+                    <td>Suspended</td>
+                    <td><a href="#">View</a> | <a href="#">Unsuspend</a> | <a href="#">Ban</a></td>
+                </tr>
+            </table>
+
+        </section>
+
+    </main>
+
+    <footer style="margin-top: 20px; border-top: 1px solid black; padding: 10px;">
+        
+        <p>
+            <a href="#">Terms</a> |
+            <a href="#">Privacy</a> |
+            <a href="#">Help</a>
+        </p>
+    
+        <p style="font-size: 12px;">
+            Switchr Admin Panel - Skeleton Version
+        </p>
+    
+    </footer>
+
+</body>
+
+</html>
