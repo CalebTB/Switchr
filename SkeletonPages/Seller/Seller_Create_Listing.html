@@ -1,1 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Listing - Switchr</title>
+</head>
+<body>
 
+  <div>
+    <h2>Switchr</h2>
+    <a href="Seller_Home.html">Home</a> |
+    <a href="#">Logout</a>
+  </div>
+  <hr>
+  <h1>Create a New Listing</h1>
+  <p>Fields marked * are required</p>
+
+  <form>
+    <div>
+      <label for="title">Title *</label><br>
+      <input type="text" id="title" name="title" placeholder="e.g., iPhone 13 Pro 256GB">
+      <br><small>Max 100 characters</small>
+    </div>
+    <br>
+    <div>
+      <label for="description">Description *</label><br>
+      <textarea id="description" name="description" rows="5" cols="40" placeholder="Describe the item, any defects, included accessories, etc."></textarea>
+    </div>
+    <br>
+    <div>
+      <label for="category">Category *</label><br>
+      <select id="category" name="category">
+        <option value="">-- Select --</option>
+        <option>Phones</option>
+        <option>Laptops</option>
+        <option>Tablets</option>
+        <option>Headphones</option>
+        <option>Chargers</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <br>
+    <div>
+      <label for="price">Price ($) *</label><br>
+      <input type="number" id="price" name="price" placeholder="e.g., 450" min="0">
+    </div>
+    <br>
+    <div>
+      <label for="condition">Condition *</label><br>
+      <select id="condition" name="condition">
+        <option value="">-- Select --</option>
+        <option value="NEW">NEW</option>
+        <option value="LIKE_NEW">LIKE_NEW</option>
+        <option value="GOOD">GOOD</option>
+        <option value="FAIR">FAIR</option>
+        <option value="POOR">POOR</option>
+      </select>
+    </div>
+    <br>
+    <div>
+      <label for="listingType">Listing Type *</label><br>
+      <select id="listingType" name="listingType">
+        <option value="">-- Select --</option>
+        <option value="SALE">SALE</option>
+        <option value="TRADE">TRADE</option>
+        <option value="BOTH">BOTH</option>
+      </select>
+    </div>
+    <br>
+    <div>
+      <label for="photoUrls">Upload Photo</label><br>
+      <input type="file" id="photoUrls" name="photoUrls" accept="image/*">
+      <br><small>Will connect to backend later</small>
+    </div>
+    <br>
+    <button type="button" onclick="submitListing()">Submit Listing</button>
+    <a href="Seller_Home.html">Cancel</a>
+  </form>
+
+  <script>
+    function submitListing() {
+      var title = document.getElementById('title').value.trim();
+      var description = document.getElementById('description').value.trim()
+      var category = document.getElementById('category').value;
+      var price = document.getElementById('price').value;
+      var condition = document.getElementById('condition').value;
+      var listingType = document.getElementById('listingType').value;
+      if (!title || !description || !category || !condition || !listingType) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+      if (title.length > 100) {
+        alert('Title must be 100 characters or less.');
+        return
+      }
+      alert('Listing submitted! (not connected to backend yet)');
+    }
+  </script>
+
+</body>
+</html>
