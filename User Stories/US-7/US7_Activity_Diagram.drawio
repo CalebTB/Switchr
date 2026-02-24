@@ -1,0 +1,122 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0" version="29.4.0">
+  <diagram name="US-7 Activity Diagram" id="activity-7">
+    <mxGraphModel dx="2066" dy="1159" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" value="US-7: Browse Listings - Activity Diagram" vertex="1">
+          <mxGeometry height="30" width="400" x="450" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="swimlane_user" parent="1" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=12;startSize=40;" value="User (Guest or Logged-in)" vertex="1">
+          <mxGeometry height="180" width="1120" x="40" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="start" parent="swimlane_user" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="60" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="act1" parent="swimlane_user" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Open Browse Page" vertex="1">
+          <mxGeometry height="50" width="120" x="130" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="act_view" parent="swimlane_user" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="View Listings" vertex="1">
+          <mxGeometry height="50" width="100" x="510" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="act_click" parent="swimlane_user" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Click on Listing" vertex="1">
+          <mxGeometry height="50" width="100" x="760" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="act_details" parent="swimlane_user" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="View Full Details" vertex="1">
+          <mxGeometry height="50" width="100" x="980" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="swimlane_system" parent="1" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=12;startSize=40;" value="System" vertex="1">
+          <mxGeometry height="200" width="1120" x="40" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="act2" parent="swimlane_system" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Query Active&#xa;Listings from DB" vertex="1">
+          <mxGeometry height="50" width="120" x="130" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act3" parent="swimlane_system" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Sort by Most&#xa;Recent (Default)" vertex="1">
+          <mxGeometry height="50" width="120" x="280" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act4" parent="swimlane_system" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=10;" value="Display Listings&#xa;(Thumbnail, Title,&#xa;Price, Condition, Type)" vertex="1">
+          <mxGeometry height="60" width="130" x="430" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="dec1" parent="swimlane_system" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=10;" value="User Clicks&#xa;Listing?" vertex="1">
+          <mxGeometry height="70" width="90" x="590" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="act5" parent="swimlane_system" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=10;" value="Load Full Details&#xa;(All Photos, Desc,&#xa;Seller Info)" vertex="1">
+          <mxGeometry height="60" width="120" x="750" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act6" parent="swimlane_system" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Display Full&#xa;Listing Page" vertex="1">
+          <mxGeometry height="50" width="100" x="900" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="dec2" parent="swimlane_system" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=10;" value="Load&#xa;More?" vertex="1">
+          <mxGeometry height="60" width="80" x="595" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="act7" parent="swimlane_system" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Load Next Page&#xa;of Listings" vertex="1">
+          <mxGeometry height="50" width="120" x="310" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="end" parent="swimlane_system" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="1015" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="start" style="endArrow=classic;html=1;strokeWidth=1;" target="act1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="act1" style="endArrow=classic;html=1;strokeWidth=1;" target="act2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="act2" style="endArrow=classic;html=1;strokeWidth=1;" target="act3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="act3" style="endArrow=classic;html=1;strokeWidth=1;" target="act4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="act4" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="act_view" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="535" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="act_view" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="dec1" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="675" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="dec1" style="endArrow=classic;html=1;strokeWidth=1;fontColor=#82b366;edgeStyle=elbowEdgeStyle;" target="act_click" value="Yes">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="act_click" style="endArrow=classic;html=1;strokeWidth=1;" target="act5" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="act5" style="endArrow=classic;html=1;strokeWidth=1;" target="act6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="act6" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" target="act_details" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="990" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="act_details" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="end" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="dec1" style="endArrow=classic;html=1;strokeWidth=2;strokeColor=#666666;fontColor=#666666;edgeStyle=orthogonalEdgeStyle;" target="dec2" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="dec2" style="endArrow=classic;html=1;strokeWidth=1;fontColor=#82b366;edgeStyle=orthogonalEdgeStyle;" target="act7" value="Yes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="act7" style="endArrow=classic;html=1;strokeWidth=1;dashed=1;edgeStyle=orthogonalEdgeStyle;" target="act4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="dec2" style="endArrow=classic;html=1;strokeWidth=1;fontColor=#b85450;edgeStyle=orthogonalEdgeStyle;" target="end" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

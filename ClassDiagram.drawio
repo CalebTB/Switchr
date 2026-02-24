@@ -1,0 +1,263 @@
+<mxGraphModel dx="1560" dy="1648" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;labelBackgroundColor=none;" value="Switchr – UML Class Diagram" vertex="1">
+      <mxGeometry height="40" width="1100" x="300" y="20" as="geometry" />
+    </mxCell>
+    <mxCell id="lbl_db" parent="1" style="text;html=1;align=center;verticalAlign=middle;rounded=1;fontSize=11;fontStyle=1;labelBackgroundColor=none;" value="BACKEND — Stored in Database" vertex="1">
+      <mxGeometry height="28" width="260" x="230" y="72" as="geometry" />
+    </mxCell>
+    <mxCell id="lbl_fe" parent="1" style="text;html=1;align=center;verticalAlign=middle;rounded=1;fontSize=11;fontStyle=1;dashed=1;labelBackgroundColor=none;" value="FRONTEND ONLY&amp;nbsp; (no DB)" vertex="1">
+      <mxGeometry height="28" width="280" x="230" y="865" as="geometry" />
+    </mxCell>
+    <mxCell id="srs1" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontStyle=2;labelBackgroundColor=none;" value="SRS §3.1–3.3, §3.14" vertex="1">
+      <mxGeometry height="16" width="180" x="230" y="107" as="geometry" />
+    </mxCell>
+    <mxCell id="srs2" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontStyle=2;labelBackgroundColor=none;" value="SRS §3.4, §3.5, §3.6, §3.7, §3.8" vertex="1">
+      <mxGeometry height="16" width="240" x="680" y="107" as="geometry" />
+    </mxCell>
+    <mxCell id="srs3" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontStyle=2;labelBackgroundColor=none;" value="SRS §3.10, §3.11, §3.12" vertex="1">
+      <mxGeometry height="16" width="200" x="1200" y="107" as="geometry" />
+    </mxCell>
+    <mxCell id="srs4" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontStyle=3;labelBackgroundColor=none;" value="SRS §3.15 (REQ-139–148)" vertex="1">
+      <mxGeometry height="16" width="200" x="220" y="487" as="geometry" />
+    </mxCell>
+    <mxCell id="srs5" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontStyle=2;labelBackgroundColor=none;" value="SRS §3.1, §3.2, §3.6, §3.12" vertex="1">
+      <mxGeometry height="16" width="200" x="680" y="587" as="geometry" />
+    </mxCell>
+    <mxCell id="srs6" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontStyle=2;labelBackgroundColor=none;" value="SRS §3.10, §3.11, §3.13" vertex="1">
+      <mxGeometry height="16" width="200" x="1200" y="554" as="geometry" />
+    </mxCell>
+    <mxCell id="User" parent="1" style="swimlane;startSize=40;fontSize=14;fontStyle=1;align=center;labelBackgroundColor=none;" value="User" vertex="1">
+      <mxGeometry height="320" width="300" x="230" y="122" as="geometry" />
+    </mxCell>
+    <mxCell id="User_s" parent="User" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=2;labelBackgroundColor=none;" value="«entity»" vertex="1">
+      <mxGeometry height="20" width="290" as="geometry" />
+    </mxCell>
+    <mxCell id="User_a" parent="User" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;fontSize=11;fontFamily=Courier New;labelBackgroundColor=none;" value="userId : String&amp;nbsp;&lt;div&gt;username : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;email : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;passwordHash : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;displayName : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;bio : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;profilePhoto : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;role : Enum&amp;nbsp;&lt;/div&gt;&lt;div&gt;{SELLER, BUYER,    BOTH, ADMIN}&amp;nbsp;&lt;/div&gt;&lt;div&gt;accountStatus : Enum&amp;nbsp;&lt;/div&gt;&lt;div&gt;{ACTIVE,    SUSPENDED, BANNED}&amp;nbsp;&lt;/div&gt;&lt;div&gt;createdAt : DateTime&lt;/div&gt;" vertex="1">
+      <mxGeometry height="280" width="290" y="40" as="geometry" />
+    </mxCell>
+    <mxCell id="DK6sjQgpyHLp-kgeaRlA-1" parent="User" style="text;html=1;fillColor=none;align=left;verticalAlign=top;spacingLeft=6;fontSize=11;fontFamily=Courier New;labelBackgroundColor=none;strokeColor=default;" value="+ register() : void&#xa;+ login() : Boolean&#xa;+ logout() : void&#xa;+ updateProfile() : void&#xa;+ isAdmin() : Boolean" vertex="1">
+      <mxGeometry height="100" width="300" y="220" as="geometry" />
+    </mxCell>
+    <mxCell id="Listing" parent="1" style="swimlane;startSize=40;fontSize=14;fontStyle=1;align=center;labelBackgroundColor=none;" value="Listing" vertex="1">
+      <mxGeometry height="420" width="310" x="680" y="122" as="geometry" />
+    </mxCell>
+    <mxCell id="Listing_s" parent="Listing" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=2;labelBackgroundColor=none;" value="«entity»" vertex="1">
+      <mxGeometry height="20" width="310" as="geometry" />
+    </mxCell>
+    <mxCell id="Listing_a" parent="Listing" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;fontSize=11;fontFamily=Courier New;labelBackgroundColor=none;" value="listingId : String&amp;nbsp;&lt;div&gt;sellerId : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;title : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;description : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;category : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;price : Float&amp;nbsp;&lt;/div&gt;&lt;div&gt;condition : Enum&amp;nbsp;&lt;/div&gt;&lt;div&gt;{NEW, LIKE_NEW,    GOOD, FAIR, POOR}&amp;nbsp;&lt;/div&gt;&lt;div&gt;listingType : Enum&amp;nbsp;&lt;/div&gt;&lt;div&gt;{SALE, TRADE, BOTH}&amp;nbsp;&lt;/div&gt;&lt;div&gt;photoUrls : List&amp;nbsp;&lt;/div&gt;&lt;div&gt;status : Enum&amp;nbsp;&lt;/div&gt;&lt;div&gt;{PENDING_APPROVAL,    ACTIVE, SOLD, TRADED,&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp;DELETED, REMOVED}&amp;nbsp;&lt;/div&gt;&lt;div&gt;createdAt : DateTime&amp;nbsp;&lt;/div&gt;&lt;div&gt;updatedAt : DateTime&lt;/div&gt;" vertex="1">
+      <mxGeometry height="380" width="310" y="40" as="geometry" />
+    </mxCell>
+    <mxCell id="8SX1VmEqys4qS2cjK23v-1" parent="Listing" style="text;html=1;strokeColor=light-dark(#82B366,#FFFFFF);fillColor=none;align=left;verticalAlign=top;spacingLeft=6;fontSize=11;fontFamily=Courier New;" value="+ createListing() : void&#xa;+ editListing() : void&#xa;+ deleteListing() : void&#xa;+ getStatus() : String" vertex="1">
+      <mxGeometry height="80" width="310" y="340" as="geometry" />
+    </mxCell>
+    <mxCell id="Offer" parent="1" style="swimlane;startSize=40;fontSize=14;fontStyle=1;align=center;labelBackgroundColor=none;" value="Offer" vertex="1">
+      <mxGeometry height="375" width="320" x="1200" y="122" as="geometry" />
+    </mxCell>
+    <mxCell id="Offer_s" parent="Offer" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=2;labelBackgroundColor=none;" value="«entity»" vertex="1">
+      <mxGeometry height="20" width="310" as="geometry" />
+    </mxCell>
+    <mxCell id="Offer_a" parent="Offer" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;fontSize=11;fontFamily=Courier New;labelBackgroundColor=none;" value="offerId : String&amp;nbsp;&lt;div&gt;listingId : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;buyerId : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;sellerId : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;offerAmount : Float&amp;nbsp;&lt;/div&gt;&lt;div&gt;tradeListingIds : List&amp;lt;String&amp;gt;&amp;nbsp;&lt;/div&gt;&lt;div&gt;cashAdjustment : Float&amp;nbsp;&lt;/div&gt;&lt;div&gt;message : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;status : Enum&amp;nbsp;&lt;/div&gt;&lt;div&gt;{PENDING, ACCEPTED,    REJECTED, CANCELLED,&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp;EXPIRED, COUNTERED}&amp;nbsp;&lt;/div&gt;&lt;div&gt;parentOfferId : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp;(null if original offer)&amp;nbsp;&lt;/div&gt;&lt;div&gt;createdAt : DateTime&amp;nbsp;&lt;/div&gt;&lt;div&gt;expiresAt : DateTime&lt;/div&gt;" vertex="1">
+      <mxGeometry height="335" width="310" y="40" as="geometry" />
+    </mxCell>
+    <mxCell id="jac6pAcOd8CT8E8q7AK2-1" parent="Offer" style="text;html=1;strokeColor=light-dark(#D6B656,#FFFFFF);fillColor=none;align=left;verticalAlign=top;spacingLeft=6;fontSize=11;fontFamily=Courier New;gradientColor=default;" value="+ submitOffer() : void&#xa;+ cancelOffer() : void&#xa;+ counterOffer() : Offer&#xa;+ acceptOffer() : void" vertex="1">
+      <mxGeometry height="80" width="320" y="295" as="geometry" />
+    </mxCell>
+    <mxCell id="Transaction" parent="1" style="swimlane;startSize=40;fontSize=14;fontStyle=1;align=center;labelBackgroundColor=none;" value="Transaction" vertex="1">
+      <mxGeometry height="310" width="320" x="1200" y="576" as="geometry" />
+    </mxCell>
+    <mxCell id="Transaction_s" parent="Transaction" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=2;labelBackgroundColor=none;" value="«entity»" vertex="1">
+      <mxGeometry height="20" width="310" as="geometry" />
+    </mxCell>
+    <mxCell id="Transaction_a" parent="Transaction" style="text;html=1;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;fontSize=11;fontFamily=Courier New;labelBackgroundColor=none;" value="transactionId : String&amp;nbsp;&lt;div&gt;offerId : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;sellerId : String&amp;nbsp;&lt;div&gt;buyerId : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;finalAmount : Float&amp;nbsp;&lt;/div&gt;&lt;div&gt;status : Enum&amp;nbsp;&lt;/div&gt;&lt;div&gt;{ACTIVE, COMPLETED,    RETURNED, CANCELLED}&amp;nbsp;&lt;/div&gt;&lt;div&gt;paymentStatus : Enum&amp;nbsp;&lt;/div&gt;&lt;div&gt;{PENDING,    COMPLETED, FAILED, REFUNDED}&amp;nbsp;&lt;/div&gt;&lt;div&gt;paymentMethod : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;completedAt : DateTime&lt;/div&gt;&lt;/div&gt;" vertex="1">
+      <mxGeometry height="270" width="310" y="40" as="geometry" />
+    </mxCell>
+    <mxCell id="rOfqu9GogkqFlBA1DuLk-1" parent="Transaction" style="text;html=1;strokeColor=light-dark(#B85450,#FFFFFF);fillColor=default;align=left;verticalAlign=top;spacingLeft=6;fontSize=11;fontFamily=Courier New;" value="+ completeTransaction() : void&#xa;+ getHistory() : List&lt;Transaction&gt;" vertex="1">
+      <mxGeometry height="55" width="320" y="255" as="geometry" />
+    </mxCell>
+    <mxCell id="Notification" parent="1" style="swimlane;startSize=40;fontSize=14;fontStyle=1;align=center;labelBackgroundColor=none;" value="Notification" vertex="1">
+      <mxGeometry height="248" width="310" x="680" y="602" as="geometry" />
+    </mxCell>
+    <mxCell id="Notification_s" parent="Notification" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=2;labelBackgroundColor=none;" value="«entity»" vertex="1">
+      <mxGeometry height="20" width="310" as="geometry" />
+    </mxCell>
+    <mxCell id="Notification_a" parent="Notification" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;fontSize=11;fontFamily=Courier New;labelBackgroundColor=none;" value="notificationId : String&amp;nbsp;&lt;div&gt;userId : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;type : Enum&amp;nbsp;&lt;/div&gt;&lt;div&gt;{OFFER_RECEIVED,    OFFER_ACCEPTED,&amp;nbsp;&lt;/div&gt;&lt;div&gt;LISTING_REMOVED}&amp;nbsp;&lt;div&gt;message : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;channel : Enum&amp;nbsp;&lt;/div&gt;&lt;div&gt;{IN_APP, EMAIL}&amp;nbsp;&lt;/div&gt;&lt;div&gt;isRead : Boolean&amp;nbsp;&lt;/div&gt;&lt;div&gt;createdAt : DateTime&lt;/div&gt;&lt;/div&gt;" vertex="1">
+      <mxGeometry height="210" width="310" y="40" as="geometry" />
+    </mxCell>
+    <mxCell id="LUZYIALM2C0zgJvEtmsM-1" parent="Notification" style="text;html=1;strokeColor=light-dark(#9673A6,#FFFFFF);fillColor=none;align=left;verticalAlign=top;spacingLeft=6;fontSize=11;fontFamily=Courier New;" value="+ markAsRead() : void&#xa;+ send() : void" vertex="1">
+      <mxGeometry height="39" width="310" y="191" as="geometry" />
+    </mxCell>
+    <mxCell id="Report" parent="1" style="swimlane;startSize=40;fontSize=14;fontStyle=1;align=center;labelBackgroundColor=none;" value="Report" vertex="1">
+      <mxGeometry height="340" width="310" x="220" y="502" as="geometry" />
+    </mxCell>
+    <mxCell id="Report_s" parent="Report" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=2;labelBackgroundColor=none;" value="«entity»" vertex="1">
+      <mxGeometry height="20" width="310" as="geometry" />
+    </mxCell>
+    <mxCell id="Report_a" parent="Report" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;fontSize=11;fontFamily=Courier New;labelBackgroundColor=none;" value="reportId : String&amp;nbsp;&lt;div&gt;reporterId : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;targetType : Enum&amp;nbsp;&lt;div&gt;{LISTING, USER}&amp;nbsp;&lt;/div&gt;&lt;div&gt;targetId : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;(Listing.listingId     or User.userId)&amp;nbsp;&lt;/div&gt;&lt;div&gt;reason : Enum&amp;nbsp;&lt;/div&gt;&lt;div&gt;{SPAM, FRAUD,    INAPPROPRIATE,&amp;nbsp;&lt;/div&gt;&lt;div&gt;&amp;nbsp;PROHIBITED, OTHER}&amp;nbsp;&lt;/div&gt;&lt;div&gt;details : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;status : Enum&amp;nbsp;&lt;/div&gt;&lt;div&gt;{PENDING,    REVIEWED, DISMISSED}&amp;nbsp;&lt;/div&gt;&lt;div&gt;createdAt : DateTime&lt;/div&gt;&lt;/div&gt;" vertex="1">
+      <mxGeometry height="300" width="310" y="40" as="geometry" />
+    </mxCell>
+    <mxCell id="_ZYpCIiUzRYfYhYT-ZAB-1" parent="Report" style="text;html=1;strokeColor=light-dark(#B85450,#FFFFFF);fillColor=none;align=left;verticalAlign=top;spacingLeft=6;fontSize=11;fontFamily=Courier New;" value="+ submitReport() : void&#xa;+ reviewReport() : void&#xa;+ dismissReport() : void" vertex="1">
+      <mxGeometry height="70" width="310" y="270" as="geometry" />
+    </mxCell>
+    <mxCell id="FilterState" parent="1" style="swimlane;startSize=40;fontSize=14;fontStyle=1;align=center;dashed=1;labelBackgroundColor=none;" value="FilterState" vertex="1">
+      <mxGeometry height="172" width="285" x="230" y="903" as="geometry" />
+    </mxCell>
+    <mxCell id="FilterState_s" parent="FilterState" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=2;labelBackgroundColor=none;" value="«frontend»" vertex="1">
+      <mxGeometry height="20" width="285" as="geometry" />
+    </mxCell>
+    <mxCell id="FilterState_a" parent="FilterState" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;fontSize=11;fontFamily=Courier New;labelBackgroundColor=none;" value="keyword : String&amp;nbsp;&lt;div&gt;category : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;minPrice : Float&amp;nbsp;&lt;/div&gt;&lt;div&gt;maxPrice : Float&amp;nbsp;&lt;/div&gt;&lt;div&gt;condition : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;listingType : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;sortBy : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;sortOrder : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;resultCount : Integer&lt;/div&gt;" vertex="1">
+      <mxGeometry height="130" width="285" y="40" as="geometry" />
+    </mxCell>
+    <mxCell id="ListingFormState" parent="1" style="swimlane;startSize=40;fontSize=14;fontStyle=1;align=center;dashed=1;labelBackgroundColor=none;" value="ListingFormState" vertex="1">
+      <mxGeometry height="182" width="295" x="570" y="903" as="geometry" />
+    </mxCell>
+    <mxCell id="ListingFormState_s" parent="ListingFormState" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=2;labelBackgroundColor=none;" value="«frontend»" vertex="1">
+      <mxGeometry height="20" width="295" as="geometry" />
+    </mxCell>
+    <mxCell id="ListingFormState_a" parent="ListingFormState" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;fontSize=11;fontFamily=Courier New;labelBackgroundColor=none;" value="title : String&amp;nbsp;&lt;div&gt;description : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;category : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;price : Float&amp;nbsp;&lt;/div&gt;&lt;div&gt;condition : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;listingType : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;photoUrls : List&amp;lt;String&amp;gt;&amp;nbsp;&lt;/div&gt;&lt;div&gt;isDirty : Boolean&amp;nbsp;&lt;/div&gt;&lt;div&gt;isSubmitting : Boolean&lt;/div&gt;" vertex="1">
+      <mxGeometry height="140" width="295" y="40" as="geometry" />
+    </mxCell>
+    <mxCell id="ConfirmationDialog" parent="1" style="swimlane;startSize=40;fontSize=14;fontStyle=1;align=center;dashed=1;labelBackgroundColor=none;" value="ConfirmationDialog" vertex="1">
+      <mxGeometry height="132" width="295" x="920" y="903" as="geometry" />
+    </mxCell>
+    <mxCell id="ConfirmationDialog_s" parent="ConfirmationDialog" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=11;fontStyle=2;labelBackgroundColor=none;" value="«frontend»" vertex="1">
+      <mxGeometry height="20" width="295" as="geometry" />
+    </mxCell>
+    <mxCell id="ConfirmationDialog_a" parent="ConfirmationDialog" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=8;fontSize=11;fontFamily=Courier New;labelBackgroundColor=none;" value="isOpen : Boolean&amp;nbsp;&lt;div&gt;title : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;message : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;targetId : String&amp;nbsp;&lt;/div&gt;&lt;div&gt;onConfirm : Function&amp;nbsp;&lt;/div&gt;&lt;div&gt;onCancel : Function&lt;/div&gt;" vertex="1">
+      <mxGeometry height="100" width="295" y="40" as="geometry" />
+    </mxCell>
+    <mxCell id="r1" edge="1" parent="1" source="User" style="endArrow=none;endFill=0;startArrow=diamond;startFill=1;fontSize=11;labelBackgroundColor=none;fontColor=default;" target="Listing" value="creates">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="r1_1" connectable="0" parent="r1" style="resizable=0;html=1;align=left;verticalAlign=bottom;labelBackgroundColor=none;fontSize=12;fontStyle=1;" value="1" vertex="1">
+      <mxGeometry relative="1" x="-1" as="geometry">
+        <mxPoint as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r1_m" connectable="0" parent="r1" style="resizable=0;html=1;align=right;verticalAlign=bottom;labelBackgroundColor=none;fontSize=14;fontStyle=1;" value="*" vertex="1">
+      <mxGeometry relative="1" x="1" as="geometry">
+        <mxPoint as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r2" edge="1" parent="1" source="Listing" style="endArrow=open;endFill=0;fontSize=11;labelBackgroundColor=none;fontColor=default;startArrow=diamondThin;startFill=1;" target="Offer" value="receives">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="r2_1" connectable="0" parent="r2" style="resizable=0;html=1;align=left;verticalAlign=bottom;labelBackgroundColor=none;fontSize=12;fontStyle=1;" value="1" vertex="1">
+      <mxGeometry relative="1" x="-1" as="geometry">
+        <mxPoint as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r2_m" connectable="0" parent="r2" style="resizable=0;html=1;align=right;verticalAlign=bottom;labelBackgroundColor=none;fontSize=14;fontStyle=1;" value="*" vertex="1">
+      <mxGeometry relative="1" x="1" as="geometry">
+        <mxPoint as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r3" edge="1" parent="1" source="User" style="endArrow=open;endFill=0;fontSize=11;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=0;entryX=0.5;entryY=0;labelBackgroundColor=none;fontColor=default;" target="Offer" value="makes">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="375" y="72" />
+          <mxPoint x="1355" y="72" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r3_1" connectable="0" parent="r3" style="resizable=0;html=1;align=left;verticalAlign=bottom;labelBackgroundColor=none;fontSize=12;fontStyle=1;" value="1" vertex="1">
+      <mxGeometry relative="1" x="-1" as="geometry">
+        <mxPoint as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r3_m" connectable="0" parent="r3" style="resizable=0;html=1;align=right;verticalAlign=bottom;labelBackgroundColor=none;fontSize=14;fontStyle=1;" value="*" vertex="1">
+      <mxGeometry relative="1" x="1" as="geometry">
+        <mxPoint as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r4" edge="1" parent="1" source="Offer" style="endArrow=none;endFill=0;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=none;fontColor=default;" target="Transaction" value="becomes">
+      <mxGeometry relative="1" x="0.0127" as="geometry">
+        <mxPoint as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r4_1a" connectable="0" parent="r4" style="resizable=0;html=1;align=left;verticalAlign=bottom;labelBackgroundColor=none;fontSize=12;fontStyle=1;" value="1" vertex="1">
+      <mxGeometry relative="1" x="-1" as="geometry">
+        <mxPoint x="2" y="20" as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r4_1b" connectable="0" parent="r4" style="resizable=0;html=1;align=right;verticalAlign=bottom;labelBackgroundColor=none;fontSize=12;fontStyle=1;" value="1" vertex="1">
+      <mxGeometry relative="1" x="1" as="geometry">
+        <mxPoint x="13" as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r5" edge="1" parent="1" source="Transaction" style="endArrow=none;endFill=0;fontSize=11;exitX=0;exitY=0.5;entryX=1;entryY=0.5;labelBackgroundColor=none;fontColor=default;" target="Notification" value="triggers">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="r5_m" connectable="0" parent="r5" style="resizable=0;html=1;align=left;verticalAlign=bottom;labelBackgroundColor=none;fontSize=14;fontStyle=1;" value="*" vertex="1">
+      <mxGeometry relative="1" x="-1" as="geometry">
+        <mxPoint x="-10" as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r5_1" connectable="0" parent="r5" style="resizable=0;html=1;align=right;verticalAlign=bottom;labelBackgroundColor=none;fontSize=12;fontStyle=1;" value="1" vertex="1">
+      <mxGeometry relative="1" x="1" as="geometry">
+        <mxPoint x="13" y="-4" as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r6" edge="1" parent="1" source="User_a" style="endArrow=open;endFill=0;fontSize=11;strokeWidth=2;edgeStyle=orthogonalEdgeStyle;exitX=0.5;exitY=1;entryX=0;entryY=0.5;labelBackgroundColor=none;fontColor=default;exitDx=0;exitDy=0;verticalAlign=middle;labelBorderColor=none;textShadow=1;" target="Notification" value="receives">
+      <mxGeometry relative="1" x="0.1037" as="geometry">
+        <mxPoint x="1" as="offset" />
+        <Array as="points">
+          <mxPoint x="375" y="740" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r6_1" connectable="0" parent="r6" style="resizable=0;html=1;align=left;verticalAlign=bottom;labelBackgroundColor=none;fontSize=12;fontStyle=1;" value="1" vertex="1">
+      <mxGeometry relative="1" x="-1" as="geometry">
+        <mxPoint x="5" y="128" as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r6_m" connectable="0" parent="r6" style="resizable=0;html=1;align=right;verticalAlign=bottom;labelBackgroundColor=none;fontSize=14;fontStyle=1;" value="*" vertex="1">
+      <mxGeometry relative="1" x="1" as="geometry">
+        <mxPoint x="-5" as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r7" edge="1" parent="1" source="User" style="endArrow=open;endFill=0;fontSize=11;exitX=0.5;exitY=1;entryX=0.5;entryY=0;labelBackgroundColor=none;fontColor=default;startArrow=diamondThin;startFill=1;" target="Report" value="files">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint as="offset" />
+        <Array as="points" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r7_1" connectable="0" parent="r7" style="resizable=0;html=1;align=left;verticalAlign=bottom;labelBackgroundColor=none;fontSize=12;fontStyle=1;" value="1" vertex="1">
+      <mxGeometry relative="1" x="-1" as="geometry">
+        <mxPoint x="7" y="24" as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r7_m" connectable="0" parent="r7" style="resizable=0;html=1;align=right;verticalAlign=bottom;labelBackgroundColor=none;fontSize=14;fontStyle=1;" value="*" vertex="1">
+      <mxGeometry relative="1" x="1" as="geometry">
+        <mxPoint x="14" as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r8" edge="1" parent="1" source="Report" style="endArrow=block;endFill=1;dashed=1;fontSize=10;exitX=1;exitY=0.3;entryX=0;entryY=1;labelBackgroundColor=none;fontColor=default;" target="Listing" value="«references»&#xa;(via targetId/targetType)">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="r9" edge="1" parent="1" style="endArrow=block;endFill=1;dashed=1;fontSize=10;exitX=1;exitY=0.7;entryX=0;entryY=0.7;labelBackgroundColor=none;fontColor=default;" value="«may trigger»">
+      <mxGeometry relative="1" x="-0.4555" y="5" as="geometry">
+        <mxPoint as="offset" />
+        <mxPoint x="540" y="762" as="sourcePoint" />
+        <mxPoint x="680" y="816.5" as="targetPoint" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r10" edge="1" parent="1" source="FilterState" style="endArrow=block;endFill=1;dashed=1;fontSize=11;exitX=1;exitY=0.3;entryX=0;entryY=1;labelBackgroundColor=none;fontColor=default;" target="Listing" value="«uses»">
+      <mxGeometry relative="1" x="-0.6545" y="-7" as="geometry">
+        <mxPoint as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r11" edge="1" parent="1" source="ListingFormState" style="endArrow=block;endFill=1;dashed=1;fontSize=11;exitX=0.5;exitY=0;entryX=0.5;entryY=1;labelBackgroundColor=none;fontColor=default;" target="Listing" value="«uses»">
+      <mxGeometry relative="1" x="-0.743" y="3" as="geometry">
+        <mxPoint as="offset" />
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="r12" edge="1" parent="1" source="ConfirmationDialog_s" style="endArrow=block;endFill=1;dashed=1;fontSize=11;exitX=0.5;exitY=0;entryX=0.8;entryY=1;exitDx=0;exitDy=0;labelBackgroundColor=none;fontColor=default;" target="Listing" value="«uses»">
+      <mxGeometry relative="1" x="-0.6871" y="6" as="geometry">
+        <mxPoint as="offset" />
+      </mxGeometry>
+    </mxCell>
+  </root>
+</mxGraphModel>

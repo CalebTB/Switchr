@@ -1,0 +1,45 @@
+<mxGraphModel dx="824" dy="824" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;labelBackgroundColor=none;" value="Activity Diagram – US-2: User Logout" vertex="1">
+      <mxGeometry height="40" width="580" x="60" y="20" as="geometry" />
+    </mxCell>
+    <mxCell id="start" parent="1" style="ellipse;aspect=fixed;labelBackgroundColor=none;gradientColor=none;fillColor=light-dark(#000000,#000000);strokeColor=light-dark(#000000,#000000);fillStyle=solid;" value="" vertex="1">
+      <mxGeometry height="30" width="30" x="320" y="80" as="geometry" />
+    </mxCell>
+    <mxCell id="a1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontStyle=1;fillColor=none;labelBackgroundColor=none;" value="User Clicks Logout" vertex="1">
+      <mxGeometry height="55" width="280" x="195" y="150" as="geometry" />
+    </mxCell>
+    <mxCell id="a2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontStyle=1;fillColor=none;labelBackgroundColor=none;" value="System Terminates Session" vertex="1">
+      <mxGeometry height="55" width="280" x="195" y="255" as="geometry" />
+    </mxCell>
+    <mxCell id="a3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontStyle=1;fillColor=none;labelBackgroundColor=none;" value="Prevent Access to Protected Pages After Logout" vertex="1">
+      <mxGeometry height="55" width="280" x="195" y="360" as="geometry" />
+    </mxCell>
+    <mxCell id="a4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontStyle=1;fillColor=none;labelBackgroundColor=none;" value="Redirect to Homepage" vertex="1">
+      <mxGeometry height="55" width="280" x="195" y="465" as="geometry" />
+    </mxCell>
+    <mxCell id="end" parent="1" style="ellipse;aspect=fixed;strokeWidth=4;labelBackgroundColor=none;strokeColor=light-dark(#000000,#000000);" value="" vertex="1">
+      <mxGeometry height="38" width="38" x="316" y="570" as="geometry" />
+    </mxCell>
+    <mxCell id="endb" parent="1" style="ellipse;aspect=fixed;labelBackgroundColor=none;fillColor=light-dark(#000000,#000000);strokeColor=light-dark(#000000,#000000);fillStyle=solid;" value="" vertex="1">
+      <mxGeometry height="28" width="28" x="320" y="575" as="geometry" />
+    </mxCell>
+    <mxCell id="e1" edge="1" parent="1" source="start" style="labelBackgroundColor=none;fontColor=default;" target="a1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e2" edge="1" parent="1" source="a1" style="labelBackgroundColor=none;fontColor=default;" target="a2">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e3" edge="1" parent="1" source="a2" style="labelBackgroundColor=none;fontColor=default;" target="a3">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e4" edge="1" parent="1" source="a3" style="labelBackgroundColor=none;fontColor=default;" target="a4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e5" edge="1" parent="1" source="a4" style="labelBackgroundColor=none;fontColor=default;" target="end">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

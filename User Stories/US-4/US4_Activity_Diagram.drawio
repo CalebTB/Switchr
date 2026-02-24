@@ -1,0 +1,147 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0" version="29.4.0">
+  <diagram name="US-4 Activity Diagram" id="activity-4">
+    <mxGraphModel dx="2066" dy="1159" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1" value="US-4: Create Listing - Activity Diagram" vertex="1">
+          <mxGeometry height="30" width="400" x="500" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="swimlane_seller" parent="1" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=12;startSize=30;" value="Seller" vertex="1">
+          <mxGeometry height="200" width="1480" x="40" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="start" parent="swimlane_seller" style="ellipse;html=1;shape=startState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="40" y="85" as="geometry" />
+        </mxCell>
+        <mxCell id="act1" parent="swimlane_seller" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Enter Listing Details" vertex="1">
+          <mxGeometry height="50" width="120" x="110" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="act2" parent="swimlane_seller" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Upload Photos" vertex="1">
+          <mxGeometry height="50" width="120" x="270" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="act3" parent="swimlane_seller" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Submit Listing" vertex="1">
+          <mxGeometry height="50" width="120" x="430" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="swimlane_system" parent="1" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=12;startSize=30;" value="System" vertex="1">
+          <mxGeometry height="220" width="1480" x="40" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="act4" parent="swimlane_system" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Validate Input" vertex="1">
+          <mxGeometry height="50" width="120" x="430" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="dec1" parent="swimlane_system" style="rhombus;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Valid?" vertex="1">
+          <mxGeometry height="60" width="70" x="455" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="act5" parent="swimlane_system" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Display Validation Errors" vertex="1">
+          <mxGeometry height="50" width="120" x="270" y="115" as="geometry" />
+        </mxCell>
+        <mxCell id="act6" parent="swimlane_system" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Save Listing&#xa;(Status: Pending)" vertex="1">
+          <mxGeometry height="50" width="120" x="590" y="115" as="geometry" />
+        </mxCell>
+        <mxCell id="act7" parent="swimlane_system" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Notify Admin&#xa;(New Listing to Review)" vertex="1">
+          <mxGeometry height="50" width="120" x="750" y="115" as="geometry" />
+        </mxCell>
+        <mxCell id="act_publish" parent="swimlane_system" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Publish Listing&#xa;(Status: Active)" vertex="1">
+          <mxGeometry height="50" width="120" x="1030" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act_notify_approve" parent="swimlane_system" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Notify Seller&#xa;(Listing Approved)" vertex="1">
+          <mxGeometry height="50" width="120" x="1200" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act_notify_deny" parent="swimlane_system" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Notify Seller&#xa;(Listing Denied + Reason)" vertex="1">
+          <mxGeometry height="50" width="120" x="1340" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="swimlane_admin" parent="1" style="swimlane;horizontal=0;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;fontSize=12;startSize=30;" value="Admin" vertex="1">
+          <mxGeometry height="200" width="1480" x="40" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="act8" parent="swimlane_admin" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Review Listing" vertex="1">
+          <mxGeometry height="50" width="120" x="750" y="75" as="geometry" />
+        </mxCell>
+        <mxCell id="dec2" parent="swimlane_admin" style="rhombus;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=1;fontSize=11;" value="Approve?" vertex="1">
+          <mxGeometry height="60" width="80" x="910" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="act9" parent="swimlane_admin" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Approve Listing" vertex="1">
+          <mxGeometry height="40" width="120" x="1030" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="act10" parent="swimlane_admin" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=1;fontSize=11;" value="Deny Listing&#xa;(Enter Reason)" vertex="1">
+          <mxGeometry height="50" width="120" x="1030" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="start" style="endArrow=classic;html=1;strokeWidth=1;" target="act1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="act1" style="endArrow=classic;html=1;strokeWidth=1;" target="act2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="act2" style="endArrow=classic;html=1;strokeWidth=1;" target="act3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="act3" style="endArrow=classic;html=1;strokeWidth=1;" target="act4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="act4" style="endArrow=classic;html=1;strokeWidth=1;" target="dec1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="dec1" style="endArrow=classic;html=1;strokeWidth=1;fontColor=#b85450;" target="act5" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="act5" style="endArrow=classic;html=1;strokeWidth=1;dashed=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="act1" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="210" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="dec1" style="endArrow=classic;html=1;strokeWidth=1;fontColor=#82b366;" target="act6" value="Yes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="act6" style="endArrow=classic;html=1;strokeWidth=1;" target="act7" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="act7" style="endArrow=classic;html=1;strokeWidth=1;" target="act8" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="act8" style="endArrow=classic;html=1;strokeWidth=1;" target="dec2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="dec2" style="endArrow=classic;html=1;strokeWidth=1;fontColor=#82b366;" target="act9" value="Yes">
+          <mxGeometry relative="1" x="-0.232" y="2" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="dec2" style="endArrow=classic;html=1;strokeWidth=1;fontColor=#b85450;" target="act10" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="act9" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="act_publish" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="act_publish" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="act_notify_approve" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="act10" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="act_notify_deny" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="act_notify_approve" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="act_view" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1440" y="325" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="1" source="act_notify_deny" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="act_view" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1440" y="435" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e19" edge="1" parent="1" source="act_view" style="endArrow=classic;html=1;strokeWidth=1;edgeStyle=orthogonalEdgeStyle;" target="end" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="end" parent="1" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#000000;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="1590" y="155" as="geometry" />
+        </mxCell>
+        <mxCell id="act_view" parent="1" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;fontSize=11;" value="View Approval Status" vertex="1">
+          <mxGeometry height="50" width="120" x="1380" y="145" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
