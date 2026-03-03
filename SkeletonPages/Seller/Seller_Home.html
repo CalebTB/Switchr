@@ -355,8 +355,8 @@
       html += '<td>' + l.condition + '</td>';
       html += '<td>' + l.listing_type + '</td>';
       html += '<td><span class="badge ' + statusClass + '">' + l.status + '</span></td>';
-      html += '<td>' + (l.created_at ? l.created_at.split('T')[0] : '') + '</td>';
-      html += '<td>' + (l.updated_at ? l.updated_at.split('T')[0] : '') + '</td>';
+      html += '<td>' + (l.created_at ? l.created_at.replace('T', ' ').split(' ')[0] : '') + '</td>';
+      html += '<td>' + (l.updated_at ? l.updated_at.replace('T', ' ').split(' ')[0] : '') + '</td>';
       html += '<td class="tbl-actions"><a href="#">Edit</a><a href="#" class="del">Delete</a></td>';
       html += '</tr>';
     });
