@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Switchr Buyer Page</title>
+    <script src="../js/auth.js"></script>
 </head>
 
 <body>
@@ -11,14 +12,15 @@
         <h2>Switchr</h2>
 
         <nav>
-            <a href="buyer.html">Browse</a> |
+            <a href="/Buyer/buyer.html">Browse</a> |
+            <a href="/offers.html">Offers</a> |
             <a href="#">Messages</a> |
-            <a href="#">Profile</a>
+            <a href="/profile.html">Profile</a>
         </nav>
 
-        <div>
-            <a href="#">Login</a> |
-            <a href="#">Sign Up</a>
+        <div id="authLinks">
+            <a href="/login.html">Login</a> |
+            <a href="/register.html">Sign Up</a>
         </div>
 
         <hr>
@@ -167,6 +169,15 @@
     
     </footer>
     
+    <script>
+        // Update header based on login state
+        const authLinks = document.getElementById('authLinks');
+        if (isLoggedIn()) {
+            const user = getUser();
+            authLinks.innerHTML = '<span>' + (user ? user.username : 'User') + '</span> | <a href="#" onclick="logout()">Logout</a>';
+        }
+    </script>
+
 </body>
     
 </html>

@@ -4,15 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Seller Home - Switchr</title>
+  <script src="../js/auth.js"></script>
 </head>
 <body>
   <div>
     <h2>Switchr</h2>
-    <a href="#">My profile</a> |
-    <a href="#">Logout</a>
+    <a href="/profile.html">My profile</a> |
+    <span id="authLinks"><a href="#" onclick="logout()">Logout</a></span>
   </div>
   <hr>
-  <h1>Welcome, [displayName,]!</h1>
+  <h1 id="welcomeMsg">Welcome!</h1>
   <p>Role: SELLER</p>
   <hr>
   <h2>Quick Actions</h2>
@@ -67,6 +68,13 @@
   </table>
   <br>
   <p>Switchr -- Sprint 3 Skeleton for development stagde -- CSE 6214</p>
+
+  <script>
+      const user = getUser();
+      if (user) {
+          document.getElementById('welcomeMsg').textContent = 'Welcome, ' + user.username + '!';
+      }
+  </script>
 
 </body>
 </html>
