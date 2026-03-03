@@ -40,6 +40,21 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS listings (
+            id SERIAL PRIMARY KEY,
+            seller_id INTEGER REFERENCES users(id),
+            title VARCHAR(100) NOT NULL,
+            description TEXT NOT NULL,
+            category VARCHAR(50) NOT NULL,
+            price NUMERIC(10, 2) NOT NULL,
+            condition VARCHAR(20) NOT NULL,
+            listing_type VARCHAR(10) NOT NULL,
+            status VARCHAR(20) DEFAULT 'ACTIVE',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     conn.close()
 
 # Token required decorator
@@ -175,7 +190,58 @@ def serve_frontend(filename):
 
 
 # ============ MAIN ============
+@app.route('/api/listings', methods=['POST'])
+@token_required
+def create_listing():
+    data = request.get_json()
 
+    title = data.get('title', '').strip()
+    description = data.get('description', '').strip()
+    category = data.get('category', '')
+    price = data.get('price')
+    condition = data.get('condition', '')
+    listing_type = data.get('listingType', '')
+
+    if not title or not description or not category or not price or not condition or not listing_type:
+        return jsonify({'error': 'All fields are required'}), 400
+
+    if len(title) > 100:
+        return jsonify({'error': 'Title must be 100 characters or less'}), 400
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''INSERT INTO listings 
+               (seller_id, title, description, category, price, condition, listing_type)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)
+               RETURNING *''',
+            (request.user_id, title, description, category, float(price), condition, listing_type)
+        )
+        listing = cur.fetchone()
+        conn.close()
+        return jsonify({'message': 'Listing created successfully', 'listing': listing}), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/listings', methods=['GET'])
+@token_required
+def get_seller_listings():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            'SELECT * FROM listings WHERE seller_id = %s ORDER BY created_at DESC',
+            (request.user_id,)
+        )
+        listings = cur.fetchall()
+        conn.close()
+        return jsonify({'listings': listings})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, port=5000)
