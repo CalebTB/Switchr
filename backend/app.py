@@ -236,8 +236,16 @@ def get_seller_listings():
             'SELECT * FROM listings WHERE seller_id = %s ORDER BY created_at DESC',
             (request.user_id,)
         )
-        listings = cur.fetchall()
+        rows = cur.fetchall()
         conn.close()
+        listings = []
+        for row in rows:
+            d = dict(row)
+            if d.get('created_at'):
+                d['created_at'] = d['created_at'].strftime('%Y-%m-%d')
+            if d.get('updated_at'):
+                d['updated_at'] = d['updated_at'].strftime('%Y-%m-%d')
+            listings.append(d)
         return jsonify({'listings': listings})
 
     except Exception as e:
