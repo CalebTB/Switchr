@@ -1,0 +1,155 @@
+<!-- offers.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Switchr - My Offers</title>
+    <script src="js/auth.js"></script>
+</head>
+
+<body>
+
+    <!-- Header / Navigation -->
+    <header>
+        <h2>Switchr</h2>
+
+        <nav>
+            <a href="/Buyer/buyer.html">Browse</a> |
+            <a href="/offers.html">Offers</a> |
+            <a href="#">Messages</a> |
+            <a href="/profile.html">Profile</a>
+        </nav>
+
+        <div id="authLinks">
+            <a href="/login.html">Login</a> |
+            <a href="/register.html">Sign Up</a>
+        </div>
+
+        <hr>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <h1>My Offers</h1>
+        <p>This page shows incoming and outgoing offers. (Skeleton only — no functionality.)</p>
+
+        <div style="display: flex; gap: 20px;">
+
+            <!-- Incoming Offers -->
+            <section style="flex: 1; border: 1px solid black; padding: 10px;">
+                <h3>Incoming Offers</h3>
+                <p>Offers other users have made on your listings.</p>
+
+                <table border="1" cellpadding="6" cellspacing="0" style="width: 100%;">
+                    <tr>
+                        <th>Offer ID</th>
+                        <th>Listing</th>
+                        <th>Type</th>
+                        <th>Value / Cash Added</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+
+                    <tr>
+                        <td>OFF-1001</td>
+                        <td>MacBook Air M1</td>
+                        <td>Trade</td>
+                        <td>Items + $50 (simulated)</td>
+                        <td>Pending</td>
+                        <td><a href="offer_detail.html">View</a></td>
+                    </tr>
+
+                    <tr>
+                        <td>OFF-1002</td>
+                        <td>iPhone 13 - 128GB</td>
+                        <td>Purchase</td>
+                        <td>$399</td>
+                        <td>Pending</td>
+                        <td><a href="offer_detail.html">View</a></td>
+                    </tr>
+
+                    <tr>
+                        <td>OFF-1003</td>
+                        <td>Sony WH-1000XM4</td>
+                        <td>Trade</td>
+                        <td>Item swap (no cash)</td>
+                        <td>Countered</td>
+                        <td><a href="offer_detail.html">View</a></td>
+                    </tr>
+                </table>
+
+                <br>
+
+                <p><strong>Seller Actions (placeholder):</strong></p>
+                <button type="button">Accept (placeholder)</button>
+                <button type="button">Reject (placeholder)</button>
+                <button type="button">Counter (placeholder)</button>
+            </section>
+
+            <!-- Outgoing Offers -->
+            <section style="flex: 1; border: 1px solid black; padding: 10px;">
+                <h3>Outgoing Offers</h3>
+                <p>Offers you have made on other users' listings.</p>
+
+                <table border="1" cellpadding="6" cellspacing="0" style="width: 100%;">
+                    <tr>
+                        <th>Offer ID</th>
+                        <th>Listing</th>
+                        <th>Type</th>
+                        <th>Value / Cash Added</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+
+                    <tr>
+                        <td>OFF-2001</td>
+                        <td>iPad Pro 11"</td>
+                        <td>Trade</td>
+                        <td>My listing + $0</td>
+                        <td>Pending</td>
+                        <td><a href="offer_detail.html">View</a></td>
+                    </tr>
+
+                    <tr>
+                        <td>OFF-2002</td>
+                        <td>Gaming Headset</td>
+                        <td>Purchase</td>
+                        <td>$70</td>
+                        <td>Rejected</td>
+                        <td><a href="offer_detail.html">View</a></td>
+                    </tr>
+                </table>
+
+                <br>
+
+                <p><strong>Buyer/Trader Actions (placeholder):</strong></p>
+                <button type="button">Cancel Offer (placeholder)</button>
+                <button type="button">Accept Counter (placeholder)</button>
+                <button type="button">Reject Counter (placeholder)</button>
+            </section>
+
+        </div>
+
+    </main>
+
+    <footer style="margin-top: 20px; border-top: 1px solid black; padding: 10px;">
+        <p>
+            <a href="terms.html">Terms</a> |
+            <a href="privacy.html">Privacy</a> |
+            <a href="#">Help</a>
+        </p>
+
+        <p style="font-size: 12px;">
+            Switchr Marketplace - Skeleton Version
+        </p>
+    </footer>
+
+    <script>
+        const authLinks = document.getElementById('authLinks');
+        if (isLoggedIn()) {
+            const user = getUser();
+            authLinks.innerHTML = '<span>' + (user ? user.username : 'User') + '</span> | <a href="#" onclick="logout()">Logout</a>';
+        }
+    </script>
+
+</body>
+</html>

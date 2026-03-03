@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Switchr - Login</title>
+    <title>Switchr - Sign Up</title>
     <script src="js/auth.js"></script>
 </head>
 
@@ -28,14 +28,19 @@
     <!-- Main Content -->
     <main>
 
-        <h1>Login</h1>
+        <h1>Sign Up</h1>
 
         <section style="border: 1px solid black; padding: 20px; width: 350px;">
 
-            <form id="loginForm" onsubmit="handleLogin(event)">
+            <form id="registerForm" onsubmit="handleRegister(event)">
 
                 <label><strong>Email</strong></label><br>
                 <input type="email" id="email" placeholder="Enter email" style="width: 100%; padding: 5px;" required>
+
+                <br><br>
+
+                <label><strong>Username</strong></label><br>
+                <input type="text" id="username" placeholder="Enter username" style="width: 100%; padding: 5px;" required>
 
                 <br><br>
 
@@ -44,19 +49,20 @@
 
                 <br><br>
 
+                <label><strong>Confirm Password</strong></label><br>
+                <input type="password" id="confirmPassword" placeholder="Confirm password" style="width: 100%; padding: 5px;" required>
+
+                <br><br>
+
                 <p id="errorMessage" style="color: red; display: none;"></p>
 
-                <button type="submit" style="width: 100%; padding: 8px;">Login</button>
+                <button type="submit" style="width: 100%; padding: 8px;">Sign Up</button>
 
             </form>
 
-            <br>
-
-            <p><a href="#">Forgot Password?</a></p>
-
             <hr>
 
-            <p>Don't have an account? <a href="register.html">Sign Up</a></p>
+            <p>Already have an account? <a href="login.html">Login</a></p>
 
         </section>
 
@@ -80,24 +86,33 @@
         // Redirect if already logged in
         redirectIfLoggedIn();
 
-        async function handleLogin(event) {
+        async function handleRegister(event) {
             event.preventDefault();
 
             const email = document.getElementById('email').value;
+            const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
             const errorMessage = document.getElementById('errorMessage');
 
             errorMessage.style.display = 'none';
 
-            const result = await login(email, password);
+            if (password !== confirmPassword) {
+                errorMessage.textContent = 'Passwords do not match';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 8) {
+                errorMessage.textContent = 'Password must be at least 8 characters';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            const result = await register(email, username, password);
 
             if (result.success) {
-                // Redirect based on role
-                if (result.user.role === 'admin') {
-                    window.location.href = '/Admin/admin.html';
-                } else {
-                    window.location.href = '/';
-                }
+                window.location.href = '/';
             } else {
                 errorMessage.textContent = result.error;
                 errorMessage.style.display = 'block';

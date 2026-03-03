@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Switchr Admin Dashboard</title>
+    <script src="../js/auth.js"></script>
 </head>
 
 <body>
@@ -17,9 +18,9 @@
             <a href="#">Users</a>
         </nav>
 
-        <div>
+        <div id="authLinks">
             <span>Logged in as: admin@switchr.com</span> |
-            <a href="#">Logout</a>
+            <a href="#" onclick="logout()">Logout</a>
         </div>
 
         <hr>
@@ -196,6 +197,14 @@
         </p>
     
     </footer>
+
+    <script>
+        const authLinks = document.getElementById('authLinks');
+        const user = getUser();
+        if (user) {
+            authLinks.innerHTML = '<span>Logged in as: ' + user.email + '</span> | <a href="#" onclick="logout()">Logout</a>';
+        }
+    </script>
 
 </body>
 

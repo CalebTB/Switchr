@@ -4,26 +4,287 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Seller Home - Switchr</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f7f6f3;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    nav {
+      background: #1a1a1a;
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav .brand {
+      font-family: 'Syne', sans-serif;
+      color: #f0e040;
+      font-size: 22px;
+      text-decoration: none;
+      letter-spacing: 1px;
+    }
+
+    nav .nav-links a {
+      color: #ccc;
+      text-decoration: none;
+      margin-left: 20px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    nav .nav-links a:hover { color: white; }
+
+    .header-bar {
+      background: #fff;
+      border-bottom: 3px solid #f0e040;
+      padding: 24px 32px;
+    }
+
+    .header-bar h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+    }
+
+    .header-bar .meta {
+      margin-top: 4px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .badge.seller { background: #1a1a1a; color: #f0e040; }
+    .badge.active { background: #e6f4ea; color: #2d7a3a; }
+    .badge.pending { background: #fff3e0; color: #b36200; }
+    .badge.sold { background: #e8eaf6; color: #3949ab; }
+    .badge.traded { background: #f3e5f5; color: #6a1b9a; }
+
+    .main {
+      max-width: 1100px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+
+    .error-banner {
+      background: #fce4ec;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+      border-radius: 4px;
+      padding: 10px 14px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .action-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 18px 22px;
+      text-decoration: none;
+      color: #1a1a1a;
+      font-size: 14px;
+      font-weight: 500;
+      flex: 1;
+      min-width: 160px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .action-card:hover { border-color: #f0e040; }
+
+    .action-card .card-label {
+      font-size: 11px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .action-card.primary {
+      background: #1a1a1a;
+      color: white;
+      border-color: #1a1a1a;
+    }
+
+    .action-card.primary .card-label { color: #f0e040; }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .section-head h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-row select,
+    .filter-row input {
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #e0e0e0;
+      font-size: 13px;
+    }
+
+    thead { background: #1a1a1a; color: white; }
+
+    th {
+      padding: 11px 14px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 12px;
+      letter-spacing: 0.3px;
+    }
+
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #333;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafaf7; }
+
+    .tbl-actions a {
+      color: #1a1a1a;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      margin-right: 4px;
+      cursor: pointer;
+    }
+
+    .tbl-actions a:hover { border-color: #1a1a1a; }
+    .tbl-actions a.del { color: #c62828; }
+    .tbl-actions a.del:hover { border-color: #c62828; }
+
+    .empty-msg {
+      text-align: center;
+      color: #aaa;
+      font-style: italic;
+      padding: 28px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 48px;
+    }
+  </style>
 </head>
 <body>
-  <div>
-    <h2>Switchr</h2>
-    <a href="#">My profile</a> |
-    <a href="#">Logout</a>
+
+<nav>
+  <a class="brand" href="/SkeletonPages/Seller/Seller_Home.html">Switchr</a>
+  <div class="nav-links">
+    <a href="/SkeletonPages/profile.html">My Profile</a>
+    <a href="#" onclick="logout()">Logout</a>
   </div>
-  <hr>
-  <h1>Welcome, [displayName,]!</h1>
-  <p>Role: SELLER</p>
-  <hr>
-  <h2>Quick Actions</h2>
-  <ul>
-    <li><a href="Seller_Create_Listing.html">Create a New Listing</a></li>
-    <li><a href="#">View my offers</a></li>
-    <li><a href="#">Transaction history</a></li>
-  </ul>
-  <hr>
-  <h2>My Listings</h2>
-  <table border="1" cellpadding="6" cellspacing="0">
+</nav>
+
+<div class="header-bar">
+  <h1>Welcome back, <span id="displayName">...</span></h1>
+  <p class="meta">
+    <span id="userEmail"></span>
+    <span class="badge seller">SELLER</span>
+    <span class="badge active">ACTIVE</span>
+  </p>
+</div>
+
+<div class="main">
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="actions-row">
+    <a class="action-card primary" href="/SkeletonPages/Seller/Seller_Create_Listing.html">
+      <div class="card-label">New</div>
+      + Create Listing
+    </a>
+    <a class="action-card" href="#">
+      <div class="card-label">Incoming</div>
+      View My Offers
+    </a>
+    <a class="action-card" href="#">
+      <div class="card-label">Past activity</div>
+      Transaction History
+    </a>
+    <a class="action-card" href="/SkeletonPages/profile.html">
+      <div class="card-label">Account</div>
+      My Profile
+    </a>
+  </div>
+
+  <div class="section-head">
+    <h2>My Listings</h2>
+  </div>
+
+  <div class="filter-row">
+    <select id="filterStatus" onchange="filterTable()">
+      <option value="">All Statuses</option>
+      <option value="ACTIVE">ACTIVE</option>
+      <option value="PENDING_APPROVAL">PENDING_APPROVAL</option>
+      <option value="SOLD">SOLD</option>
+      <option value="TRADED">TRADED</option>
+    </select>
+    <select id="filterType" onchange="filterTable()">
+      <option value="">All Types</option>
+      <option value="SALE">SALE</option>
+      <option value="TRADE">TRADE</option>
+      <option value="BOTH">BOTH</option>
+    </select>
+    <input type="text" id="filterSearch" placeholder="Search by title..." oninput="filterTable()">
+  </div>
+
+  <table id="listingsTable">
     <thead>
       <tr>
         <th>listingId</th>
@@ -31,42 +292,111 @@
         <th>Category</th>
         <th>Price</th>
         <th>Condition</th>
-        <th>Listing Type</th>
+        <th>Type</th>
         <th>Status</th>
         <th>Created At</th>
+        <th>Updated At</th>
         <th>Actions</th>
       </tr>
     </thead>
-    <tbody>
+    <tbody id="listingsBody">
       <tr>
-        <td>L001</td>
-        <td>iPhone 13 Pro</td>
-        <td>Phones</td>
-        <td>$450</td>
-        <td>GOOD</td>
-        <td>SALE</td>
-        <td>ACTIVE</td>
-        <td>2025-01-10</td>
-        <td><a href="#">Edit</a> | <a href="#">Delete</a></td>
-      </tr>
-      <tr>
-        <td>L002</td>
-        <td>MacBook Air M1</td>
-        <td>Laptops</td>
-        <td>$700</td>
-        <td>LIKE_NEW</td>
-        <td>TRADE</td>
-        <td>ACTIVE</td>
-        <td>2025-01-12</td>
-        <td><a href="#">Edit</a> | <a href="#">Delete</a></td>
-      </tr>
-      <tr>
-        <td colspan="9"><i>Listings will load from database</i></td>
+        <td colspan="10" class="empty-msg">Loading listings...</td>
       </tr>
     </tbody>
   </table>
-  <br>
-  <p>Switchr -- Sprint 3 Skeleton for development stagde -- CSE 6214</p>
+
+</div>
+
+<footer>Switchr &mdash; Sprint 3 &mdash; CSE 4214</footer>
+
+<script>
+  // check auth on page load
+  var token = localStorage.getItem('token');
+  var user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (!token) {
+    window.location.href = '/SkeletonPages/login.html';
+  }
+
+  // show user info
+  document.getElementById('displayName').textContent = user.username || 'Seller';
+  document.getElementById('userEmail').textContent = user.email || '';
+
+  // load listings from API
+  fetch('/api/listings', {
+    headers: {
+      'Authorization': 'Bearer ' + token
+    }
+  })
+  .then(function(res) {
+    if (res.status === 401) {
+      window.location.href = '/SkeletonPages/login.html';
+      return;
+    }
+    return res.json();
+  })
+  .then(function(data) {
+    var tbody = document.getElementById('listingsBody');
+
+    if (!data || !data.listings || data.listings.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" class="empty-msg">No listings yet. Create one above!</td></tr>';
+      return;
+    }
+
+    var html = '';
+    data.listings.forEach(function(l) {
+      var statusClass = l.status ? l.status.toLowerCase() : 'active';
+      html += '<tr>';
+      html += '<td>' + l.id + '</td>';
+      html += '<td>' + l.title + '</td>';
+      html += '<td>' + l.category + '</td>';
+      html += '<td>$' + parseFloat(l.price).toFixed(2) + '</td>';
+      html += '<td>' + l.condition + '</td>';
+      html += '<td>' + l.listing_type + '</td>';
+      html += '<td><span class="badge ' + statusClass + '">' + l.status + '</span></td>';
+      html += '<td>' + (l.created_at ? l.created_at.replace('T', ' ').split(' ')[0] : '') + '</td>';
+      html += '<td>' + (l.updated_at ? l.updated_at.replace('T', ' ').split(' ')[0] : '') + '</td>';
+      html += '<td class="tbl-actions"><a href="#">Edit</a><a href="#" class="del">Delete</a></td>';
+      html += '</tr>';
+    });
+
+    tbody.innerHTML = html;
+  })
+  .catch(function(err) {
+    var banner = document.getElementById('errorBanner');
+    banner.textContent = 'Could not load listings. Please try again.';
+    banner.style.display = 'block';
+  });
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/SkeletonPages/login.html';
+  }
+
+  function filterTable() {
+    var status = document.getElementById('filterStatus').value.toLowerCase();
+    var type = document.getElementById('filterType').value.toLowerCase();
+    var search = document.getElementById('filterSearch').value.toLowerCase();
+    var rows = document.querySelectorAll('#listingsTable tbody tr');
+
+    rows.forEach(function(row) {
+      var cells = row.querySelectorAll('td');
+      if (cells.length < 7) return;
+      var rowStatus = cells[6].innerText.toLowerCase();
+      var rowType = cells[5].innerText.toLowerCase();
+      var rowTitle = cells[1].innerText.toLowerCase();
+
+      var show = true;
+      if (status && rowStatus.indexOf(status) === -1) show = false;
+      if (type && rowType.indexOf(type) === -1) show = false;
+      if (search && rowTitle.indexOf(search) === -1) show = false;
+
+      row.style.display = show ? '' : 'none';
+    });
+  }
+</script>
 
 </body>
 </html>
