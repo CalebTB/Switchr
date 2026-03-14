@@ -363,6 +363,87 @@ def get_seller_listings():
         return jsonify({'error': str(e)}), 500
 
 
+# Edit a listing - seller can edit their own listing
+@app.route('/api/listings/<int:listing_id>', methods=['PUT'])
+@approved_required
+def edit_listing(listing_id):
+    data = request.get_json()
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Get the existing listing and verify ownership
+        cur.execute('SELECT * FROM listings WHERE id = %s AND seller_id = %s', (listing_id, request.user_id))
+        listing = cur.fetchone()
+
+        if not listing:
+            conn.close()
+            return jsonify({'error': 'Listing not found'}), 404
+
+        title = data.get('title', listing['title']).strip()
+        description = data.get('description', listing['description']).strip()
+        category = data.get('category', listing['category'])
+        price = data.get('price', float(listing['price']))
+        condition = data.get('condition', listing['condition'])
+        listing_type = data.get('listingType', listing['listing_type'])
+
+        if len(title) > 100:
+            conn.close()
+            return jsonify({'error': 'Title must be 100 characters or less'}), 400
+
+        # If listing is ACTIVE and title or description changed, needs re-approval
+        new_status = listing['status']
+        if listing['status'] == 'ACTIVE':
+            if title != listing['title'] or description != listing['description']:
+                new_status = 'PENDING_APPROVAL'
+
+        # If listing is PENDING_APPROVAL or DENIED, stays PENDING_APPROVAL (free edits)
+        if listing['status'] in ('PENDING_APPROVAL', 'DENIED'):
+            new_status = 'PENDING_APPROVAL'
+
+        cur.execute(
+            '''UPDATE listings
+               SET title = %s, description = %s, category = %s, price = %s,
+                   condition = %s, listing_type = %s, status = %s,
+                   denial_reason = NULL, updated_at = CURRENT_TIMESTAMP
+               WHERE id = %s
+               RETURNING *''',
+            (title, description, category, float(price), condition, listing_type, new_status, listing_id)
+        )
+        updated = cur.fetchone()
+        conn.close()
+
+        msg = 'Listing updated'
+        if new_status == 'PENDING_APPROVAL' and listing['status'] == 'ACTIVE':
+            msg = 'Listing updated and sent back for approval'
+
+        return jsonify({'message': msg, 'listing': format_listing(updated)})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Get a single listing by ID (for edit form)
+@app.route('/api/listings/<int:listing_id>', methods=['GET'])
+@approved_required
+def get_listing(listing_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('SELECT * FROM listings WHERE id = %s AND seller_id = %s', (listing_id, request.user_id))
+        listing = cur.fetchone()
+        conn.close()
+
+        if not listing:
+            return jsonify({'error': 'Listing not found'}), 404
+
+        return jsonify({'listing': format_listing(listing)})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # Public route - buyers browse only ACTIVE (approved) listings
 @app.route('/api/listings/browse', methods=['GET'])
 def browse_listings():
@@ -616,4 +697,5 @@ def serve_frontend(filename):
 # ============ MAIN ============
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True, port=5000)
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=(os.getenv('RENDER') is None))
