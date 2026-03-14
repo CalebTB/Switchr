@@ -54,7 +54,17 @@
 
                 <br><br>
 
+                <label><strong>Role</strong></label><br>
+                <select id="role" style="width: 100%; padding: 5px;" required>
+                    <option value="user">Buyer</option>
+                    <option value="seller">Seller</option>
+                    <option value="admin">Admin</option>
+                </select>
+
+                <br><br>
+
                 <p id="errorMessage" style="color: red; display: none;"></p>
+                <p id="successMessage" style="color: green; display: none;"></p>
 
                 <button type="submit" style="width: 100%; padding: 8px;">Sign Up</button>
 
@@ -109,10 +119,19 @@
                 return;
             }
 
-            const result = await register(email, username, password);
+            const role = document.getElementById('role').value;
+
+            const result = await register(email, username, password, role);
 
             if (result.success) {
-                window.location.href = '/';
+                if (result.user.role === 'admin') {
+                    window.location.href = '/Admin/admin.html';
+                } else {
+                    // Buyer/Seller accounts are pending approval
+                    document.getElementById('successMessage').textContent = 'Account created! Your account is pending admin approval. You can browse listings but cannot buy, sell, or trade until approved.';
+                    document.getElementById('successMessage').style.display = 'block';
+                    document.getElementById('registerForm').style.display = 'none';
+                }
             } else {
                 errorMessage.textContent = result.error;
                 errorMessage.style.display = 'block';

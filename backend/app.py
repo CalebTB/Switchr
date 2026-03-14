@@ -37,6 +37,8 @@ def init_db():
             username VARCHAR(50) UNIQUE NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
             role VARCHAR(20) DEFAULT 'user',
+            status VARCHAR(20) DEFAULT 'pending',
+            denial_reason TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -50,20 +52,47 @@ def init_db():
             price NUMERIC(10, 2) NOT NULL,
             condition VARCHAR(20) NOT NULL,
             listing_type VARCHAR(10) NOT NULL,
-            status VARCHAR(20) DEFAULT 'ACTIVE',
+            status VARCHAR(20) DEFAULT 'PENDING_APPROVAL',
+            denial_reason TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    # Add columns if tables already exist without them
+    cur.execute('''
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'listings' AND column_name = 'denial_reason'
+            ) THEN
+                ALTER TABLE listings ADD COLUMN denial_reason TEXT;
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'users' AND column_name = 'status'
+            ) THEN
+                ALTER TABLE users ADD COLUMN status VARCHAR(20) DEFAULT 'pending';
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'users' AND column_name = 'denial_reason'
+            ) THEN
+                ALTER TABLE users ADD COLUMN denial_reason TEXT;
+            END IF;
+        END $$;
+    ''')
+    cur.execute('''
+        ALTER TABLE listings ALTER COLUMN status SET DEFAULT 'PENDING_APPROVAL'
+    ''')
     conn.close()
 
-# Token required decorator
+# Token required decorator - just checks valid login
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
 
-        # Get token from Authorization header
         if 'Authorization' in request.headers:
             auth_header = request.headers['Authorization']
             if auth_header.startswith('Bearer '):
@@ -85,6 +114,76 @@ def token_required(f):
         return f(*args, **kwargs)
     return decorated
 
+# Approved user required - must be logged in AND account approved by admin
+def approved_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            if auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            request.user_id = payload['user_id']
+            request.user_email = payload['email']
+            request.user_role = payload['role']
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token has expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 401
+
+        # Check account approval status from DB
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('SELECT status FROM users WHERE id = %s', (request.user_id,))
+        user = cur.fetchone()
+        conn.close()
+
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        if user['status'] != 'approved':
+            return jsonify({'error': 'Account not yet approved by admin'}), 403
+
+        return f(*args, **kwargs)
+    return decorated
+
+# Admin required decorator
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        if 'Authorization' in request.headers:
+            auth_header = request.headers['Authorization']
+            if auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 401
+
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            request.user_id = payload['user_id']
+            request.user_email = payload['email']
+            request.user_role = payload['role']
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token has expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 401
+
+        if request.user_role != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+
+        return f(*args, **kwargs)
+    return decorated
+
 # Generate JWT token
 def generate_token(user):
     payload = {
@@ -94,6 +193,15 @@ def generate_token(user):
         'exp': datetime.now(timezone.utc) + timedelta(hours=24)
     }
     return jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+
+# Helper to format listing dates for JSON
+def format_listing(row):
+    d = dict(row)
+    if d.get('created_at'):
+        d['created_at'] = d['created_at'].strftime('%Y-%m-%d')
+    if d.get('updated_at'):
+        d['updated_at'] = d['updated_at'].strftime('%Y-%m-%d')
+    return d
 
 
 # ============ AUTH ROUTES ============
@@ -105,9 +213,16 @@ def register():
     email = data.get('email')
     username = data.get('username')
     password = data.get('password')
+    role = data.get('role', 'user')
 
     if not email or not username or not password:
         return jsonify({'error': 'Email, username, and password are required'}), 400
+
+    if role not in ('user', 'seller', 'admin'):
+        return jsonify({'error': 'Invalid role'}), 400
+
+    # Admins are auto-approved, buyers/sellers need admin approval
+    status = 'approved' if role == 'admin' else 'pending'
 
     # Hash password
     password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -116,14 +231,23 @@ def register():
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(
-            'INSERT INTO users (email, username, password_hash) VALUES (%s, %s, %s) RETURNING id, email, username, role',
-            (email, username, password_hash)
+            'INSERT INTO users (email, username, password_hash, role, status) VALUES (%s, %s, %s, %s, %s) RETURNING id, email, username, role, status',
+            (email, username, password_hash, role, status)
         )
         user = cur.fetchone()
         conn.close()
 
         token = generate_token(user)
-        return jsonify({'token': token, 'user': {'id': user['id'], 'email': user['email'], 'username': user['username'], 'role': user['role']}}), 201
+        return jsonify({
+            'token': token,
+            'user': {
+                'id': user['id'],
+                'email': user['email'],
+                'username': user['username'],
+                'role': user['role'],
+                'status': user['status']
+            }
+        }), 201
 
     except psycopg2.errors.UniqueViolation:
         return jsonify({'error': 'Email or username already exists'}), 409
@@ -158,7 +282,9 @@ def login():
             'id': user['id'],
             'email': user['email'],
             'username': user['username'],
-            'role': user['role']
+            'role': user['role'],
+            'status': user['status'],
+            'denial_reason': user.get('denial_reason')
         }
     })
 
@@ -168,7 +294,7 @@ def login():
 def get_current_user():
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute('SELECT id, email, username, role, created_at FROM users WHERE id = %s', (request.user_id,))
+    cur.execute('SELECT id, email, username, role, status, denial_reason, created_at FROM users WHERE id = %s', (request.user_id,))
     user = cur.fetchone()
     conn.close()
 
@@ -178,20 +304,11 @@ def get_current_user():
     return jsonify({'user': user})
 
 
-# ============ FRONTEND ROUTES ============
+# ============ LISTING ROUTES ============
 
-@app.route('/')
-def index():
-    return send_from_directory(os.path.join(FRONTEND_DIR, 'Buyer'), 'buyer.html')
-
-@app.route('/<path:filename>')
-def serve_frontend(filename):
-    return send_from_directory(FRONTEND_DIR, filename)
-
-
-# ============ MAIN ============
+# Create listing - requires approved account
 @app.route('/api/listings', methods=['POST'])
-@token_required
+@approved_required
 def create_listing():
     data = request.get_json()
 
@@ -212,22 +329,23 @@ def create_listing():
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(
-            '''INSERT INTO listings 
-               (seller_id, title, description, category, price, condition, listing_type)
-               VALUES (%s, %s, %s, %s, %s, %s, %s)
+            '''INSERT INTO listings
+               (seller_id, title, description, category, price, condition, listing_type, status)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, 'PENDING_APPROVAL')
                RETURNING *''',
             (request.user_id, title, description, category, float(price), condition, listing_type)
         )
         listing = cur.fetchone()
         conn.close()
-        return jsonify({'message': 'Listing created successfully', 'listing': listing}), 201
+        return jsonify({'message': 'Listing submitted for approval', 'listing': format_listing(listing)}), 201
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
+# Get seller's own listings - requires approved account
 @app.route('/api/listings', methods=['GET'])
-@token_required
+@approved_required
 def get_seller_listings():
     try:
         conn = get_db()
@@ -238,18 +356,264 @@ def get_seller_listings():
         )
         rows = cur.fetchall()
         conn.close()
-        listings = []
-        for row in rows:
-            d = dict(row)
-            if d.get('created_at'):
-                d['created_at'] = d['created_at'].strftime('%Y-%m-%d')
-            if d.get('updated_at'):
-                d['updated_at'] = d['updated_at'].strftime('%Y-%m-%d')
-            listings.append(d)
+        listings = [format_listing(row) for row in rows]
         return jsonify({'listings': listings})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# Public route - buyers browse only ACTIVE (approved) listings
+@app.route('/api/listings/browse', methods=['GET'])
+def browse_listings():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''SELECT l.*, u.username as seller_username
+               FROM listings l
+               JOIN users u ON l.seller_id = u.id
+               WHERE l.status = 'ACTIVE'
+               ORDER BY l.created_at DESC'''
+        )
+        rows = cur.fetchall()
+        conn.close()
+        listings = [format_listing(row) for row in rows]
+        return jsonify({'listings': listings})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ============ ADMIN ROUTES ============
+
+# Get platform stats
+@app.route('/api/admin/stats', methods=['GET'])
+@admin_required
+def admin_stats():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cur.execute('SELECT COUNT(*) as count FROM users')
+        total_users = cur.fetchone()['count']
+
+        cur.execute("SELECT COUNT(*) as count FROM users WHERE status = 'pending'")
+        pending_users = cur.fetchone()['count']
+
+        cur.execute("SELECT COUNT(*) as count FROM listings WHERE status = 'ACTIVE'")
+        active_listings = cur.fetchone()['count']
+
+        cur.execute("SELECT COUNT(*) as count FROM listings WHERE status = 'PENDING_APPROVAL'")
+        pending_approvals = cur.fetchone()['count']
+
+        cur.execute('SELECT COUNT(*) as count FROM listings')
+        total_listings = cur.fetchone()['count']
+
+        conn.close()
+
+        return jsonify({
+            'total_users': total_users,
+            'pending_users': pending_users,
+            'active_listings': active_listings,
+            'pending_approvals': pending_approvals,
+            'total_listings': total_listings
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Get all users (admin oversight)
+@app.route('/api/admin/users', methods=['GET'])
+@admin_required
+def admin_get_users():
+    status_filter = request.args.get('status', '')
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        if status_filter:
+            cur.execute(
+                'SELECT id, email, username, role, status, denial_reason, created_at FROM users WHERE status = %s ORDER BY created_at DESC',
+                (status_filter,)
+            )
+        else:
+            cur.execute('SELECT id, email, username, role, status, denial_reason, created_at FROM users ORDER BY created_at DESC')
+
+        rows = cur.fetchall()
+        conn.close()
+
+        users = []
+        for row in rows:
+            d = dict(row)
+            if d.get('created_at'):
+                d['created_at'] = d['created_at'].strftime('%Y-%m-%d')
+            users.append(d)
+
+        return jsonify({'users': users})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Approve a user
+@app.route('/api/admin/users/<int:user_id>/approve', methods=['PUT'])
+@admin_required
+def approve_user(user_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''UPDATE users
+               SET status = 'approved', denial_reason = NULL
+               WHERE id = %s
+               RETURNING id, email, username, role, status''',
+            (user_id,)
+        )
+        user = cur.fetchone()
+        conn.close()
+
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        return jsonify({'message': 'User approved', 'user': dict(user)})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Deny a user
+@app.route('/api/admin/users/<int:user_id>/deny', methods=['PUT'])
+@admin_required
+def deny_user(user_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''UPDATE users
+               SET status = 'denied'
+               WHERE id = %s
+               RETURNING id, email, username, role, status''',
+            (user_id,)
+        )
+        user = cur.fetchone()
+        conn.close()
+
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        return jsonify({'message': 'User denied', 'user': dict(user)})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Get all listings (admin oversight)
+@app.route('/api/admin/listings', methods=['GET'])
+@admin_required
+def admin_get_listings():
+    status_filter = request.args.get('status', '')
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        if status_filter:
+            cur.execute(
+                '''SELECT l.*, u.username as seller_username
+                   FROM listings l
+                   JOIN users u ON l.seller_id = u.id
+                   WHERE l.status = %s
+                   ORDER BY l.created_at DESC''',
+                (status_filter,)
+            )
+        else:
+            cur.execute(
+                '''SELECT l.*, u.username as seller_username
+                   FROM listings l
+                   JOIN users u ON l.seller_id = u.id
+                   ORDER BY l.created_at DESC'''
+            )
+
+        rows = cur.fetchall()
+        conn.close()
+        listings = [format_listing(row) for row in rows]
+        return jsonify({'listings': listings})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Approve a listing
+@app.route('/api/admin/listings/<int:listing_id>/approve', methods=['PUT'])
+@admin_required
+def approve_listing(listing_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''UPDATE listings
+               SET status = 'ACTIVE', denial_reason = NULL, updated_at = CURRENT_TIMESTAMP
+               WHERE id = %s
+               RETURNING *''',
+            (listing_id,)
+        )
+        listing = cur.fetchone()
+        conn.close()
+
+        if not listing:
+            return jsonify({'error': 'Listing not found'}), 404
+
+        return jsonify({'message': 'Listing approved', 'listing': format_listing(listing)})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Deny a listing
+@app.route('/api/admin/listings/<int:listing_id>/deny', methods=['PUT'])
+@admin_required
+def deny_listing(listing_id):
+    data = request.get_json()
+    reason = data.get('reason', '').strip()
+
+    if not reason:
+        return jsonify({'error': 'Denial reason is required'}), 400
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''UPDATE listings
+               SET status = 'DENIED', denial_reason = %s, updated_at = CURRENT_TIMESTAMP
+               WHERE id = %s
+               RETURNING *''',
+            (reason, listing_id)
+        )
+        listing = cur.fetchone()
+        conn.close()
+
+        if not listing:
+            return jsonify({'error': 'Listing not found'}), 404
+
+        return jsonify({'message': 'Listing denied', 'listing': format_listing(listing)})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ============ FRONTEND ROUTES ============
+
+@app.route('/')
+def index():
+    return send_from_directory(os.path.join(FRONTEND_DIR, 'Buyer'), 'buyer.html')
+
+@app.route('/<path:filename>')
+def serve_frontend(filename):
+    return send_from_directory(FRONTEND_DIR, filename)
+
+
+# ============ MAIN ============
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, port=5000)

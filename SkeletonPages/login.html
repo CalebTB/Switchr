@@ -92,9 +92,17 @@
             const result = await login(email, password);
 
             if (result.success) {
-                // Redirect based on role
                 if (result.user.role === 'admin') {
                     window.location.href = '/Admin/admin.html';
+                } else if (result.user.status === 'denied') {
+                    errorMessage.textContent = 'Your account has been denied.';
+                    errorMessage.style.display = 'block';
+                } else if (result.user.status === 'pending') {
+                    errorMessage.style.color = 'orange';
+                    errorMessage.textContent = 'Your account is pending admin approval. You can browse listings but cannot buy, sell, or trade yet.';
+                    errorMessage.style.display = 'block';
+                } else if (result.user.role === 'seller') {
+                    window.location.href = '/Seller/Seller_Home.html';
                 } else {
                     window.location.href = '/';
                 }

@@ -13,13 +13,11 @@
 
         <nav>
             <a href="admin.html">Dashboard</a> |
-            <a href="adminsubpage.html">Pending Approvals</a> |
-            <a href="#">Reports</a> |
-            <a href="#">Users</a>
+            <a href="adminsubpage.html">Pending Listings</a>
         </nav>
 
         <div id="authLinks">
-            <span>Logged in as: admin@switchr.com</span> |
+            <span>Logged in as: admin</span> |
             <a href="#" onclick="logout()">Logout</a>
         </div>
 
@@ -35,174 +33,325 @@
         <section style="border: 1px solid black; padding: 10px; margin-bottom: 20px;">
             <h3>Platform Overview</h3>
 
-            <p>Total Users: <strong>156</strong></p>
-            <p>Active Listings: <strong>89</strong></p>
-            <p>Transactions This Week: <strong>34</strong></p>
-            <p>Pending Approvals: <strong>7</strong></p>
-            <p>Open Reports: <strong>3</strong></p>
+            <p>Total Users: <strong id="statUsers">--</strong></p>
+            <p>Pending Users: <strong id="statPendingUsers">--</strong></p>
+            <p>Active Listings: <strong id="statActive">--</strong></p>
+            <p>Total Listings: <strong id="statTotal">--</strong></p>
+            <p>Pending Listing Approvals: <strong id="statPending">--</strong></p>
+        </section>
+
+        <!-- Pending Users Section -->
+        <section style="border: 1px solid black; padding: 10px; margin-bottom: 20px;">
+            <h3>Pending User Approvals</h3>
+
+            <p id="userStatusMessage" style="display: none; padding: 8px; margin-bottom: 10px;"></p>
+
+            <table border="1" cellpadding="5" cellspacing="0" style="width: 100%;">
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+                <tbody id="pendingUsersBody">
+                    <tr><td colspan="6">Loading...</td></tr>
+                </tbody>
+            </table>
         </section>
 
         <!-- Two-column layout -->
         <div style="display: flex; gap: 20px;">
 
-            <!-- Pending Approvals -->
+            <!-- Pending Listing Approvals Preview -->
             <section style="flex: 1; border: 1px solid black; padding: 10px;">
                 <h3>Pending Listing Approvals</h3>
-                <p><a href="adminsubpage.html">View All (7)</a></p>
+                <p><a href="adminsubpage.html">View All</a></p>
 
-                <!-- Pending Item 1 -->
-                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
-                    <div style="display: flex; gap: 10px;">
-                        <div style="width: 80px; height: 60px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
-                            IMG
-                        </div>
-
-                        <div>
-                            <h4 style="margin: 0;">Samsung Galaxy S22</h4>
-                            <p style="margin: 5px 0;">Seller: john_doe</p>
-                            <p style="margin: 5px 0;">Submitted: 2 hours ago</p>
-                            <a href="adminsubpage.html">Review</a>
-                        </div>
-                    </div>
-                </article>
-
-                <!-- Pending Item 2 -->
-                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
-                    <div style="display: flex; gap: 10px;">
-                        <div style="width: 80px; height: 60px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
-                            IMG
-                        </div>
-
-                        <div>
-                            <h4 style="margin: 0;">iPad Pro 11"</h4>
-                            <p style="margin: 5px 0;">Seller: jane_smith</p>
-                            <p style="margin: 5px 0;">Submitted: 5 hours ago</p>
-                            <a href="adminsubpage.html">Review</a>
-                        </div>
-                    </div>
-                </article>
-
-                <!-- Pending Item 3 -->
-                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
-                    <div style="display: flex; gap: 10px;">
-                        <div style="width: 80px; height: 60px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
-                            IMG
-                        </div>
-
-                        <div>
-                            <h4 style="margin: 0;">AirPods Pro 2</h4>
-                            <p style="margin: 5px 0;">Seller: mike_tech</p>
-                            <p style="margin: 5px 0;">Submitted: 1 day ago</p>
-                            <a href="adminsubpage.html">Review</a>
-                        </div>
-                    </div>
-                </article>
-
+                <div id="pendingPreview">
+                    <p>Loading...</p>
+                </div>
             </section>
 
-            <!-- Reports Queue -->
+            <!-- All Users Overview -->
             <section style="flex: 1; border: 1px solid black; padding: 10px;">
-                <h3>Recent Reports</h3>
-                <p><a href="#">View All (3)</a></p>
+                <h3>All Users</h3>
 
-                <!-- Report 1 -->
-                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
-                    <h4 style="margin: 0;">Report #1042</h4>
-                    <p style="margin: 5px 0;">Type: Suspicious Listing</p>
-                    <p style="margin: 5px 0;">Reported by: user123</p>
-                    <p style="margin: 5px 0;">Status: Pending Review</p>
-                    <a href="#">View Report</a>
-                </article>
+                <label>Filter: </label>
+                <select id="userStatusFilter" onchange="loadAllUsers()">
+                    <option value="">All</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="denied">Denied</option>
+                </select>
 
-                <!-- Report 2 -->
-                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
-                    <h4 style="margin: 0;">Report #1041</h4>
-                    <p style="margin: 5px 0;">Type: User Misconduct</p>
-                    <p style="margin: 5px 0;">Reported by: seller_pro</p>
-                    <p style="margin: 5px 0;">Status: Pending Review</p>
-                    <a href="#">View Report</a>
-                </article>
+                <br><br>
 
-                <!-- Report 3 -->
-                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
-                    <h4 style="margin: 0;">Report #1040</h4>
-                    <p style="margin: 5px 0;">Type: Prohibited Item</p>
-                    <p style="margin: 5px 0;">Reported by: buyer_22</p>
-                    <p style="margin: 5px 0;">Status: Pending Review</p>
-                    <a href="#">View Report</a>
-                </article>
-
+                <table border="1" cellpadding="5" cellspacing="0" style="width: 100%;">
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                    </tr>
+                    <tbody id="usersBody">
+                        <tr><td colspan="6">Loading...</td></tr>
+                    </tbody>
+                </table>
             </section>
 
         </div>
 
         <br>
 
-        <!-- User Search -->
+        <!-- All Listings Overview -->
         <section style="border: 1px solid black; padding: 10px;">
-            <h3>User Search</h3>
+            <h3>All Listings</h3>
 
-            <form>
-                <input type="text" placeholder="Search by username or email...">
-                <button type="submit">Search</button>
-            </form>
+            <label>Filter by status: </label>
+            <select id="statusFilter" onchange="loadAllListings()">
+                <option value="">All</option>
+                <option value="PENDING_APPROVAL">PENDING_APPROVAL</option>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="DENIED">DENIED</option>
+            </select>
 
-            <br>
+            <br><br>
 
-            <table border="1" cellpadding="5" cellspacing="0">
+            <table border="1" cellpadding="5" cellspacing="0" style="width: 100%;">
                 <tr>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Role</th>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Seller</th>
+                    <th>Category</th>
+                    <th>Price</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th>Created</th>
                 </tr>
-                <tr>
-                    <td>john_doe</td>
-                    <td>john@email.com</td>
-                    <td>Seller</td>
-                    <td>Active</td>
-                    <td><a href="#">View</a> | <a href="#">Suspend</a></td>
-                </tr>
-                <tr>
-                    <td>jane_smith</td>
-                    <td>jane@email.com</td>
-                    <td>Buyer</td>
-                    <td>Active</td>
-                    <td><a href="#">View</a> | <a href="#">Suspend</a></td>
-                </tr>
-                <tr>
-                    <td>bad_actor</td>
-                    <td>bad@email.com</td>
-                    <td>Seller</td>
-                    <td>Suspended</td>
-                    <td><a href="#">View</a> | <a href="#">Unsuspend</a> | <a href="#">Ban</a></td>
-                </tr>
+                <tbody id="allListingsBody">
+                    <tr><td colspan="7">Loading...</td></tr>
+                </tbody>
             </table>
-
         </section>
 
     </main>
 
     <footer style="margin-top: 20px; border-top: 1px solid black; padding: 10px;">
-        
         <p>
             <a href="#">Terms</a> |
             <a href="#">Privacy</a> |
             <a href="#">Help</a>
         </p>
-    
         <p style="font-size: 12px;">
             Switchr Admin Panel - Skeleton Version
         </p>
-    
     </footer>
 
     <script>
-        const authLinks = document.getElementById('authLinks');
-        const user = getUser();
-        if (user) {
+        // Auth gate: admin only
+        if (!requireAdmin()) {
+            // requireAdmin redirects away
+        } else {
+            var token = getToken();
+            var user = getUser();
+
+            var authLinks = document.getElementById('authLinks');
             authLinks.innerHTML = '<span>Logged in as: ' + user.email + '</span> | <a href="#" onclick="logout()">Logout</a>';
+
+            // Load stats
+            authFetch('/admin/stats').then(function(res) {
+                if (!res) return;
+                return res.json();
+            }).then(function(data) {
+                if (!data) return;
+                document.getElementById('statUsers').textContent = data.total_users;
+                document.getElementById('statPendingUsers').textContent = data.pending_users;
+                document.getElementById('statActive').textContent = data.active_listings;
+                document.getElementById('statTotal').textContent = data.total_listings;
+                document.getElementById('statPending').textContent = data.pending_approvals;
+            });
+
+            // Load pending users
+            loadPendingUsers();
+
+            // Load pending listing preview (first 5)
+            authFetch('/admin/listings?status=PENDING_APPROVAL').then(function(res) {
+                if (!res) return;
+                return res.json();
+            }).then(function(data) {
+                if (!data) return;
+                var container = document.getElementById('pendingPreview');
+                var listings = data.listings || [];
+
+                if (listings.length === 0) {
+                    container.innerHTML = '<p>No pending listing approvals.</p>';
+                    return;
+                }
+
+                var html = '';
+                listings.slice(0, 5).forEach(function(l) {
+                    html += '<article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">';
+                    html += '<h4 style="margin: 0;">' + l.title + '</h4>';
+                    html += '<p style="margin: 5px 0;">Seller: ' + l.seller_username + '</p>';
+                    html += '<p style="margin: 5px 0;">Created: ' + l.created_at + '</p>';
+                    html += '<a href="adminsubpage.html">Review</a>';
+                    html += '</article>';
+                });
+
+                container.innerHTML = html;
+            });
+
+            // Load all users table
+            loadAllUsers();
+
+            // Load all listings
+            loadAllListings();
+        }
+
+        function showUserStatus(msg, isError) {
+            var el = document.getElementById('userStatusMessage');
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.style.background = isError ? '#fce4ec' : '#e6f4ea';
+            el.style.color = isError ? '#c62828' : '#2d7a3a';
+            el.style.border = '1px solid ' + (isError ? '#ef9a9a' : '#a5d6a7');
+        }
+
+        function loadPendingUsers() {
+            authFetch('/admin/users?status=pending').then(function(res) {
+                if (!res) return;
+                return res.json();
+            }).then(function(data) {
+                if (!data) return;
+                var tbody = document.getElementById('pendingUsersBody');
+                var users = data.users || [];
+
+                if (users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6">No pending users.</td></tr>';
+                    return;
+                }
+
+                var html = '';
+                users.forEach(function(u) {
+                    html += '<tr id="pending-user-' + u.id + '">';
+                    html += '<td>' + u.id + '</td>';
+                    html += '<td>' + u.username + '</td>';
+                    html += '<td>' + u.email + '</td>';
+                    html += '<td>' + u.role + '</td>';
+                    html += '<td>' + u.created_at + '</td>';
+                    html += '<td>';
+                    html += '<button onclick="approveUser(' + u.id + ')">Approve</button> ';
+                    html += '<button onclick="denyUser(' + u.id + ')">Deny</button>';
+                    html += '</td>';
+                    html += '</tr>';
+                });
+
+                tbody.innerHTML = html;
+            });
+        }
+
+        function approveUser(id) {
+            authFetch('/admin/users/' + id + '/approve', {
+                method: 'PUT'
+            }).then(function(res) {
+                return res.json();
+            }).then(function(data) {
+                if (data.error) {
+                    showUserStatus(data.error, true);
+                } else {
+                    showUserStatus('User #' + id + ' approved!', false);
+                    var el = document.getElementById('pending-user-' + id);
+                    if (el) el.remove();
+                }
+            });
+        }
+
+        function denyUser(id) {
+            authFetch('/admin/users/' + id + '/deny', {
+                method: 'PUT'
+            }).then(function(res) {
+                return res.json();
+            }).then(function(data) {
+                if (data.error) {
+                    showUserStatus(data.error, true);
+                } else {
+                    showUserStatus('User #' + id + ' denied.', false);
+                    var el = document.getElementById('pending-user-' + id);
+                    if (el) el.remove();
+                }
+            });
+        }
+
+        function loadAllUsers() {
+            var status = document.getElementById('userStatusFilter').value;
+            var url = '/admin/users';
+            if (status) url += '?status=' + status;
+
+            authFetch(url).then(function(res) {
+                if (!res) return;
+                return res.json();
+            }).then(function(data) {
+                if (!data) return;
+                var tbody = document.getElementById('usersBody');
+                var users = data.users || [];
+
+                if (users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6">No users found.</td></tr>';
+                    return;
+                }
+
+                var html = '';
+                users.forEach(function(u) {
+                    html += '<tr>';
+                    html += '<td>' + u.id + '</td>';
+                    html += '<td>' + u.username + '</td>';
+                    html += '<td>' + u.email + '</td>';
+                    html += '<td>' + u.role + '</td>';
+                    html += '<td>' + u.status + '</td>';
+                    html += '<td>' + u.created_at + '</td>';
+                    html += '</tr>';
+                });
+
+                tbody.innerHTML = html;
+            });
+        }
+
+        function loadAllListings() {
+            var status = document.getElementById('statusFilter').value;
+            var url = '/admin/listings';
+            if (status) url += '?status=' + status;
+
+            authFetch(url).then(function(res) {
+                if (!res) return;
+                return res.json();
+            }).then(function(data) {
+                if (!data) return;
+                var tbody = document.getElementById('allListingsBody');
+                var listings = data.listings || [];
+
+                if (listings.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7">No listings found.</td></tr>';
+                    return;
+                }
+
+                var html = '';
+                listings.forEach(function(l) {
+                    html += '<tr>';
+                    html += '<td>' + l.id + '</td>';
+                    html += '<td>' + l.title + '</td>';
+                    html += '<td>' + l.seller_username + '</td>';
+                    html += '<td>' + l.category + '</td>';
+                    html += '<td>$' + parseFloat(l.price).toFixed(2) + '</td>';
+                    html += '<td>' + l.status + '</td>';
+                    html += '<td>' + l.created_at + '</td>';
+                    html += '</tr>';
+                });
+
+                tbody.innerHTML = html;
+            });
         }
     </script>
 

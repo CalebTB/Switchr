@@ -326,8 +326,18 @@
 <script>
   // check auth on load
   var token = localStorage.getItem('token');
+  var user = JSON.parse(localStorage.getItem('user') || '{}');
   if (!token) {
     window.location.href = '/SkeletonPages/login.html';
+  }
+
+  // check account approval
+  if (user.status === 'pending') {
+    showError('Your account is pending admin approval. You cannot create listings yet.');
+    document.getElementById('submitBtn').disabled = true;
+  } else if (user.status === 'denied') {
+    showError('Your account has been denied. You cannot create listings.');
+    document.getElementById('submitBtn').disabled = true;
   }
 
   function updateCount(input, countId, max) {
@@ -400,7 +410,7 @@
     })
     .then(function(result) {
       if (result.status === 201) {
-        showSuccess('Listing created! Redirecting...');
+        showSuccess('Listing submitted for approval! Redirecting...');
         setTimeout(function() {
           window.location.href = '/SkeletonPages/Seller/Seller_Home.html';
         }, 1200);
