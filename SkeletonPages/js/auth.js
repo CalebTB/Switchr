@@ -80,11 +80,11 @@ async function login(email, password) {
 }
 
 // Register
-async function register(email, username, password) {
+async function register(email, username, password, role) {
     const response = await fetch(API_URL + '/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username, password })
+        body: JSON.stringify({ email, username, password, role })
     });
 
     const data = await response.json();
@@ -108,6 +108,20 @@ function logout() {
 function requireAuth() {
     if (!isLoggedIn()) {
         window.location.href = '/login.html';
+        return false;
+    }
+    return true;
+}
+
+// Protect page - redirect if not admin
+function requireAdmin() {
+    if (!isLoggedIn()) {
+        window.location.href = '/login.html';
+        return false;
+    }
+    var user = getUser();
+    if (!user || user.role !== 'admin') {
+        window.location.href = '/';
         return false;
     }
     return true;

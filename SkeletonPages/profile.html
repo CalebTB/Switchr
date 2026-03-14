@@ -109,7 +109,15 @@
         const authLinks = document.getElementById('authLinks');
         if (isLoggedIn()) {
             const user = getUser();
-            authLinks.innerHTML = '<span>' + (user ? user.username : 'User') + '</span> | <a href="#" onclick="logout()">Logout</a>';
+            var links = '<span>' + (user ? user.username : 'User') + '</span> | ';
+            if (user && user.role === 'seller') {
+                links += '<a href="/Seller/Seller_Home.html">Seller Dashboard</a> | ';
+            }
+            if (user && user.role === 'admin') {
+                links += '<a href="/Admin/admin.html">Admin Dashboard</a> | ';
+            }
+            links += '<a href="#" onclick="logout()">Logout</a>';
+            authLinks.innerHTML = links;
         }
     </script>
 

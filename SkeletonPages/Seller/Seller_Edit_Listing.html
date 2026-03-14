@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create Listing - Switchr</title>
+  <title>Edit Listing - Switchr</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -100,6 +100,17 @@
       display: none;
     }
 
+    .warning-banner {
+      background: #fff3e0;
+      color: #b36200;
+      border: 1px solid #ffcc80;
+      border-radius: 4px;
+      padding: 10px 14px;
+      margin-bottom: 22px;
+      font-size: 13px;
+      display: none;
+    }
+
     .form-group { margin-bottom: 20px; }
 
     .form-row {
@@ -141,12 +152,6 @@
     }
 
     textarea { resize: vertical; }
-
-    .hint {
-      font-size: 11px;
-      color: #aaa;
-      margin-top: 4px;
-    }
 
     .char-count {
       font-size: 11px;
@@ -229,9 +234,9 @@
 </nav>
 
 <div class="header-bar">
-  <h1>Create a New Listing</h1>
+  <h1>Edit Listing</h1>
   <p class="breadcrumb">
-    <a href="/SkeletonPages/Seller/Seller_Home.html">Seller Home</a> &rsaquo; Create Listing
+    <a href="/SkeletonPages/Seller/Seller_Home.html">Seller Home</a> &rsaquo; Edit Listing
   </p>
 </div>
 
@@ -240,23 +245,20 @@
 
     <div class="error-banner" id="errorBanner"></div>
     <div class="success-banner" id="successBanner"></div>
+    <div class="warning-banner" id="warningBanner"></div>
 
-    <p style="font-size:13px; color:#888; margin-bottom:24px;">
-      Fields marked <span style="color:#c62828;">*</span> are required
-    </p>
+    <p id="statusInfo" style="font-size:13px; color:#888; margin-bottom:24px;"></p>
 
     <div class="form-group">
       <label for="title">Title <span class="required">*</span></label>
       <input type="text" id="title" name="title" maxlength="100"
-             placeholder="e.g., iPhone 13 Pro 256GB Space Gray"
              oninput="updateCount(this, 'titleCount', 100)">
       <div class="char-count" id="titleCount">0 / 100</div>
     </div>
 
     <div class="form-group">
       <label for="description">Description <span class="required">*</span></label>
-      <textarea id="description" name="description" rows="5"
-                placeholder="Describe the item. Include any defects, accessories, or other relevant details."></textarea>
+      <textarea id="description" name="description" rows="5"></textarea>
     </div>
 
     <div class="form-row">
@@ -275,7 +277,7 @@
 
       <div class="form-group">
         <label for="price">Price ($) <span class="required">*</span></label>
-        <input type="number" id="price" name="price" placeholder="e.g., 450" min="0" step="0.01">
+        <input type="number" id="price" name="price" min="0" step="0.01">
       </div>
     </div>
 
@@ -310,12 +312,11 @@
         <small>Multiple images supported (backend connection coming)</small>
         <input type="file" id="photoUrls" name="photoUrls" accept="image/*" multiple>
       </div>
-      <div class="hint">At least one photo recommended (REQ-25)</div>
     </div>
 
     <div class="btn-row">
       <a class="btn-cancel" href="/SkeletonPages/Seller/Seller_Home.html">&larr; Cancel</a>
-      <button class="btn-submit" id="submitBtn" onclick="submitListing()">Submit Listing</button>
+      <button class="btn-submit" id="submitBtn" onclick="saveListing()">Save Changes</button>
     </div>
 
   </div>
@@ -324,21 +325,61 @@
 <footer>Switchr &mdash; Sprint 3 &mdash; CSE 4214</footer>
 
 <script>
-  // check auth on load
   var token = localStorage.getItem('token');
-  var user = JSON.parse(localStorage.getItem('user') || '{}');
   if (!token) {
     window.location.href = '/SkeletonPages/login.html';
   }
 
-  // check account approval
-  if (user.status === 'pending') {
-    showError('Your account is pending admin approval. You cannot create listings yet.');
-    document.getElementById('submitBtn').disabled = true;
-  } else if (user.status === 'denied') {
-    showError('Your account has been denied. You cannot create listings.');
-    document.getElementById('submitBtn').disabled = true;
+  // Get listing ID from URL query param
+  var params = new URLSearchParams(window.location.search);
+  var listingId = params.get('id');
+
+  if (!listingId) {
+    window.location.href = '/SkeletonPages/Seller/Seller_Home.html';
   }
+
+  var currentStatus = '';
+
+  // Load existing listing data
+  fetch('/api/listings/' + listingId, {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(res) {
+    if (res.status === 401) {
+      window.location.href = '/SkeletonPages/login.html';
+      return;
+    }
+    return res.json();
+  })
+  .then(function(data) {
+    if (!data || data.error) {
+      showError(data ? data.error : 'Could not load listing.');
+      return;
+    }
+
+    var l = data.listing;
+    currentStatus = l.status;
+
+    document.getElementById('title').value = l.title;
+    document.getElementById('description').value = l.description;
+    document.getElementById('category').value = l.category;
+    document.getElementById('price').value = parseFloat(l.price);
+    document.getElementById('condition').value = l.condition;
+    document.getElementById('listingType').value = l.listing_type;
+
+    updateCount(document.getElementById('title'), 'titleCount', 100);
+
+    document.getElementById('statusInfo').textContent = 'Current status: ' + l.status;
+
+    if (l.status === 'ACTIVE') {
+      var warn = document.getElementById('warningBanner');
+      warn.textContent = 'This listing is ACTIVE. Changing the title or description will send it back for admin approval.';
+      warn.style.display = 'block';
+    }
+  })
+  .catch(function() {
+    showError('Could not load listing.');
+  });
 
   function updateCount(input, countId, max) {
     var len = input.value.length;
@@ -365,7 +406,7 @@
     document.getElementById('errorBanner').style.display = 'none';
   }
 
-  function submitListing() {
+  function saveListing() {
     var title = document.getElementById('title').value.trim();
     var description = document.getElementById('description').value.trim();
     var category = document.getElementById('category').value;
@@ -373,7 +414,6 @@
     var condition = document.getElementById('condition').value;
     var listingType = document.getElementById('listingType').value;
 
-    // front end validation before hitting the API
     if (!title || !description || !category || !price || !condition || !listingType) {
       showError('Please fill in all required fields.');
       return;
@@ -386,10 +426,10 @@
 
     var btn = document.getElementById('submitBtn');
     btn.disabled = true;
-    btn.textContent = 'Submitting...';
+    btn.textContent = 'Saving...';
 
-    fetch('/api/listings', {
-      method: 'POST',
+    fetch('/api/listings/' + listingId, {
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token
@@ -409,21 +449,21 @@
       });
     })
     .then(function(result) {
-      if (result.status === 201) {
-        showSuccess('Listing submitted for approval! Redirecting...');
+      if (result.status === 200) {
+        showSuccess(result.data.message + ' Redirecting...');
         setTimeout(function() {
           window.location.href = '/SkeletonPages/Seller/Seller_Home.html';
         }, 1200);
       } else {
-        showError(result.data.error || 'Something went wrong. Try again.');
+        showError(result.data.error || 'Something went wrong.');
         btn.disabled = false;
-        btn.textContent = 'Submit Listing';
+        btn.textContent = 'Save Changes';
       }
     })
     .catch(function() {
       showError('Network error. Check that the backend is running.');
       btn.disabled = false;
-      btn.textContent = 'Submit Listing';
+      btn.textContent = 'Save Changes';
     });
   }
 

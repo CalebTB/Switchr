@@ -28,156 +28,177 @@
 
     <!-- Main Content -->
     <main>
-    
+
         <h1>Browse Listings</h1>
-    
+
         <!-- Search Bar -->
-        <form>
-            <input type="text" placeholder="Search listings...">
-            <button type="submit">Search</button>
+        <form onsubmit="return false;">
+            <input type="text" id="searchInput" placeholder="Search listings..." oninput="filterListings()">
+            <button type="button" onclick="filterListings()">Search</button>
         </form>
-    
+
         <br>
-    
+
         <!-- Two-column layout: Filters (left) + Listings (right) -->
         <div style="display: flex; gap: 20px;">
-    
+
             <!-- Filters column -->
             <aside style="width: 250px; border: 1px solid black; padding: 10px;">
                 <h3>Filters</h3>
-    
-                <form>
+
+                <form onsubmit="return false;">
 
                     <label><strong>Category</strong></label><br>
-                    <select>
-                        <option>Any</option>
+                    <select id="filterCategory" onchange="filterListings()">
+                        <option value="">Any</option>
                         <option>Phones</option>
                         <option>Laptops</option>
                         <option>Tablets</option>
                         <option>Headphones</option>
-                        <option>Accessories</option>
+                        <option>Chargers</option>
+                        <option>Other</option>
                     </select>
-                
+
                     <br><br>
-                
+
                     <label><strong>Condition</strong></label><br>
-                    <select>
-                        <option>Any</option>
-                        <option>New</option>
-                        <option>Like New</option>
-                        <option>Good</option>
-                        <option>Fair</option>
-                        <option>Poor</option>
+                    <select id="filterCondition" onchange="filterListings()">
+                        <option value="">Any</option>
+                        <option value="NEW">New</option>
+                        <option value="LIKE_NEW">Like New</option>
+                        <option value="GOOD">Good</option>
+                        <option value="FAIR">Fair</option>
+                        <option value="POOR">Poor</option>
                     </select>
-                
+
                     <br><br>
-                
+
                     <label><strong>Listing Type</strong></label><br>
-                    <select>
-                        <option>Any</option>
-                        <option>For Sale</option>
-                        <option>For Trade</option>
-                        <option>Both</option>
+                    <select id="filterType" onchange="filterListings()">
+                        <option value="">Any</option>
+                        <option value="SALE">For Sale</option>
+                        <option value="TRADE">For Trade</option>
+                        <option value="BOTH">Both</option>
                     </select>
-                
+
                     <br><br>
-                
-                    <label><strong>Price Range</strong></label><br>
-                    <input type="text" placeholder="Min" style="width: 100px;">
-                    <input type="text" placeholder="Max" style="width: 100px;">
-                
-                    <br><br>
-                
-                    <button type="button">Apply (placeholder)</button>
-                    <button type="button">Clear (placeholder)</button>
-                
+
+                    <button type="button" onclick="clearFilters()">Clear</button>
+
                 </form>
             </aside>
-    
+
             <!-- Listings column -->
             <section style="flex: 1; border: 1px solid black; padding: 10px;">
-                <h3>Results</h3>
-            
-                <!-- Listing Card 1 -->
-                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
-                    <div style="display: flex; gap: 10px;">
-                        <div style="width: 100px; height: 80px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
-                            IMG
-                        </div>
-            
-                        <div>
-                            <h4 style="margin: 0;">iPhone 13 - 128GB</h4>
-                            <p style="margin: 5px 0;">Condition: Good</p>
-                            <p style="margin: 5px 0;">Price/Value: $399</p>
-                            <p style="margin: 5px 0;">Type: For Sale</p>
-                            <a href="listing.html">View Details</a>
-                        </div>
-                    </div>
-                </article>
-            
-                <!-- Listing Card 2 -->
-                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
-                    <div style="display: flex; gap: 10px;">
-                        <div style="width: 100px; height: 80px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
-                            IMG
-                        </div>
-            
-                        <div>
-                            <h4 style="margin: 0;">MacBook Air M1</h4>
-                            <p style="margin: 5px 0;">Condition: Like New</p>
-                            <p style="margin: 5px 0;">Price/Value: $650</p>
-                            <p style="margin: 5px 0;">Type: Both</p>
-                            <a href="listing.html">View Details</a>
-                        </div>
-                    </div>
-                </article>
-            
-                <!-- Listing Card 3 -->
-                <article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">
-                    <div style="display: flex; gap: 10px;">
-                        <div style="width: 100px; height: 80px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
-                            IMG
-                        </div>
-            
-                        <div>
-                            <h4 style="margin: 0;">Sony WH-1000XM4</h4>
-                            <p style="margin: 5px 0;">Condition: Fair</p>
-                            <p style="margin: 5px 0;">Price/Value: $140</p>
-                            <p style="margin: 5px 0;">Type: For Trade</p>
-                            <a href="listing.html">View Details</a>
-                        </div>
-                    </div>
-                </article>
-            
+                <h3>Results (<span id="resultCount">0</span>)</h3>
+
+                <div id="listingsContainer">
+                    <p>Loading listings...</p>
+                </div>
             </section>
-    
+
         </div>
-    
+
     </main>
 
     <footer style="margin-top: 20px; border-top: 1px solid black; padding: 10px;">
-        
+
         <p>
             <a href="#">Terms</a> |
             <a href="#">Privacy</a> |
             <a href="#">Help</a>
         </p>
-    
+
         <p style="font-size: 12px;">
             Switchr Marketplace - Skeleton Version
         </p>
-    
+
     </footer>
-    
+
     <script>
         // Update header based on login state
-        const authLinks = document.getElementById('authLinks');
+        var authLinks = document.getElementById('authLinks');
         if (isLoggedIn()) {
-            const user = getUser();
-            authLinks.innerHTML = '<span>' + (user ? user.username : 'User') + '</span> | <a href="#" onclick="logout()">Logout</a>';
+            var user = getUser();
+            var links = '<span>' + (user ? user.username : 'User') + '</span> | ';
+            if (user && user.role === 'seller') {
+                links += '<a href="/Seller/Seller_Home.html">Seller Dashboard</a> | ';
+            }
+            if (user && user.role === 'admin') {
+                links += '<a href="/Admin/admin.html">Admin Dashboard</a> | ';
+            }
+            links += '<a href="#" onclick="logout()">Logout</a>';
+            authLinks.innerHTML = links;
+        }
+
+        var allListings = [];
+
+        // Fetch active listings (public, no auth needed)
+        fetch('/api/listings/browse')
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            allListings = data.listings || [];
+            renderListings(allListings);
+        })
+        .catch(function() {
+            document.getElementById('listingsContainer').innerHTML = '<p>Could not load listings.</p>';
+        });
+
+        function renderListings(listings) {
+            var container = document.getElementById('listingsContainer');
+            document.getElementById('resultCount').textContent = listings.length;
+
+            if (listings.length === 0) {
+                container.innerHTML = '<p>No listings found.</p>';
+                return;
+            }
+
+            var html = '';
+            listings.forEach(function(l) {
+                html += '<article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">';
+                html += '<div style="display: flex; gap: 10px;">';
+                html += '<div style="width: 100px; height: 80px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">IMG</div>';
+                html += '<div>';
+                html += '<h4 style="margin: 0;">' + l.title + '</h4>';
+                html += '<p style="margin: 5px 0;">Condition: ' + l.condition + '</p>';
+                html += '<p style="margin: 5px 0;">Price: $' + parseFloat(l.price).toFixed(2) + '</p>';
+                html += '<p style="margin: 5px 0;">Type: ' + l.listing_type + '</p>';
+                html += '<p style="margin: 5px 0;">Seller: ' + l.seller_username + '</p>';
+                html += '<a href="listing.html">View Details</a>';
+                html += '</div>';
+                html += '</div>';
+                html += '</article>';
+            });
+
+            container.innerHTML = html;
+        }
+
+        function filterListings() {
+            var search = document.getElementById('searchInput').value.toLowerCase();
+            var category = document.getElementById('filterCategory').value;
+            var condition = document.getElementById('filterCondition').value;
+            var type = document.getElementById('filterType').value;
+
+            var filtered = allListings.filter(function(l) {
+                if (search && l.title.toLowerCase().indexOf(search) === -1) return false;
+                if (category && l.category !== category) return false;
+                if (condition && l.condition !== condition) return false;
+                if (type && l.listing_type !== type) return false;
+                return true;
+            });
+
+            renderListings(filtered);
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterCategory').value = '';
+            document.getElementById('filterCondition').value = '';
+            document.getElementById('filterType').value = '';
+            renderListings(allListings);
         }
     </script>
 
 </body>
-    
+
 </html>
