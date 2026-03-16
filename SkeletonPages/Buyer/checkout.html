@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - Switchr</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <script src="../js/auth.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f7f6f3;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    nav {
+      background: #1a1a1a;
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav .brand {
+      font-family: 'Syne', sans-serif;
+      color: #f0e040;
+      font-size: 22px;
+      text-decoration: none;
+      letter-spacing: 1px;
+    }
+
+    nav .nav-links a {
+      color: #ccc;
+      text-decoration: none;
+      margin-left: 20px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    nav .nav-links a:hover { color: white; }
+
+    .header-bar {
+      background: #fff;
+      border-bottom: 3px solid #f0e040;
+      padding: 20px 32px;
+    }
+
+    .header-bar h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+    }
+
+    .breadcrumb {
+      font-size: 13px;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    .breadcrumb a { color: #666; text-decoration: none; }
+    .breadcrumb a:hover { color: #1a1a1a; }
+
+    .main {
+      max-width: 900px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+
+    .checkout-layout {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .checkout-forms { flex: 1; }
+    .checkout-summary { width: 300px; }
+
+    .card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-row {
+      display: flex;
+      gap: 16px;
+    }
+
+    .form-row .form-group { flex: 1; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      background: #fafaf8;
+      color: #1a1a1a;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #1a1a1a;
+      background: white;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 7px 0;
+      border-bottom: 1px solid #f0f0f0;
+      color: #555;
+    }
+
+    .summary-row:last-of-type { border-bottom: none; }
+
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      padding-top: 12px;
+      margin-top: 8px;
+      border-top: 2px solid #1a1a1a;
+    }
+
+    .tax-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #999;
+      padding: 4px 0;
+    }
+
+    .btn-confirm {
+      display: block;
+      width: 100%;
+      padding: 13px;
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+
+    .btn-confirm:hover { background: #333; }
+
+    .notice {
+      font-size: 11px;
+      color: #aaa;
+      text-align: center;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+
+    .success-screen {
+      text-align: center;
+      padding: 48px 24px;
+      display: none;
+    }
+
+    .success-screen .checkmark {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .success-screen h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .success-screen p {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .btn-browse {
+      display: inline-block;
+      padding: 10px 24px;
+      background: #1a1a1a;
+      color: white;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 48px;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="brand" href="/Buyer/buyer.html">Switchr</a>
+  <div class="nav-links">
+    <a href="/Buyer/buyer.html">Browse</a>
+    <a href="/Buyer/cart.html">Cart</a>
+    <span id="authLinks"></span>
+  </div>
+</nav>
+
+<div class="header-bar">
+  <h1>Checkout</h1>
+  <p class="breadcrumb">
+    <a href="/Buyer/cart.html">&larr; Back to Cart</a>
+  </p>
+</div>
+
+<div class="main">
+
+  <div id="checkoutContent">
+    <div class="checkout-layout">
+
+      <div class="checkout-forms">
+
+        <!-- Shipping Info -->
+        <div class="card">
+          <h3>Shipping Information</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text" id="firstName" placeholder="John">
+            </div>
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text" id="lastName" placeholder="Doe">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Address</label>
+            <input type="text" id="address" placeholder="123 Main St">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>City</label>
+              <input type="text" id="city" placeholder="New York">
+            </div>
+            <div class="form-group">
+              <label>State</label>
+              <input type="text" id="state" placeholder="NY">
+            </div>
+            <div class="form-group">
+              <label>ZIP</label>
+              <input type="text" id="zip" placeholder="10001">
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Info -->
+        <div class="card">
+          <h3>Payment Information</h3>
+
+          <div class="form-group">
+            <label>Card Number</label>
+            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Expiry Date</label>
+              <input type="text" id="expiry" placeholder="MM/YY" maxlength="5">
+            </div>
+            <div class="form-group">
+              <label>CVV</label>
+              <input type="text" id="cvv" placeholder="123" maxlength="3">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Name on Card</label>
+            <input type="text" id="cardName" placeholder="John Doe">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Order Summary -->
+      <div class="checkout-summary">
+        <div class="card">
+          <h3>Order Summary</h3>
+          <div id="summaryItems"></div>
+          <div class="tax-row">
+            <span>Subtotal</span>
+            <span id="subtotal">$0.00</span>
+          </div>
+          <div class="tax-row">
+            <span>Tax (8%)</span>
+            <span id="tax">$0.00</span>
+          </div>
+          <div class="tax-row">
+            <span>Shipping</span>
+            <span>Simulated</span>
+          </div>
+          <div class="summary-total">
+            <span>Total</span>
+            <span id="total">$0.00</span>
+          </div>
+          <button class="btn-confirm" onclick="confirmTransaction()">Confirm Transaction</button>
+          <p class="notice">This is a simulated transaction. No real payment is processed. (REQ-87)</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Success screen (hidden until confirmed) -->
+  <div class="card success-screen" id="successScreen">
+    <div class="checkmark">✅</div>
+    <h2>Transaction Confirmed!</h2>
+    <p>Your simulated purchase is complete. Thank you for using Switchr.</p>
+    <a href="/Buyer/buyer.html" class="btn-browse">Continue Browsing</a>
+  </div>
+
+</div>
+
+<footer>Switchr &mdash; Sprint 3 &mdash; CSE 4214</footer>
+
+<script>
+  var token = localStorage.getItem('token');
+  var user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (!token) {
+    window.location.href = '/login.html';
+  }
+
+  var authLinks = document.getElementById('authLinks');
+  authLinks.innerHTML = '<a href="/profile.html">' + (user.username || 'Profile') + '</a> <a href="#" onclick="logout()">Logout</a>';
+
+  // load cart for summary
+  fetch('/api/cart', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    var items = data.cart || [];
+
+    if (items.length === 0) {
+      window.location.href = '/Buyer/cart.html';
+      return;
+    }
+
+    var subtotal = 0;
+    items.forEach(function(item) { subtotal += parseFloat(item.price); });
+    var tax = subtotal * 0.08;
+    var total = subtotal + tax;
+
+    var html = '';
+    items.forEach(function(item) {
+      html += '<div class="summary-row"><span>' + item.title + '</span><span>$' + parseFloat(item.price).toFixed(2) + '</span></div>';
+    });
+
+    document.getElementById('summaryItems').innerHTML = html;
+    document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
+    document.getElementById('tax').textContent = '$' + tax.toFixed(2);
+    document.getElementById('total').textContent = '$' + total.toFixed(2);
+  })
+  .catch(function() {
+    window.location.href = '/Buyer/cart.html';
+  });
+
+  function confirmTransaction() {
+    var firstName = document.getElementById('firstName').value.trim();
+    var lastName = document.getElementById('lastName').value.trim();
+    var address = document.getElementById('address').value.trim();
+    var cardNumber = document.getElementById('cardNumber').value.trim();
+
+    if (!firstName || !lastName || !address || !cardNumber) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+
+    // Simulated transaction - no real payment
+    document.getElementById('checkoutContent').style.display = 'none';
+    document.getElementById('successScreen').style.display = 'block';
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login.html';
+  }
+</script>
+
+</body>
+</html>

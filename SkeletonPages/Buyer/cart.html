@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Cart - Switchr</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <script src="../js/auth.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f7f6f3;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    nav {
+      background: #1a1a1a;
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav .brand {
+      font-family: 'Syne', sans-serif;
+      color: #f0e040;
+      font-size: 22px;
+      text-decoration: none;
+      letter-spacing: 1px;
+    }
+
+    nav .nav-links a {
+      color: #ccc;
+      text-decoration: none;
+      margin-left: 20px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    nav .nav-links a:hover { color: white; }
+
+    .header-bar {
+      background: #fff;
+      border-bottom: 3px solid #f0e040;
+      padding: 20px 32px;
+    }
+
+    .header-bar h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+    }
+
+    .breadcrumb {
+      font-size: 13px;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    .breadcrumb a { color: #666; text-decoration: none; }
+    .breadcrumb a:hover { color: #1a1a1a; }
+
+    .main {
+      max-width: 900px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+
+    .error-banner {
+      background: #fce4ec;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+      border-radius: 4px;
+      padding: 10px 14px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .cart-layout {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .cart-items { flex: 1; }
+    .cart-summary { width: 280px; }
+
+    .card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .cart-item:last-child { border-bottom: none; }
+
+    .item-info h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .item-info p {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 2px;
+    }
+
+    .item-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .item-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .btn-remove {
+      font-size: 11px;
+      color: #c62828;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      padding: 6px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .summary-row:last-of-type { border-bottom: none; }
+
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      padding-top: 12px;
+      margin-top: 8px;
+      border-top: 2px solid #1a1a1a;
+    }
+
+    .btn-checkout {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 16px;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .btn-checkout:hover { background: #333; }
+
+    .empty-cart {
+      text-align: center;
+      padding: 48px 24px;
+      color: #aaa;
+    }
+
+    .empty-cart p { margin-bottom: 16px; font-size: 15px; }
+
+    .btn-browse {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #1a1a1a;
+      color: white;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 48px;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="brand" href="/Buyer/buyer.html">Switchr</a>
+  <div class="nav-links">
+    <a href="/Buyer/buyer.html">Browse</a>
+    <span id="authLinks"></span>
+  </div>
+</nav>
+
+<div class="header-bar">
+  <h1>My Cart</h1>
+  <p class="breadcrumb">
+    <a href="/Buyer/buyer.html">&larr; Back to Browse</a>
+  </p>
+</div>
+
+<div class="main">
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div id="cartContent">
+    <p style="color:#aaa; text-align:center; padding:40px;">Loading cart...</p>
+  </div>
+
+</div>
+
+<footer>Switchr &mdash; Sprint 3 &mdash; CSE 4214</footer>
+
+<script>
+  // auth check
+  var token = localStorage.getItem('token');
+  var user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (!token) {
+    window.location.href = '/login.html';
+  }
+
+  var authLinks = document.getElementById('authLinks');
+  authLinks.innerHTML = '<a href="/profile.html">' + (user.username || 'Profile') + '</a> <a href="#" onclick="logout()">Logout</a>';
+
+  var cartItems = [];
+
+  fetch('/api/cart', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(res) {
+    if (res.status === 401) {
+      window.location.href = '/login.html';
+      return;
+    }
+    return res.json();
+  })
+  .then(function(data) {
+    cartItems = data.cart || [];
+    renderCart();
+  })
+  .catch(function() {
+    document.getElementById('errorBanner').textContent = 'Could not load cart.';
+    document.getElementById('errorBanner').style.display = 'block';
+  });
+
+  function renderCart() {
+    var container = document.getElementById('cartContent');
+
+    if (cartItems.length === 0) {
+      container.innerHTML = '<div class="card"><div class="empty-cart"><p>Your cart is empty.</p><a href="/Buyer/buyer.html" class="btn-browse">Browse Listings</a></div></div>';
+      return;
+    }
+
+    var total = 0;
+    cartItems.forEach(function(item) { total += parseFloat(item.price); });
+
+    var itemsHtml = '<div class="cart-items"><div class="card">';
+    cartItems.forEach(function(item) {
+      itemsHtml += '<div class="cart-item">';
+      itemsHtml += '<div class="item-info">';
+      itemsHtml += '<h4>' + item.title + '</h4>';
+      itemsHtml += '<p>' + item.category + ' &middot; ' + item.condition + '</p>';
+      itemsHtml += '<p>Seller: ' + item.seller_username + '</p>';
+      itemsHtml += '<p>Type: ' + item.listing_type + '</p>';
+      itemsHtml += '</div>';
+      itemsHtml += '<div class="item-actions">';
+      itemsHtml += '<span class="item-price">$' + parseFloat(item.price).toFixed(2) + '</span>';
+      itemsHtml += '<a href="/Buyer/listing.html?id=' + item.listing_id + '" style="font-size:11px; color:#666;">View</a>';
+      itemsHtml += '<button class="btn-remove" onclick="removeFromCart(' + item.listing_id + ')">Remove</button>';
+      itemsHtml += '</div>';
+      itemsHtml += '</div>';
+    });
+    itemsHtml += '</div></div>';
+
+    var summaryHtml = '<div class="cart-summary"><div class="card">';
+    summaryHtml += '<h3 style="font-family:Syne,sans-serif; font-size:16px; margin-bottom:14px;">Order Summary</h3>';
+    cartItems.forEach(function(item) {
+      summaryHtml += '<div class="summary-row"><span>' + item.title + '</span><span>$' + parseFloat(item.price).toFixed(2) + '</span></div>';
+    });
+    summaryHtml += '<div class="summary-total"><span>Total</span><span>$' + total.toFixed(2) + '</span></div>';
+    summaryHtml += '<a href="/Buyer/checkout.html" class="btn-checkout">Proceed to Checkout</a>';
+    summaryHtml += '</div></div>';
+
+    container.innerHTML = '<div class="cart-layout">' + itemsHtml + summaryHtml + '</div>';
+  }
+
+  function removeFromCart(listingId) {
+    fetch('/api/cart/' + listingId, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        cartItems = cartItems.filter(function(item) { return item.listing_id !== listingId; });
+        renderCart();
+      } else {
+        alert(data.error || 'Could not remove item.');
+      }
+    })
+    .catch(function() { alert('Network error. Try again.'); });
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login.html';
+  }
+</script>
+
+</body>
+</html>

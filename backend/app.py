@@ -58,6 +58,15 @@ def init_db():
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS cart (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            listing_id INTEGER REFERENCES listings(id),
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, listing_id)
+        )
+    ''')
     # Add columns if tables already exist without them
     cur.execute('''
         DO $$
@@ -728,6 +737,89 @@ def get_browse_listing(listing_id):
 
         return jsonify({'listing': format_listing(listing)})
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ============ CART ROUTES ============
+
+@app.route('/api/cart', methods=['GET'])
+@token_required
+def get_cart():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''SELECT c.id, c.added_at, l.id as listing_id, l.title, l.price,
+               l.condition, l.listing_type, l.category, u.username as seller_username
+               FROM cart c
+               JOIN listings l ON c.listing_id = l.id
+               JOIN users u ON l.seller_id = u.id
+               WHERE c.user_id = %s AND l.status = 'ACTIVE'
+               ORDER BY c.added_at DESC''',
+            (request.user_id,)
+        )
+        rows = cur.fetchall()
+        conn.close()
+        items = []
+        for row in rows:
+            d = dict(row)
+            if d.get('added_at'):
+                d['added_at'] = d['added_at'].strftime('%Y-%m-%d')
+            items.append(d)
+        return jsonify({'cart': items})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/cart', methods=['POST'])
+@token_required
+def add_to_cart():
+    data = request.get_json()
+    listing_id = data.get('listing_id')
+
+    if not listing_id:
+        return jsonify({'error': 'listing_id is required'}), 400
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Check listing exists and is active
+        cur.execute('SELECT * FROM listings WHERE id = %s AND status = %s', (listing_id, 'ACTIVE'))
+        listing = cur.fetchone()
+
+        if not listing:
+            conn.close()
+            return jsonify({'error': 'Listing not found or not available'}), 404
+
+        # Cannot add your own listing to cart
+        if listing['seller_id'] == request.user_id:
+            conn.close()
+            return jsonify({'error': 'You cannot add your own listing to cart'}), 400
+
+        cur.execute(
+            'INSERT INTO cart (user_id, listing_id) VALUES (%s, %s) ON CONFLICT DO NOTHING RETURNING *',
+            (request.user_id, listing_id)
+        )
+        conn.close()
+        return jsonify({'message': 'Added to cart'}), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/cart/<int:listing_id>', methods=['DELETE'])
+@token_required
+def remove_from_cart(listing_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            'DELETE FROM cart WHERE user_id = %s AND listing_id = %s',
+            (request.user_id, listing_id)
+        )
+        conn.close()
+        return jsonify({'message': 'Removed from cart'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

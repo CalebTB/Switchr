@@ -304,7 +304,8 @@
     html += '<p class="price-display">$' + parseFloat(l.price).toFixed(2) + '</p>';
 
     if (l.listing_type === 'SALE' || l.listing_type === 'BOTH') {
-      html += '<button class="btn primary" onclick="alert(\'Buy flow coming soon!\')">Buy Now</button>';
+      html += '<button class="btn primary" onclick="addToCart(' + l.id + ')">Add to Cart</button>';
+      html += '<a class="btn" href="/Buyer/cart.html" style="text-align:center; text-decoration:none;">View Cart</a>';
     }
     if (l.listing_type === 'TRADE' || l.listing_type === 'BOTH') {
       html += '<button class="btn" onclick="alert(\'Trade offer flow coming soon!\')">Offer Trade</button>';
@@ -322,6 +323,34 @@
     banner.textContent = 'Could not load listing. Please try again.';
     banner.style.display = 'block';
   });
+  
+  function addToCart(listingId) {
+    var token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login.html';
+      return;
+    }
+
+    fetch('/api/cart', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ listing_id: listingId })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        alert('Added to cart! Go to cart to checkout.');
+      } else {
+        alert(data.error || 'Could not add to cart.');
+      }
+    })
+    .catch(function() {
+      alert('Network error. Try again.');
+    });
+  }
 
   function logout() {
     localStorage.removeItem('token');
