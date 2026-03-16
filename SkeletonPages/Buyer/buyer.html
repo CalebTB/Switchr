@@ -5,65 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Switchr Buyer Page</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/shared.css">
   <script src="../js/auth.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: #f7f6f3;
-      color: #1a1a1a;
-      min-height: 100vh;
-    }
-
-    nav {
-      background: #1a1a1a;
-      padding: 14px 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    nav .brand {
-      font-family: 'Syne', sans-serif;
-      color: #f0e040;
-      font-size: 22px;
-      text-decoration: none;
-      letter-spacing: 1px;
-    }
-
-    nav .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    nav .nav-links a {
-      color: #ccc;
-      text-decoration: none;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    nav .nav-links a:hover { color: white; }
-
-    .header-bar {
-      background: #fff;
-      border-bottom: 3px solid #f0e040;
-      padding: 20px 32px;
-    }
-
-    .header-bar h1 {
-      font-family: 'Syne', sans-serif;
-      font-size: 26px;
-    }
-
-    .main {
-      max-width: 1200px;
-      margin: 32px auto;
-      padding: 0 24px;
-    }
-
     .search-row {
       display: flex;
       gap: 10px;
@@ -224,19 +168,6 @@
 
     .listing-meta span { display: flex; align-items: center; gap: 4px; }
 
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 3px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-    }
-
-    .badge.sale { background: #e8eaf6; color: #3949ab; }
-    .badge.trade { background: #f3e5f5; color: #6a1b9a; }
-    .badge.both { background: #e6f4ea; color: #2d7a3a; }
-
     .listing-price {
       font-family: 'Syne', sans-serif;
       font-size: 18px;
@@ -265,28 +196,6 @@
     }
 
     .btn-view:hover { background: #333; }
-
-    .empty-msg {
-      text-align: center;
-      color: #aaa;
-      padding: 48px 24px;
-      font-style: italic;
-      background: white;
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-    }
-
-    footer {
-      text-align: center;
-      padding: 24px;
-      font-size: 12px;
-      color: #aaa;
-      margin-top: 48px;
-      border-top: 1px solid #e0e0e0;
-    }
-
-    footer a { color: #888; text-decoration: none; margin: 0 8px; }
-    footer a:hover { color: #1a1a1a; }
   </style>
 </head>
 <body>
@@ -387,7 +296,7 @@
     links += '<a href="#" onclick="logout()">Logout</a>';
     authLinks.innerHTML = links;
   } else {
-    authLinks.innerHTML = '<a href="/login.html">Login</a> <a href="/register.html">Sign Up</a>';
+    authLinks.innerHTML = '<a href="/login.html">Login</a>';
   }
 
   var allListings = [];

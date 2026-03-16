@@ -133,3 +133,21 @@ function redirectIfLoggedIn(redirectUrl = '/') {
         window.location.href = redirectUrl;
     }
 }
+
+// Update nav links based on login state
+function updateNavLinks() {
+    if (!isLoggedIn()) {
+        var profileLinks = document.querySelectorAll('a[href="/profile.html"]');
+        for (var i = 0; i < profileLinks.length; i++) {
+            profileLinks[i].href = '/login.html';
+        }
+
+        var offersLinks = document.querySelectorAll('a[href="/offers.html"]');
+        for (var i = 0; i < offersLinks.length; i++) {
+            offersLinks[i].style.display = 'none';
+        }
+    }
+}
+
+// Run on page load
+document.addEventListener('DOMContentLoaded', updateNavLinks);
