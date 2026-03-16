@@ -1,204 +1,472 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Switchr Buyer Page</title>
-    <script src="../js/auth.js"></script>
-</head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Switchr Buyer Page</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <script src="../js/auth.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f7f6f3;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    nav {
+      background: #1a1a1a;
+      padding: 14px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav .brand {
+      font-family: 'Syne', sans-serif;
+      color: #f0e040;
+      font-size: 22px;
+      text-decoration: none;
+      letter-spacing: 1px;
+    }
+
+    nav .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    nav .nav-links a {
+      color: #ccc;
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    nav .nav-links a:hover { color: white; }
+
+    .header-bar {
+      background: #fff;
+      border-bottom: 3px solid #f0e040;
+      padding: 20px 32px;
+    }
+
+    .header-bar h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 26px;
+    }
+
+    .main {
+      max-width: 1200px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .search-row input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      background: white;
+    }
+
+    .search-row input:focus {
+      outline: none;
+      border-color: #1a1a1a;
+    }
+
+    .search-row button {
+      padding: 10px 20px;
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+    }
+
+    .search-row button:hover { background: #333; }
+
+    .browse-layout {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .filters-panel {
+      width: 240px;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 20px;
+      flex-shrink: 0;
+    }
+
+    .filters-panel h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f0e040;
+    }
+
+    .filter-group { margin-bottom: 16px; }
+
+    .filter-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #888;
+      margin-bottom: 6px;
+    }
+
+    .filter-group select {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      background: #fafaf8;
+      color: #1a1a1a;
+    }
+
+    .filter-group select:focus {
+      outline: none;
+      border-color: #1a1a1a;
+    }
+
+    .btn-clear {
+      width: 100%;
+      padding: 8px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .btn-clear:hover { border-color: #1a1a1a; }
+
+    .listings-panel { flex: 1; }
+
+    .results-header {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+
+    .results-header span {
+      color: #1a1a1a;
+      font-weight: 700;
+    }
+
+    .listing-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      transition: border-color 0.15s;
+    }
+
+    .listing-card:hover { border-color: #f0e040; }
+
+    .listing-img {
+      width: 100px;
+      height: 80px;
+      border: 1px dashed #ccc;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #aaa;
+      background: #fafaf8;
+      flex-shrink: 0;
+    }
+
+    .listing-info { flex: 1; }
+
+    .listing-info h4 {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .listing-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .listing-meta span { display: flex; align-items: center; gap: 4px; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .badge.sale { background: #e8eaf6; color: #3949ab; }
+    .badge.trade { background: #f3e5f5; color: #6a1b9a; }
+    .badge.both { background: #e6f4ea; color: #2d7a3a; }
+
+    .listing-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+
+    .listing-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .btn-view {
+      padding: 8px 16px;
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-view:hover { background: #333; }
+
+    .empty-msg {
+      text-align: center;
+      color: #aaa;
+      padding: 48px 24px;
+      font-style: italic;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 48px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    footer a { color: #888; text-decoration: none; margin: 0 8px; }
+    footer a:hover { color: #1a1a1a; }
+  </style>
+</head>
 <body>
 
-    <!-- Header / Navigation -->
-    <header>
-        <h2>Switchr</h2>
+<nav>
+  <a class="brand" href="/Buyer/buyer.html">Switchr</a>
+  <div class="nav-links">
+    <a href="/Buyer/buyer.html">Browse</a>
+    <a href="/offers.html">Offers</a>
+    <a href="/Buyer/cart.html">Cart</a>
+    <a href="/profile.html">Profile</a>
+    <span id="authLinks"></span>
+  </div>
+</nav>
 
-        <nav>
-            <a href="/Buyer/buyer.html">Browse</a> |
-            <a href="/offers.html">Offers</a> |
-            <a href="#">Messages</a> |
-            <a href="/profile.html">Profile</a>
-        </nav>
+<div class="header-bar">
+  <h1>Browse Listings</h1>
+</div>
 
-        <div id="authLinks">
-            <a href="/login.html">Login</a> |
-            <a href="/register.html">Sign Up</a>
-        </div>
+<div class="main">
 
-        <hr>
-    </header>
+  <div class="search-row">
+    <input type="text" id="searchInput" placeholder="Search listings by title or description..." oninput="filterListings()">
+    <button type="button" onclick="filterListings()">Search</button>
+  </div>
 
-    <!-- Main Content -->
-    <main>
+  <div class="browse-layout">
 
-        <h1>Browse Listings</h1>
+    <aside class="filters-panel">
+      <h3>Filters</h3>
 
-        <!-- Search Bar -->
-        <form onsubmit="return false;">
-            <input type="text" id="searchInput" placeholder="Search listings..." oninput="filterListings()">
-            <button type="button" onclick="filterListings()">Search</button>
-        </form>
+      <div class="filter-group">
+        <label>Category</label>
+        <select id="filterCategory" onchange="filterListings()">
+          <option value="">Any</option>
+          <option>Phones</option>
+          <option>Laptops</option>
+          <option>Tablets</option>
+          <option>Headphones</option>
+          <option>Chargers</option>
+          <option>Other</option>
+        </select>
+      </div>
 
-        <br>
+      <div class="filter-group">
+        <label>Condition</label>
+        <select id="filterCondition" onchange="filterListings()">
+          <option value="">Any</option>
+          <option value="NEW">New</option>
+          <option value="LIKE_NEW">Like New</option>
+          <option value="GOOD">Good</option>
+          <option value="FAIR">Fair</option>
+          <option value="POOR">Poor</option>
+        </select>
+      </div>
 
-        <!-- Two-column layout: Filters (left) + Listings (right) -->
-        <div style="display: flex; gap: 20px;">
+      <div class="filter-group">
+        <label>Listing Type</label>
+        <select id="filterType" onchange="filterListings()">
+          <option value="">Any</option>
+          <option value="SALE">For Sale</option>
+          <option value="TRADE">For Trade</option>
+          <option value="BOTH">Both</option>
+        </select>
+      </div>
 
-            <!-- Filters column -->
-            <aside style="width: 250px; border: 1px solid black; padding: 10px;">
-                <h3>Filters</h3>
+      <button class="btn-clear" type="button" onclick="clearFilters()">Clear Filters</button>
+    </aside>
 
-                <form onsubmit="return false;">
+    <section class="listings-panel">
+      <p class="results-header">Results: <span id="resultCount">0</span></p>
+      <div id="listingsContainer">
+        <p class="empty-msg">Loading listings...</p>
+      </div>
+    </section>
 
-                    <label><strong>Category</strong></label><br>
-                    <select id="filterCategory" onchange="filterListings()">
-                        <option value="">Any</option>
-                        <option>Phones</option>
-                        <option>Laptops</option>
-                        <option>Tablets</option>
-                        <option>Headphones</option>
-                        <option>Chargers</option>
-                        <option>Other</option>
-                    </select>
+  </div>
+</div>
 
-                    <br><br>
+<footer>
+  <a href="/terms.html">Terms</a>
+  <a href="/privacy.html">Privacy</a>
+  <a href="#">Help</a>
+  <p style="margin-top:8px;">Switchr &mdash; Sprint 3 &mdash; CSE 4214</p>
+</footer>
 
-                    <label><strong>Condition</strong></label><br>
-                    <select id="filterCondition" onchange="filterListings()">
-                        <option value="">Any</option>
-                        <option value="NEW">New</option>
-                        <option value="LIKE_NEW">Like New</option>
-                        <option value="GOOD">Good</option>
-                        <option value="FAIR">Fair</option>
-                        <option value="POOR">Poor</option>
-                    </select>
+<script>
+  var authLinks = document.getElementById('authLinks');
+  if (isLoggedIn()) {
+    var user = getUser();
+    var links = '';
+    if (user && user.role === 'seller') {
+      links += '<a href="/Seller/Seller_Home.html">Seller Dashboard</a>';
+    }
+    if (user && user.role === 'admin') {
+      links += '<a href="/Admin/admin.html">Admin Dashboard</a>';
+    }
+    links += '<a href="#" onclick="logout()">Logout</a>';
+    authLinks.innerHTML = links;
+  } else {
+    authLinks.innerHTML = '<a href="/login.html">Login</a> <a href="/register.html">Sign Up</a>';
+  }
 
-                    <br><br>
+  var allListings = [];
 
-                    <label><strong>Listing Type</strong></label><br>
-                    <select id="filterType" onchange="filterListings()">
-                        <option value="">Any</option>
-                        <option value="SALE">For Sale</option>
-                        <option value="TRADE">For Trade</option>
-                        <option value="BOTH">Both</option>
-                    </select>
+  fetch('/api/listings/browse')
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    allListings = data.listings || [];
+    renderListings(allListings);
+  })
+  .catch(function() {
+    document.getElementById('listingsContainer').innerHTML = '<p class="empty-msg">Could not load listings. Please try again.</p>';
+  });
 
-                    <br><br>
+  function renderListings(listings) {
+    var container = document.getElementById('listingsContainer');
+    document.getElementById('resultCount').textContent = listings.length;
 
-                    <button type="button" onclick="clearFilters()">Clear</button>
+    if (listings.length === 0) {
+      container.innerHTML = '<p class="empty-msg">No listings found.</p>';
+      return;
+    }
 
-                </form>
-            </aside>
+    var html = '';
+    listings.forEach(function(l) {
+      var typeClass = l.listing_type ? l.listing_type.toLowerCase() : 'sale';
+      var typeLabel = l.listing_type === 'SALE' ? 'For Sale' : l.listing_type === 'TRADE' ? 'For Trade' : 'Sale or Trade';
 
-            <!-- Listings column -->
-            <section style="flex: 1; border: 1px solid black; padding: 10px;">
-                <h3>Results (<span id="resultCount">0</span>)</h3>
+      html += '<div class="listing-card">';
+      html += '<div class="listing-img">IMG</div>';
+      html += '<div class="listing-info">';
+      html += '<h4>' + l.title + '</h4>';
+      html += '<div class="listing-meta">';
+      html += '<span>Condition: ' + l.condition + '</span>';
+      html += '<span>Seller: ' + l.seller_username + '</span>';
+      html += '<span><span class="badge ' + typeClass + '">' + typeLabel + '</span></span>';
+      html += '</div>';
+      html += '</div>';
+      html += '<div class="listing-actions">';
+      html += '<span class="listing-price">$' + parseFloat(l.price).toFixed(2) + '</span>';
+      html += '<a class="btn-view" href="/Buyer/listing.html?id=' + l.id + '">View Details</a>';
+      html += '</div>';
+      html += '</div>';
+    });
 
-                <div id="listingsContainer">
-                    <p>Loading listings...</p>
-                </div>
-            </section>
+    container.innerHTML = html;
+  }
 
-        </div>
+  function filterListings() {
+    var search = document.getElementById('searchInput').value.toLowerCase();
+    var category = document.getElementById('filterCategory').value;
+    var condition = document.getElementById('filterCondition').value;
+    var type = document.getElementById('filterType').value;
 
-    </main>
+    var filtered = allListings.filter(function(l) {
+      if (search && l.title.toLowerCase().indexOf(search) === -1) return false;
+      if (category && l.category !== category) return false;
+      if (condition && l.condition !== condition) return false;
+      if (type && l.listing_type !== type) return false;
+      return true;
+    });
 
-    <footer style="margin-top: 20px; border-top: 1px solid black; padding: 10px;">
+    renderListings(filtered);
+  }
 
-        <p>
-            <a href="#">Terms</a> |
-            <a href="#">Privacy</a> |
-            <a href="#">Help</a>
-        </p>
+  function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterCondition').value = '';
+    document.getElementById('filterType').value = '';
+    renderListings(allListings);
+  }
 
-        <p style="font-size: 12px;">
-            Switchr Marketplace - Skeleton Version
-        </p>
-
-    </footer>
-
-    <script>
-        // Update header based on login state
-        var authLinks = document.getElementById('authLinks');
-        if (isLoggedIn()) {
-            var user = getUser();
-            var links = '<span>' + (user ? user.username : 'User') + '</span> | ';
-            if (user && user.role === 'seller') {
-                links += '<a href="/Seller/Seller_Home.html">Seller Dashboard</a> | ';
-            }
-            if (user && user.role === 'admin') {
-                links += '<a href="/Admin/admin.html">Admin Dashboard</a> | ';
-            }
-            links += '<a href="#" onclick="logout()">Logout</a>';
-            authLinks.innerHTML = links;
-        }
-
-        var allListings = [];
-
-        // Fetch active listings (public, no auth needed)
-        fetch('/api/listings/browse')
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            allListings = data.listings || [];
-            renderListings(allListings);
-        })
-        .catch(function() {
-            document.getElementById('listingsContainer').innerHTML = '<p>Could not load listings.</p>';
-        });
-
-        function renderListings(listings) {
-            var container = document.getElementById('listingsContainer');
-            document.getElementById('resultCount').textContent = listings.length;
-
-            if (listings.length === 0) {
-                container.innerHTML = '<p>No listings found.</p>';
-                return;
-            }
-
-            var html = '';
-            listings.forEach(function(l) {
-                html += '<article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">';
-                html += '<div style="display: flex; gap: 10px;">';
-                html += '<div style="width: 100px; height: 80px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">IMG</div>';
-                html += '<div>';
-                html += '<h4 style="margin: 0;">' + l.title + '</h4>';
-                html += '<p style="margin: 5px 0;">Condition: ' + l.condition + '</p>';
-                html += '<p style="margin: 5px 0;">Price: $' + parseFloat(l.price).toFixed(2) + '</p>';
-                html += '<p style="margin: 5px 0;">Type: ' + l.listing_type + '</p>';
-                html += '<p style="margin: 5px 0;">Seller: ' + l.seller_username + '</p>';
-                html += '<a href="/Buyer/listing.html?id=' + l.id + '">View Details</a>';
-                html += '</div>';
-                html += '</div>';
-                html += '</article>';
-            });
-
-            container.innerHTML = html;
-        }
-
-        function filterListings() {
-            var search = document.getElementById('searchInput').value.toLowerCase();
-            var category = document.getElementById('filterCategory').value;
-            var condition = document.getElementById('filterCondition').value;
-            var type = document.getElementById('filterType').value;
-
-            var filtered = allListings.filter(function(l) {
-                if (search && l.title.toLowerCase().indexOf(search) === -1) return false;
-                if (category && l.category !== category) return false;
-                if (condition && l.condition !== condition) return false;
-                if (type && l.listing_type !== type) return false;
-                return true;
-            });
-
-            renderListings(filtered);
-        }
-
-        function clearFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('filterCategory').value = '';
-            document.getElementById('filterCondition').value = '';
-            document.getElementById('filterType').value = '';
-            renderListings(allListings);
-        }
-    </script>
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login.html';
+  }
+</script>
 
 </body>
-
 </html>
