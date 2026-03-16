@@ -374,7 +374,7 @@
       html += '</td>';
       html += '<td>' + (l.created_at ? l.created_at.replace('T', ' ').split(' ')[0] : '') + '</td>';
       html += '<td>' + (l.updated_at ? l.updated_at.replace('T', ' ').split(' ')[0] : '') + '</td>';
-      html += '<td class="tbl-actions"><a href="/SkeletonPages/Seller/Seller_Edit_Listing.html?id=' + l.id + '">Edit</a><a href="#" class="del">Delete</a></td>';
+      html += '<td class="tbl-actions"><a href="/SkeletonPages/Seller/Seller_Edit_Listing.html?id=' + l.id + '">Edit</a><a href="#" class="del" onclick="deleteListing(' + l.id + '); return false;">Delete</a></td>';
       html += '</tr>';
     });
 
@@ -390,6 +390,26 @@
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.href = '/SkeletonPages/login.html';
+  }
+
+function deleteListing(id) {
+    if (!confirm('Are you sure you want to remove this listing?')) return;
+
+    fetch('/api/listings/' + id, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        window.location.reload();
+      } else {
+        alert(data.error || 'Could not delete listing.');
+      }
+    })
+    .catch(function() {
+      alert('Network error. Try again.');
+    });
   }
 
   function filterTable() {

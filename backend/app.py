@@ -681,6 +681,31 @@ def deny_listing(listing_id):
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+# Delist a listing - marks as DELETED, does not remove from database
+@app.route('/api/listings/<int:listing_id>', methods=['DELETE'])
+@approved_required
+def delete_listing(listing_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('SELECT * FROM listings WHERE id = %s AND seller_id = %s', (listing_id, request.user_id))
+        listing = cur.fetchone()
+
+        if not listing:
+            conn.close()
+            return jsonify({'error': 'Listing not found'}), 404
+
+        cur.execute(
+            '''UPDATE listings SET status = 'DELETED', updated_at = CURRENT_TIMESTAMP
+               WHERE id = %s RETURNING *''',
+            (listing_id,)
+        )
+        conn.close()
+        return jsonify({'message': 'Listing removed successfully'}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # ============ FRONTEND ROUTES ============
