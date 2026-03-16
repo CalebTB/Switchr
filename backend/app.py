@@ -707,6 +707,29 @@ def delete_listing(listing_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Public route - get single active listing by ID for buyers
+@app.route('/api/listings/browse/<int:listing_id>', methods=['GET'])
+def get_browse_listing(listing_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''SELECT l.*, u.username as seller_username
+               FROM listings l
+               JOIN users u ON l.seller_id = u.id
+               WHERE l.id = %s AND l.status = 'ACTIVE' ''',
+            (listing_id,)
+        )
+        listing = cur.fetchone()
+        conn.close()
+
+        if not listing:
+            return jsonify({'error': 'Listing not found'}), 404
+
+        return jsonify({'listing': format_listing(listing)})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ============ FRONTEND ROUTES ============
 
