@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Switchr Buyer Page</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
+  <style>
+    .search-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .search-row input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      background: white;
+    }
+
+    .search-row input:focus {
+      outline: none;
+      border-color: #1a1a1a;
+    }
+
+    .search-row button {
+      padding: 10px 20px;
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+    }
+
+    .search-row button:hover { background: #333; }
+
+    .browse-layout {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .filters-panel {
+      width: 240px;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 20px;
+      flex-shrink: 0;
+    }
+
+    .filters-panel h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f0e040;
+    }
+
+    .filter-group { margin-bottom: 16px; }
+
+    .filter-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #888;
+      margin-bottom: 6px;
+    }
+
+    .filter-group select {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      background: #fafaf8;
+      color: #1a1a1a;
+    }
+
+    .filter-group select:focus {
+      outline: none;
+      border-color: #1a1a1a;
+    }
+
+    .btn-clear {
+      width: 100%;
+      padding: 8px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .btn-clear:hover { border-color: #1a1a1a; }
+
+    .listings-panel { flex: 1; }
+
+    .results-header {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+
+    .results-header span {
+      color: #1a1a1a;
+      font-weight: 700;
+    }
+
+    .listing-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      transition: border-color 0.15s;
+    }
+
+    .listing-card:hover { border-color: #f0e040; }
+
+    .listing-img {
+      width: 100px;
+      height: 80px;
+      border: 1px dashed #ccc;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #aaa;
+      background: #fafaf8;
+      flex-shrink: 0;
+    }
+
+    .listing-info { flex: 1; }
+
+    .listing-info h4 {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .listing-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .listing-meta span { display: flex; align-items: center; gap: 4px; }
+
+    .listing-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+
+    .listing-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .btn-view {
+      padding: 8px 16px;
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-view:hover { background: #333; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
+  <div class="nav-center">
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/offers/offers.html">Offers</a>
+    <a href="/pages/buyer/cart.html">Cart</a>
+    <a href="/pages/profile.html">Profile</a>
+  </div>
+  <div class="nav-right" id="authLinks"></div>
+</nav>
+
+<div class="header-bar">
+  <h1>Browse Listings</h1>
+</div>
+
+<div class="main">
+
+  <div class="search-row">
+    <input type="text" id="searchInput" placeholder="Search listings by title or description..." oninput="filterListings()">
+    <button type="button" onclick="filterListings()">Search</button>
+  </div>
+
+  <div class="browse-layout">
+
+    <aside class="filters-panel">
+      <h3>Filters</h3>
+
+      <div class="filter-group">
+        <label>Category</label>
+        <select id="filterCategory" onchange="filterListings()">
+          <option value="">Any</option>
+          <option>Phones</option>
+          <option>Laptops</option>
+          <option>Tablets</option>
+          <option>Headphones</option>
+          <option>Chargers</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Condition</label>
+        <select id="filterCondition" onchange="filterListings()">
+          <option value="">Any</option>
+          <option value="NEW">New</option>
+          <option value="LIKE_NEW">Like New</option>
+          <option value="GOOD">Good</option>
+          <option value="FAIR">Fair</option>
+          <option value="POOR">Poor</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Listing Type</label>
+        <select id="filterType" onchange="filterListings()">
+          <option value="">Any</option>
+          <option value="SALE">For Sale</option>
+          <option value="TRADE">For Trade</option>
+          <option value="BOTH">Both</option>
+        </select>
+      </div>
+
+      <button class="btn-clear" type="button" onclick="clearFilters()">Clear Filters</button>
+    </aside>
+
+    <section class="listings-panel">
+      <p class="results-header">Results: <span id="resultCount">0</span></p>
+      <div id="listingsContainer">
+        <p class="empty-msg">Loading listings...</p>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<footer>
+  <a href="/pages/terms.html">Terms</a>
+  <a href="/pages/privacy.html">Privacy</a>
+  <a href="#">Help</a>
+  <p style="margin-top:8px;">Switchr &mdash; Sprint 3 &mdash; CSE 4214</p>
+</footer>
+
+<script>
+  var authLinks = document.getElementById('authLinks');
+  if (isLoggedIn()) {
+    var user = getUser();
+    var links = '';
+    if (user && user.role === 'seller') {
+      links += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
+    }
+    if (user && user.role === 'admin') {
+      links += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
+    }
+    links += '<a href="#" onclick="logout()">Logout</a>';
+    authLinks.innerHTML = links;
+  } else {
+    authLinks.innerHTML = '<a href="/pages/auth/login.html">Login</a>';
+  }
+
+  var allListings = [];
+
+  fetch('/api/listings/browse')
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    allListings = data.listings || [];
+    renderListings(allListings);
+  })
+  .catch(function() {
+    document.getElementById('listingsContainer').innerHTML = '<p class="empty-msg">Could not load listings. Please try again.</p>';
+  });
+
+  function renderListings(listings) {
+    var container = document.getElementById('listingsContainer');
+    document.getElementById('resultCount').textContent = listings.length;
+
+    if (listings.length === 0) {
+      container.innerHTML = '<p class="empty-msg">No listings found.</p>';
+      return;
+    }
+
+    var html = '';
+    listings.forEach(function(l) {
+      var typeClass = l.listing_type ? l.listing_type.toLowerCase() : 'sale';
+      var typeLabel = l.listing_type === 'SALE' ? 'For Sale' : l.listing_type === 'TRADE' ? 'For Trade' : 'Sale or Trade';
+
+      html += '<div class="listing-card">';
+      html += '<div class="listing-img">IMG</div>';
+      html += '<div class="listing-info">';
+      html += '<h4>' + l.title + '</h4>';
+      html += '<div class="listing-meta">';
+      html += '<span>Condition: ' + l.condition + '</span>';
+      html += '<span>Seller: ' + l.seller_username + '</span>';
+      html += '<span><span class="badge ' + typeClass + '">' + typeLabel + '</span></span>';
+      html += '</div>';
+      html += '</div>';
+      html += '<div class="listing-actions">';
+      html += '<span class="listing-price">$' + parseFloat(l.price).toFixed(2) + '</span>';
+      html += '<a class="btn-view" href="/pages/buyer/listing.html?id=' + l.id + '">View Details</a>';
+      html += '</div>';
+      html += '</div>';
+    });
+
+    container.innerHTML = html;
+  }
+
+  function filterListings() {
+    var search = document.getElementById('searchInput').value.toLowerCase();
+    var category = document.getElementById('filterCategory').value;
+    var condition = document.getElementById('filterCondition').value;
+    var type = document.getElementById('filterType').value;
+
+    var filtered = allListings.filter(function(l) {
+      if (search && l.title.toLowerCase().indexOf(search) === -1) return false;
+      if (category && l.category !== category) return false;
+      if (condition && l.condition !== condition) return false;
+      if (type && l.listing_type !== type) return false;
+      return true;
+    });
+
+    renderListings(filtered);
+  }
+
+  function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterCondition').value = '';
+    document.getElementById('filterType').value = '';
+    renderListings(allListings);
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/pages/auth/login.html';
+  }
+</script>
+
+</body>
+</html>

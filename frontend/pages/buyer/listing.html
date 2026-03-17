@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Listing Details - Switchr</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
+  <style>
+    .main { max-width: 1100px; }
+
+    .listing-grid {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .listing-left { flex: 1; }
+    .listing-right { width: 320px; }
+
+    .photo-placeholder {
+      display: flex;
+      gap: 10px;
+    }
+
+    .photo-box {
+      width: 150px;
+      height: 120px;
+      border: 1px dashed #ccc;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #aaa;
+      background: #fafaf8;
+    }
+
+    .listing-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .seller-info {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+    }
+
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: #888; }
+    .detail-value { font-weight: 500; }
+
+    .price-display {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      color: #1a1a1a;
+      margin: 16px 0;
+    }
+
+    .btn { display: block; width: 100%; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
+  <div class="nav-center">
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/offers/offers.html">Offers</a>
+    <a href="/pages/buyer/cart.html">Cart</a>
+    <a href="/pages/profile.html">Profile</a>
+  </div>
+  <div class="nav-right" id="authLinks"></div>
+</nav>
+
+<div class="header-bar">
+  <p class="breadcrumb">
+    <a href="/pages/buyer/browse.html">&larr; Back to Browse</a>
+  </p>
+</div>
+
+<div class="main">
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div id="listingContent" class="listing-grid">
+    <div class="listing-left">
+      <div class="card">
+        <p style="color:#aaa; text-align:center; padding:20px;">Loading listing...</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Switchr &mdash; Sprint 3 &mdash; CSE 4214</footer>
+
+<script>
+  // auth header
+  var authLinks = document.getElementById('authLinks');
+  if (isLoggedIn()) {
+    var user = getUser();
+    var links = '';
+    if (user && user.role === 'seller') {
+      links += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
+    }
+    if (user && user.role === 'admin') {
+      links += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
+    }
+    links += '<a href="#" onclick="logout()">Logout</a>';
+    authLinks.innerHTML = links;
+  } else {
+    authLinks.innerHTML = '<a href="/pages/auth/login.html">Login</a>';
+  }
+
+  // get listing ID from URL
+  var params = new URLSearchParams(window.location.search);
+  var listingId = params.get('id');
+
+  if (!listingId) {
+    window.location.href = '/pages/buyer/browse.html';
+  }
+
+  fetch('/api/listings/browse/' + listingId)
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (data.error) {
+      var banner = document.getElementById('errorBanner');
+      banner.textContent = data.error;
+      banner.style.display = 'block';
+      return;
+    }
+
+    var l = data.listing;
+    var typeClass = l.listing_type ? l.listing_type.toLowerCase() : 'sale';
+    var typeLabel = l.listing_type === 'SALE' ? 'For Sale' : l.listing_type === 'TRADE' ? 'For Trade' : 'Sale or Trade';
+
+    document.title = l.title + ' - Switchr';
+
+    var html = '<div class="listing-left">';
+
+    html += '<div class="card">';
+    html += '<div class="photo-placeholder">';
+    html += '<div class="photo-box">IMG 1</div>';
+    html += '<div class="photo-box">IMG 2</div>';
+    html += '<div class="photo-box">IMG 3</div>';
+    html += '</div>';
+    html += '</div>';
+
+    html += '<div class="card">';
+    html += '<h1 class="listing-title">' + l.title + '</h1>';
+    html += '<p class="seller-info">Listed by <strong>' + l.seller_username + '</strong> &middot; ' + (l.created_at || '') + '</p>';
+
+    html += '<div class="detail-row"><span class="detail-label">Category</span><span class="detail-value">' + l.category + '</span></div>';
+    html += '<div class="detail-row"><span class="detail-label">Condition</span><span class="detail-value">' + l.condition + '</span></div>';
+    html += '<div class="detail-row"><span class="detail-label">Listing Type</span><span class="detail-value"><span class="badge ' + typeClass + '">' + typeLabel + '</span></span></div>';
+    html += '<div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">' + l.status + '</span></div>';
+    html += '</div>';
+
+    html += '<div class="card">';
+    html += '<h3>Description</h3>';
+    html += '<p style="font-size:14px; line-height:1.6; color:#444;">' + l.description + '</p>';
+    html += '</div>';
+
+    html += '</div>'; // end listing-left
+
+    html += '<div class="listing-right">';
+    html += '<div class="card">';
+    html += '<p class="price-display">$' + parseFloat(l.price).toFixed(2) + '</p>';
+
+    if (l.listing_type === 'SALE' || l.listing_type === 'BOTH') {
+      html += '<button class="btn primary" onclick="addToCart(' + l.id + ')">Add to Cart</button>';
+      html += '<a class="btn" href="/pages/buyer/cart.html" style="text-align:center; text-decoration:none;">View Cart</a>';
+    }
+    if (l.listing_type === 'TRADE' || l.listing_type === 'BOTH') {
+      html += '<button class="btn" onclick="alert(\'Trade offer flow coming soon!\')">Offer Trade</button>';
+    }
+
+    html += '<button class="btn" onclick="alert(\'Messaging coming soon!\')">Message Seller</button>';
+    html += '<button class="btn danger" onclick="alert(\'Report flow coming soon!\')">Report Listing</button>';
+    html += '</div>';
+    html += '</div>';
+
+    document.getElementById('listingContent').innerHTML = html;
+  })
+  .catch(function() {
+    var banner = document.getElementById('errorBanner');
+    banner.textContent = 'Could not load listing. Please try again.';
+    banner.style.display = 'block';
+  });
+  
+  function addToCart(listingId) {
+    var token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/pages/auth/login.html';
+      return;
+    }
+
+    fetch('/api/cart', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ listing_id: listingId })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        alert('Added to cart! Go to cart to checkout.');
+      } else {
+        alert(data.error || 'Could not add to cart.');
+      }
+    })
+    .catch(function() {
+      alert('Network error. Try again.');
+    });
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/pages/auth/login.html';
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Home - Switchr</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/shared.css">
+  <style>
+    .main { max-width: 1100px; }
+    .header-bar { padding: 24px 32px; }
+    .badge { margin-left: 6px; }
+
+    .actions-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .action-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 18px 22px;
+      text-decoration: none;
+      color: #1a1a1a;
+      font-size: 14px;
+      font-weight: 500;
+      flex: 1;
+      min-width: 160px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .action-card:hover { border-color: #f0e040; }
+
+    .action-card .card-label {
+      font-size: 11px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .action-card.primary {
+      background: #1a1a1a;
+      color: white;
+      border-color: #1a1a1a;
+    }
+
+    .action-card.primary .card-label { color: #f0e040; }
+
+    .empty-msg { padding: 28px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="brand" href="/pages/seller/dashboard.html">Switchr</a>
+  <div class="nav-center">
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/seller/dashboard.html">My Listings</a>
+    <a href="/pages/profile.html">Profile</a>
+  </div>
+  <div class="nav-right">
+    <a href="#" onclick="logout()">Logout</a>
+  </div>
+</nav>
+
+<div class="header-bar">
+  <h1>Welcome back, <span id="displayName">...</span></h1>
+  <p class="meta">
+    <span id="userEmail"></span>
+    <span class="badge seller">SELLER</span>
+    <span class="badge active">ACTIVE</span>
+  </p>
+</div>
+
+<div class="main">
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="actions-row">
+    <a class="action-card primary" href="/pages/seller/create-listing.html">
+      <div class="card-label">New</div>
+      + Create Listing
+    </a>
+    <a class="action-card" href="#">
+      <div class="card-label">Incoming</div>
+      View My Offers
+    </a>
+    <a class="action-card" href="#">
+      <div class="card-label">Past activity</div>
+      Transaction History
+    </a>
+    <a class="action-card" href="/pages/profile.html">
+      <div class="card-label">Account</div>
+      My Profile
+    </a>
+  </div>
+
+  <div class="section-head">
+    <h2>My Listings</h2>
+  </div>
+
+  <div class="filter-row">
+    <select id="filterStatus" onchange="filterTable()">
+      <option value="">All Statuses</option>
+      <option value="ACTIVE">ACTIVE</option>
+      <option value="PENDING_APPROVAL">PENDING_APPROVAL</option>
+      <option value="SOLD">SOLD</option>
+      <option value="TRADED">TRADED</option>
+      <option value="DENIED">DENIED</option>
+    </select>
+    <select id="filterType" onchange="filterTable()">
+      <option value="">All Types</option>
+      <option value="SALE">SALE</option>
+      <option value="TRADE">TRADE</option>
+      <option value="BOTH">BOTH</option>
+    </select>
+    <input type="text" id="filterSearch" placeholder="Search by title..." oninput="filterTable()">
+  </div>
+
+  <table id="listingsTable">
+    <thead>
+      <tr>
+        <th>listingId</th>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Price</th>
+        <th>Condition</th>
+        <th>Type</th>
+        <th>Status</th>
+        <th>Created At</th>
+        <th>Updated At</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="listingsBody">
+      <tr>
+        <td colspan="10" class="empty-msg">Loading listings...</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+<footer>Switchr &mdash; Sprint 3 &mdash; CSE 4214</footer>
+
+<script>
+  // check auth on page load
+  var token = localStorage.getItem('token');
+  var user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (!token) {
+    window.location.href = '/pages/auth/login.html';
+  }
+
+  // show user info
+  document.getElementById('displayName').textContent = user.username || 'Seller';
+  document.getElementById('userEmail').textContent = user.email || '';
+
+  // check account status
+  if (user.status === 'pending') {
+    var banner = document.getElementById('errorBanner');
+    banner.textContent = 'Your account is pending admin approval. You cannot create or manage listings yet.';
+    banner.style.display = 'block';
+  } else if (user.status === 'denied') {
+    var banner = document.getElementById('errorBanner');
+    banner.textContent = 'Your account has been denied.';
+    banner.style.display = 'block';
+  }
+
+  // load listings from API
+  fetch('/api/listings', {
+    headers: {
+      'Authorization': 'Bearer ' + token
+    }
+  })
+  .then(function(res) {
+    if (res.status === 401) {
+      window.location.href = '/pages/auth/login.html';
+      return;
+    }
+    return res.json();
+  })
+  .then(function(data) {
+    var tbody = document.getElementById('listingsBody');
+
+    if (!data || !data.listings || data.listings.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="10" class="empty-msg">No listings yet. Create one above!</td></tr>';
+      return;
+    }
+
+    var html = '';
+    data.listings.forEach(function(l) {
+      var statusClass = l.status ? l.status.toLowerCase() : 'active';
+      html += '<tr>';
+      html += '<td>' + l.id + '</td>';
+      html += '<td>' + l.title + '</td>';
+      html += '<td>' + l.category + '</td>';
+      html += '<td>$' + parseFloat(l.price).toFixed(2) + '</td>';
+      html += '<td>' + l.condition + '</td>';
+      html += '<td>' + l.listing_type + '</td>';
+      html += '<td><span class="badge ' + statusClass + '">' + l.status + '</span>';
+      if (l.status === 'DENIED' && l.denial_reason) {
+        html += '<br><small style="color:#c62828;">Reason: ' + l.denial_reason + '</small>';
+      }
+      html += '</td>';
+      html += '<td>' + (l.created_at ? l.created_at.replace('T', ' ').split(' ')[0] : '') + '</td>';
+      html += '<td>' + (l.updated_at ? l.updated_at.replace('T', ' ').split(' ')[0] : '') + '</td>';
+      html += '<td class="tbl-actions"><a href="/pages/seller/edit-listing.html?id=' + l.id + '">Edit</a><a href="#" class="del" onclick="deleteListing(' + l.id + '); return false;">Delete</a></td>';
+      html += '</tr>';
+    });
+
+    tbody.innerHTML = html;
+  })
+  .catch(function(err) {
+    var banner = document.getElementById('errorBanner');
+    banner.textContent = 'Could not load listings. Please try again.';
+    banner.style.display = 'block';
+  });
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/pages/auth/login.html';
+  }
+
+function deleteListing(id) {
+    if (!confirm('Are you sure you want to remove this listing?')) return;
+
+    fetch('/api/listings/' + id, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        window.location.reload();
+      } else {
+        alert(data.error || 'Could not delete listing.');
+      }
+    })
+    .catch(function() {
+      alert('Network error. Try again.');
+    });
+  }
+
+  function filterTable() {
+    var status = document.getElementById('filterStatus').value.toLowerCase();
+    var type = document.getElementById('filterType').value.toLowerCase();
+    var search = document.getElementById('filterSearch').value.toLowerCase();
+    var rows = document.querySelectorAll('#listingsTable tbody tr');
+
+    rows.forEach(function(row) {
+      var cells = row.querySelectorAll('td');
+      if (cells.length < 7) return;
+      var rowStatus = cells[6].innerText.toLowerCase();
+      var rowType = cells[5].innerText.toLowerCase();
+      var rowTitle = cells[1].innerText.toLowerCase();
+
+      var show = true;
+      if (status && rowStatus.indexOf(status) === -1) show = false;
+      if (type && rowType.indexOf(type) === -1) show = false;
+      if (search && rowTitle.indexOf(search) === -1) show = false;
+
+      row.style.display = show ? '' : 'none';
+    });
+  }
+</script>
+
+</body>
+</html>
