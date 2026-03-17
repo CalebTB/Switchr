@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Cart - Switchr</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/shared.css">
-  <script src="../js/auth.js"></script>
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
   <style>
     .main { max-width: 900px; }
     .header-bar h1 { font-size: 22px; }
@@ -128,12 +128,12 @@
 <body>
 
 <nav>
-  <a class="brand" href="/Buyer/buyer.html">Switchr</a>
+  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
   <div class="nav-center">
-    <a href="/Buyer/buyer.html">Browse</a>
-    <a href="/offers.html">Offers</a>
-    <a href="/Buyer/cart.html">Cart</a>
-    <a href="/profile.html">Profile</a>
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/offers/offers.html">Offers</a>
+    <a href="/pages/buyer/cart.html">Cart</a>
+    <a href="/pages/profile.html">Profile</a>
   </div>
   <div class="nav-right" id="authLinks"></div>
 </nav>
@@ -141,7 +141,7 @@
 <div class="header-bar">
   <h1>My Cart</h1>
   <p class="breadcrumb">
-    <a href="/Buyer/buyer.html">&larr; Back to Browse</a>
+    <a href="/pages/buyer/browse.html">&larr; Back to Browse</a>
   </p>
 </div>
 
@@ -163,16 +163,16 @@
   var user = JSON.parse(localStorage.getItem('user') || '{}');
 
   if (!token) {
-    window.location.href = '/login.html';
+    window.location.href = '/pages/auth/login.html';
   }
 
   var authLinks = document.getElementById('authLinks');
   var cartLinks = '';
   if (user && user.role === 'seller') {
-    cartLinks += '<a href="/Seller/Seller_Home.html">Seller Dashboard</a>';
+    cartLinks += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
   }
   if (user && user.role === 'admin') {
-    cartLinks += '<a href="/Admin/admin.html">Admin Dashboard</a>';
+    cartLinks += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
   }
   cartLinks += '<a href="#" onclick="logout()">Logout</a>';
   authLinks.innerHTML = cartLinks;
@@ -184,7 +184,7 @@
   })
   .then(function(res) {
     if (res.status === 401) {
-      window.location.href = '/login.html';
+      window.location.href = '/pages/auth/login.html';
       return;
     }
     return res.json();
@@ -202,7 +202,7 @@
     var container = document.getElementById('cartContent');
 
     if (cartItems.length === 0) {
-      container.innerHTML = '<div class="card"><div class="empty-cart"><p>Your cart is empty.</p><a href="/Buyer/buyer.html" class="btn-browse">Browse Listings</a></div></div>';
+      container.innerHTML = '<div class="card"><div class="empty-cart"><p>Your cart is empty.</p><a href="/pages/buyer/browse.html" class="btn-browse">Browse Listings</a></div></div>';
       return;
     }
 
@@ -220,7 +220,7 @@
       itemsHtml += '</div>';
       itemsHtml += '<div class="item-actions">';
       itemsHtml += '<span class="item-price">$' + parseFloat(item.price).toFixed(2) + '</span>';
-      itemsHtml += '<a href="/Buyer/listing.html?id=' + item.listing_id + '" style="font-size:11px; color:#666;">View</a>';
+      itemsHtml += '<a href="/pages/buyer/listing.html?id=' + item.listing_id + '" style="font-size:11px; color:#666;">View</a>';
       itemsHtml += '<button class="btn-remove" onclick="removeFromCart(' + item.listing_id + ')">Remove</button>';
       itemsHtml += '</div>';
       itemsHtml += '</div>';
@@ -233,7 +233,7 @@
       summaryHtml += '<div class="summary-row"><span>' + item.title + '</span><span>$' + parseFloat(item.price).toFixed(2) + '</span></div>';
     });
     summaryHtml += '<div class="summary-total"><span>Total</span><span>$' + total.toFixed(2) + '</span></div>';
-    summaryHtml += '<a href="/Buyer/checkout.html" class="btn-checkout">Proceed to Checkout</a>';
+    summaryHtml += '<a href="/pages/buyer/checkout.html" class="btn-checkout">Proceed to Checkout</a>';
     summaryHtml += '</div></div>';
 
     container.innerHTML = '<div class="cart-layout">' + itemsHtml + summaryHtml + '</div>';
@@ -259,7 +259,7 @@
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login.html';
+    window.location.href = '/pages/auth/login.html';
   }
 </script>
 

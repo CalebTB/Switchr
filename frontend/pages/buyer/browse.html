@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Switchr Buyer Page</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/shared.css">
-  <script src="../js/auth.js"></script>
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
   <style>
     .search-row {
       display: flex;
@@ -201,12 +201,12 @@
 <body>
 
 <nav>
-  <a class="brand" href="/Buyer/buyer.html">Switchr</a>
+  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
   <div class="nav-center">
-    <a href="/Buyer/buyer.html">Browse</a>
-    <a href="/offers.html">Offers</a>
-    <a href="/Buyer/cart.html">Cart</a>
-    <a href="/profile.html">Profile</a>
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/offers/offers.html">Offers</a>
+    <a href="/pages/buyer/cart.html">Cart</a>
+    <a href="/pages/profile.html">Profile</a>
   </div>
   <div class="nav-right" id="authLinks"></div>
 </nav>
@@ -276,8 +276,8 @@
 </div>
 
 <footer>
-  <a href="/terms.html">Terms</a>
-  <a href="/privacy.html">Privacy</a>
+  <a href="/pages/terms.html">Terms</a>
+  <a href="/pages/privacy.html">Privacy</a>
   <a href="#">Help</a>
   <p style="margin-top:8px;">Switchr &mdash; Sprint 3 &mdash; CSE 4214</p>
 </footer>
@@ -288,15 +288,15 @@
     var user = getUser();
     var links = '';
     if (user && user.role === 'seller') {
-      links += '<a href="/Seller/Seller_Home.html">Seller Dashboard</a>';
+      links += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
     }
     if (user && user.role === 'admin') {
-      links += '<a href="/Admin/admin.html">Admin Dashboard</a>';
+      links += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
     }
     links += '<a href="#" onclick="logout()">Logout</a>';
     authLinks.innerHTML = links;
   } else {
-    authLinks.innerHTML = '<a href="/login.html">Login</a>';
+    authLinks.innerHTML = '<a href="/pages/auth/login.html">Login</a>';
   }
 
   var allListings = [];
@@ -337,7 +337,7 @@
       html += '</div>';
       html += '<div class="listing-actions">';
       html += '<span class="listing-price">$' + parseFloat(l.price).toFixed(2) + '</span>';
-      html += '<a class="btn-view" href="/Buyer/listing.html?id=' + l.id + '">View Details</a>';
+      html += '<a class="btn-view" href="/pages/buyer/listing.html?id=' + l.id + '">View Details</a>';
       html += '</div>';
       html += '</div>';
     });
@@ -373,7 +373,7 @@
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login.html';
+    window.location.href = '/pages/auth/login.html';
   }
 </script>
 

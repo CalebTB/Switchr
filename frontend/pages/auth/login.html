@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Switchr - Sign Up</title>
+  <title>Switchr - Login</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/shared.css">
-  <script src="js/auth.js"></script>
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
   <style>
     .main { max-width: 420px; }
 
@@ -41,8 +41,7 @@
       margin-bottom: 6px;
     }
 
-    .auth-field input,
-    .auth-field select {
+    .auth-field input {
       width: 100%;
       padding: 10px 12px;
       border: 1px solid #ddd;
@@ -53,14 +52,13 @@
       color: #1a1a1a;
     }
 
-    .auth-field input:focus,
-    .auth-field select:focus {
+    .auth-field input:focus {
       outline: none;
       border-color: #1a1a1a;
       background: white;
     }
 
-    .btn-signup {
+    .btn-login {
       display: block;
       width: 100%;
       padding: 12px;
@@ -75,7 +73,7 @@
       margin-top: 4px;
     }
 
-    .btn-signup:hover { background: #333; }
+    .btn-login:hover { background: #333; }
 
     .auth-error {
       background: #fce4ec;
@@ -88,16 +86,10 @@
       display: none;
     }
 
-    .auth-success {
-      background: #e6f4ea;
-      color: #2d7a3a;
-      border: 1px solid #a5d6a7;
-      border-radius: 4px;
-      padding: 14px;
-      margin-bottom: 16px;
-      font-size: 13px;
-      line-height: 1.5;
-      display: none;
+    .auth-error.warning {
+      background: #fff3e0;
+      color: #b36200;
+      border-color: #ffe0b2;
     }
 
     .auth-links {
@@ -116,84 +108,68 @@
 
     .auth-links a:hover { text-decoration: underline; }
 
-    .field-hint {
-      font-size: 11px;
-      color: #999;
-      margin-top: 4px;
+    .forgot-link {
+      display: block;
+      margin-top: 12px;
+      font-size: 12px;
+      color: #888;
+      text-decoration: none;
     }
+
+    .forgot-link:hover { color: #1a1a1a; }
   </style>
 </head>
 <body>
 
 <nav>
-  <a class="brand" href="/Buyer/buyer.html">Switchr</a>
+  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
   <div class="nav-center">
-    <a href="/Buyer/buyer.html">Browse</a>
+    <a href="/pages/buyer/browse.html">Browse</a>
   </div>
   <div class="nav-right">
-    <a href="/login.html">Login</a>
+    <a href="/pages/auth/login.html">Login</a>
   </div>
 </nav>
 
 <div class="header-bar">
-  <h1>Create Account</h1>
-  <p class="meta">Join the Switchr marketplace</p>
+  <h1>Welcome Back</h1>
+  <p class="meta">Sign in to your Switchr account</p>
 </div>
 
 <div class="main">
 
   <div class="auth-card">
-    <h2>Sign Up</h2>
-    <p class="subtitle">Fill in your details to get started</p>
+    <h2>Login</h2>
+    <p class="subtitle">Enter your credentials to continue</p>
 
     <div class="auth-error" id="errorMessage"></div>
-    <div class="auth-success" id="successMessage"></div>
 
-    <form id="registerForm" onsubmit="handleRegister(event)">
+    <form id="loginForm" onsubmit="handleLogin(event)">
       <div class="auth-field">
         <label for="email">Email</label>
         <input type="email" id="email" placeholder="you@example.com" required>
       </div>
 
       <div class="auth-field">
-        <label for="username">Username</label>
-        <input type="text" id="username" placeholder="Choose a username" required>
-      </div>
-
-      <div class="auth-field">
         <label for="password">Password</label>
-        <input type="password" id="password" placeholder="At least 8 characters" required>
-        <p class="field-hint">Minimum 8 characters with letters, numbers, and symbols</p>
+        <input type="password" id="password" placeholder="Enter your password" required>
       </div>
 
-      <div class="auth-field">
-        <label for="confirmPassword">Confirm Password</label>
-        <input type="password" id="confirmPassword" placeholder="Re-enter your password" required>
-      </div>
-
-      <div class="auth-field">
-        <label for="role">Account Type</label>
-        <select id="role" required>
-          <option value="user">Buyer</option>
-          <option value="seller">Seller</option>
-          <option value="admin">Admin</option>
-        </select>
-        <p class="field-hint">Buyer and Seller accounts require admin approval</p>
-      </div>
-
-      <button type="submit" class="btn-signup">Sign Up</button>
+      <button type="submit" class="btn-login">Login</button>
     </form>
 
+    <a href="#" class="forgot-link">Forgot your password?</a>
+
     <div class="auth-links">
-      <p>Already have an account? <a href="login.html">Login</a></p>
+      <p>Don't have an account? <a href="/pages/auth/register.html">Sign Up</a></p>
     </div>
   </div>
 
 </div>
 
 <footer>
-  <a href="/terms.html">Terms</a>
-  <a href="/privacy.html">Privacy</a>
+  <a href="/pages/terms.html">Terms</a>
+  <a href="/pages/privacy.html">Privacy</a>
   <a href="#">Help</a>
   <p style="margin-top:8px;">Switchr &mdash; Sprint 3 &mdash; CSE 4214</p>
 </footer>
@@ -201,40 +177,32 @@
 <script>
   redirectIfLoggedIn();
 
-  async function handleRegister(event) {
+  async function handleLogin(event) {
     event.preventDefault();
 
     var email = document.getElementById('email').value;
-    var username = document.getElementById('username').value;
     var password = document.getElementById('password').value;
-    var confirmPassword = document.getElementById('confirmPassword').value;
     var errorEl = document.getElementById('errorMessage');
 
     errorEl.style.display = 'none';
+    errorEl.classList.remove('warning');
 
-    if (password !== confirmPassword) {
-      errorEl.textContent = 'Passwords do not match';
-      errorEl.style.display = 'block';
-      return;
-    }
-
-    if (password.length < 8) {
-      errorEl.textContent = 'Password must be at least 8 characters';
-      errorEl.style.display = 'block';
-      return;
-    }
-
-    var role = document.getElementById('role').value;
-
-    var result = await register(email, username, password, role);
+    var result = await login(email, password);
 
     if (result.success) {
       if (result.user.role === 'admin') {
-        window.location.href = '/Admin/admin.html';
+        window.location.href = '/pages/admin/dashboard.html';
+      } else if (result.user.status === 'denied') {
+        errorEl.textContent = 'Your account has been denied.';
+        errorEl.style.display = 'block';
+      } else if (result.user.status === 'pending') {
+        errorEl.classList.add('warning');
+        errorEl.textContent = 'Your account is pending admin approval. You can browse listings but cannot buy, sell, or trade yet.';
+        errorEl.style.display = 'block';
+      } else if (result.user.role === 'seller') {
+        window.location.href = '/pages/seller/dashboard.html';
       } else {
-        document.getElementById('successMessage').textContent = 'Account created! Your account is pending admin approval. You can browse listings but cannot buy, sell, or trade until approved.';
-        document.getElementById('successMessage').style.display = 'block';
-        document.getElementById('registerForm').style.display = 'none';
+        window.location.href = '/pages/buyer/browse.html';
       }
     } else {
       errorEl.textContent = result.error;

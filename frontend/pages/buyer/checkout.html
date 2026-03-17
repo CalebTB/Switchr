@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout - Switchr</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/shared.css">
-  <script src="../js/auth.js"></script>
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
   <style>
     .main { max-width: 900px; }
     .header-bar h1 { font-size: 22px; }
@@ -147,12 +147,12 @@
 <body>
 
 <nav>
-  <a class="brand" href="/Buyer/buyer.html">Switchr</a>
+  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
   <div class="nav-center">
-    <a href="/Buyer/buyer.html">Browse</a>
-    <a href="/offers.html">Offers</a>
-    <a href="/Buyer/cart.html">Cart</a>
-    <a href="/profile.html">Profile</a>
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/offers/offers.html">Offers</a>
+    <a href="/pages/buyer/cart.html">Cart</a>
+    <a href="/pages/profile.html">Profile</a>
   </div>
   <div class="nav-right" id="authLinks"></div>
 </nav>
@@ -160,7 +160,7 @@
 <div class="header-bar">
   <h1>Checkout</h1>
   <p class="breadcrumb">
-    <a href="/Buyer/cart.html">&larr; Back to Cart</a>
+    <a href="/pages/buyer/cart.html">&larr; Back to Cart</a>
   </p>
 </div>
 
@@ -269,7 +269,7 @@
     <div class="checkmark">✅</div>
     <h2>Transaction Confirmed!</h2>
     <p>Your simulated purchase is complete. Thank you for using Switchr.</p>
-    <a href="/Buyer/buyer.html" class="btn-browse">Continue Browsing</a>
+    <a href="/pages/buyer/browse.html" class="btn-browse">Continue Browsing</a>
   </div>
 
 </div>
@@ -281,16 +281,16 @@
   var user = JSON.parse(localStorage.getItem('user') || '{}');
 
   if (!token) {
-    window.location.href = '/login.html';
+    window.location.href = '/pages/auth/login.html';
   }
 
   var authLinks = document.getElementById('authLinks');
   var checkoutLinks = '';
   if (user && user.role === 'seller') {
-    checkoutLinks += '<a href="/Seller/Seller_Home.html">Seller Dashboard</a>';
+    checkoutLinks += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
   }
   if (user && user.role === 'admin') {
-    checkoutLinks += '<a href="/Admin/admin.html">Admin Dashboard</a>';
+    checkoutLinks += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
   }
   checkoutLinks += '<a href="#" onclick="logout()">Logout</a>';
   authLinks.innerHTML = checkoutLinks;
@@ -304,7 +304,7 @@
     var items = data.cart || [];
 
     if (items.length === 0) {
-      window.location.href = '/Buyer/cart.html';
+      window.location.href = '/pages/buyer/cart.html';
       return;
     }
 
@@ -324,7 +324,7 @@
     document.getElementById('total').textContent = '$' + total.toFixed(2);
   })
   .catch(function() {
-    window.location.href = '/Buyer/cart.html';
+    window.location.href = '/pages/buyer/cart.html';
   });
 
   function confirmTransaction() {
@@ -346,7 +346,7 @@
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login.html';
+    window.location.href = '/pages/auth/login.html';
   }
 </script>
 

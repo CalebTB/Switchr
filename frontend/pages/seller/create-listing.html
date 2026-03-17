@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create Listing - Switchr</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/shared.css">
+  <link rel="stylesheet" href="../../css/shared.css">
   <style>
     .main { max-width: 700px; }
     .header-bar h1 { font-size: 22px; }
@@ -90,11 +90,11 @@
 <body>
 
 <nav>
-  <a class="brand" href="/SkeletonPages/Seller/Seller_Home.html">Switchr</a>
+  <a class="brand" href="/pages/seller/dashboard.html">Switchr</a>
   <div class="nav-center">
-    <a href="/Buyer/buyer.html">Browse</a>
-    <a href="/SkeletonPages/Seller/Seller_Home.html">My Listings</a>
-    <a href="/SkeletonPages/profile.html">Profile</a>
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/seller/dashboard.html">My Listings</a>
+    <a href="/pages/profile.html">Profile</a>
   </div>
   <div class="nav-right">
     <a href="#" onclick="logout()">Logout</a>
@@ -104,7 +104,7 @@
 <div class="header-bar">
   <h1>Create a New Listing</h1>
   <p class="breadcrumb">
-    <a href="/SkeletonPages/Seller/Seller_Home.html">Seller Home</a> &rsaquo; Create Listing
+    <a href="/pages/seller/dashboard.html">Seller Home</a> &rsaquo; Create Listing
   </p>
 </div>
 
@@ -187,7 +187,7 @@
     </div>
 
     <div class="btn-row">
-      <a class="btn-cancel" href="/SkeletonPages/Seller/Seller_Home.html">&larr; Cancel</a>
+      <a class="btn-cancel" href="/pages/seller/dashboard.html">&larr; Cancel</a>
       <button class="btn-submit" id="submitBtn" onclick="submitListing()">Submit Listing</button>
     </div>
 
@@ -201,7 +201,7 @@
   var token = localStorage.getItem('token');
   var user = JSON.parse(localStorage.getItem('user') || '{}');
   if (!token) {
-    window.location.href = '/SkeletonPages/login.html';
+    window.location.href = '/pages/auth/login.html';
   }
 
   // check account approval
@@ -285,7 +285,7 @@
       if (result.status === 201) {
         showSuccess('Listing submitted for approval! Redirecting...');
         setTimeout(function() {
-          window.location.href = '/SkeletonPages/Seller/Seller_Home.html';
+          window.location.href = '/pages/seller/dashboard.html';
         }, 1200);
       } else {
         showError(result.data.error || 'Something went wrong. Try again.');
@@ -303,7 +303,7 @@
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/SkeletonPages/login.html';
+    window.location.href = '/pages/auth/login.html';
   }
 </script>
 

@@ -53,7 +53,7 @@ async function authFetch(url, options = {}) {
     // If token expired, redirect to login
     if (response.status === 401) {
         removeToken();
-        window.location.href = '/login.html';
+        window.location.href = '/pages/auth/login.html';
         return null;
     }
 
@@ -107,7 +107,7 @@ function logout() {
 // Protect page - redirect to login if not authenticated
 function requireAuth() {
     if (!isLoggedIn()) {
-        window.location.href = '/login.html';
+        window.location.href = '/pages/auth/login.html';
         return false;
     }
     return true;
@@ -116,7 +116,7 @@ function requireAuth() {
 // Protect page - redirect if not admin
 function requireAdmin() {
     if (!isLoggedIn()) {
-        window.location.href = '/login.html';
+        window.location.href = '/pages/auth/login.html';
         return false;
     }
     var user = getUser();
@@ -137,12 +137,12 @@ function redirectIfLoggedIn(redirectUrl = '/') {
 // Update nav links based on login state
 function updateNavLinks() {
     if (!isLoggedIn()) {
-        var profileLinks = document.querySelectorAll('a[href="/profile.html"]');
+        var profileLinks = document.querySelectorAll('a[href="/pages/profile.html"]');
         for (var i = 0; i < profileLinks.length; i++) {
-            profileLinks[i].href = '/login.html';
+            profileLinks[i].href = '/pages/auth/login.html';
         }
 
-        var offersLinks = document.querySelectorAll('a[href="/offers.html"]');
+        var offersLinks = document.querySelectorAll('a[href="/pages/offers/offers.html"]');
         for (var i = 0; i < offersLinks.length; i++) {
             offersLinks[i].style.display = 'none';
         }

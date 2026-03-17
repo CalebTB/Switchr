@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Listing Details - Switchr</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/shared.css">
-  <script src="../js/auth.js"></script>
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
   <style>
     .main { max-width: 1100px; }
 
@@ -74,19 +74,19 @@
 <body>
 
 <nav>
-  <a class="brand" href="/Buyer/buyer.html">Switchr</a>
+  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
   <div class="nav-center">
-    <a href="/Buyer/buyer.html">Browse</a>
-    <a href="/offers.html">Offers</a>
-    <a href="/Buyer/cart.html">Cart</a>
-    <a href="/profile.html">Profile</a>
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/offers/offers.html">Offers</a>
+    <a href="/pages/buyer/cart.html">Cart</a>
+    <a href="/pages/profile.html">Profile</a>
   </div>
   <div class="nav-right" id="authLinks"></div>
 </nav>
 
 <div class="header-bar">
   <p class="breadcrumb">
-    <a href="/Buyer/buyer.html">&larr; Back to Browse</a>
+    <a href="/pages/buyer/browse.html">&larr; Back to Browse</a>
   </p>
 </div>
 
@@ -113,15 +113,15 @@
     var user = getUser();
     var links = '';
     if (user && user.role === 'seller') {
-      links += '<a href="/Seller/Seller_Home.html">Seller Dashboard</a>';
+      links += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
     }
     if (user && user.role === 'admin') {
-      links += '<a href="/Admin/admin.html">Admin Dashboard</a>';
+      links += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
     }
     links += '<a href="#" onclick="logout()">Logout</a>';
     authLinks.innerHTML = links;
   } else {
-    authLinks.innerHTML = '<a href="/login.html">Login</a>';
+    authLinks.innerHTML = '<a href="/pages/auth/login.html">Login</a>';
   }
 
   // get listing ID from URL
@@ -129,7 +129,7 @@
   var listingId = params.get('id');
 
   if (!listingId) {
-    window.location.href = '/Buyer/buyer.html';
+    window.location.href = '/pages/buyer/browse.html';
   }
 
   fetch('/api/listings/browse/' + listingId)
@@ -181,7 +181,7 @@
 
     if (l.listing_type === 'SALE' || l.listing_type === 'BOTH') {
       html += '<button class="btn primary" onclick="addToCart(' + l.id + ')">Add to Cart</button>';
-      html += '<a class="btn" href="/Buyer/cart.html" style="text-align:center; text-decoration:none;">View Cart</a>';
+      html += '<a class="btn" href="/pages/buyer/cart.html" style="text-align:center; text-decoration:none;">View Cart</a>';
     }
     if (l.listing_type === 'TRADE' || l.listing_type === 'BOTH') {
       html += '<button class="btn" onclick="alert(\'Trade offer flow coming soon!\')">Offer Trade</button>';
@@ -203,7 +203,7 @@
   function addToCart(listingId) {
     var token = localStorage.getItem('token');
     if (!token) {
-      window.location.href = '/login.html';
+      window.location.href = '/pages/auth/login.html';
       return;
     }
 
@@ -231,7 +231,7 @@
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login.html';
+    window.location.href = '/pages/auth/login.html';
   }
 </script>
 

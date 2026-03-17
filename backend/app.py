@@ -827,7 +827,7 @@ def remove_from_cart(listing_id):
 
 @app.route('/')
 def index():
-    return send_from_directory(os.path.join(FRONTEND_DIR, 'Buyer'), 'buyer.html')
+    return send_from_directory(os.path.join(FRONTEND_DIR, 'pages', 'buyer'), 'browse.html')
 
 @app.route('/<path:filename>')
 def serve_frontend(filename):
