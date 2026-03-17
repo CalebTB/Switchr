@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'SkeletonPages')
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
 
 app = Flask(__name__, static_folder=FRONTEND_DIR)
 CORS(app)
