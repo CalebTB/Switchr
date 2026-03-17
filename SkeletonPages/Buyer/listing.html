@@ -75,10 +75,13 @@
 
 <nav>
   <a class="brand" href="/Buyer/buyer.html">Switchr</a>
-  <div class="nav-links">
+  <div class="nav-center">
     <a href="/Buyer/buyer.html">Browse</a>
-    <span id="authLinks"></span>
+    <a href="/offers.html">Offers</a>
+    <a href="/Buyer/cart.html">Cart</a>
+    <a href="/profile.html">Profile</a>
   </div>
+  <div class="nav-right" id="authLinks"></div>
 </nav>
 
 <div class="header-bar">
@@ -108,8 +111,14 @@
   var authLinks = document.getElementById('authLinks');
   if (isLoggedIn()) {
     var user = getUser();
-    var links = '<a href="/profile.html">' + (user ? user.username : 'Profile') + '</a>';
-    links += ' <a href="#" onclick="logout()">Logout</a>';
+    var links = '';
+    if (user && user.role === 'seller') {
+      links += '<a href="/Seller/Seller_Home.html">Seller Dashboard</a>';
+    }
+    if (user && user.role === 'admin') {
+      links += '<a href="/Admin/admin.html">Admin Dashboard</a>';
+    }
+    links += '<a href="#" onclick="logout()">Logout</a>';
     authLinks.innerHTML = links;
   } else {
     authLinks.innerHTML = '<a href="/login.html">Login</a>';

@@ -148,11 +148,13 @@
 
 <nav>
   <a class="brand" href="/Buyer/buyer.html">Switchr</a>
-  <div class="nav-links">
+  <div class="nav-center">
     <a href="/Buyer/buyer.html">Browse</a>
+    <a href="/offers.html">Offers</a>
     <a href="/Buyer/cart.html">Cart</a>
-    <span id="authLinks"></span>
+    <a href="/profile.html">Profile</a>
   </div>
+  <div class="nav-right" id="authLinks"></div>
 </nav>
 
 <div class="header-bar">
@@ -283,7 +285,15 @@
   }
 
   var authLinks = document.getElementById('authLinks');
-  authLinks.innerHTML = '<a href="/profile.html">' + (user.username || 'Profile') + '</a> <a href="#" onclick="logout()">Logout</a>';
+  var checkoutLinks = '';
+  if (user && user.role === 'seller') {
+    checkoutLinks += '<a href="/Seller/Seller_Home.html">Seller Dashboard</a>';
+  }
+  if (user && user.role === 'admin') {
+    checkoutLinks += '<a href="/Admin/admin.html">Admin Dashboard</a>';
+  }
+  checkoutLinks += '<a href="#" onclick="logout()">Logout</a>';
+  authLinks.innerHTML = checkoutLinks;
 
   // load cart for summary
   fetch('/api/cart', {
