@@ -277,6 +277,10 @@
         <label for="price">Price ($) <span class="required">*</span></label>
         <input type="number" id="price" name="price" placeholder="e.g., 450" min="0" step="0.01">
       </div>
+      <div class="form-group">
+        <label for="quantity">Quantity <span class="required">*</span></label>
+        <input type="number" id="quantity" name="quantity" placeholder="e.g., 1" min="1" step="1" value="1">
+      </div>
     </div>
 
     <div class="form-row">
@@ -305,10 +309,11 @@
 
     <div class="form-group">
       <label>Photos</label>
-      <div class="photo-box" onclick="document.getElementById('photoUrls').click()">
+      <div class="photo-box" onclick="document.getElementById('photos').click()">
+        <div id="photoPreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;"></div>
         <p>Click to upload photos</p>
-        <small>Multiple images supported (backend connection coming)</small>
-        <input type="file" id="photoUrls" name="photoUrls" accept="image/*" multiple>
+        <small>Multiple images supported</small>
+        <input type="file" id="photos" name="photos" accept="image/*" multiple onchange="previewPhotos(this)">
       </div>
       <div class="hint">At least one photo recommended (REQ-25)</div>
     </div>
@@ -351,6 +356,21 @@
     }
   }
 
+  function previewPhotos(input) {
+    var preview = document.getElementById('photoPreview');
+    preview.innerHTML = '';
+    Array.from(input.files).forEach(function(file) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:4px;border:1px solid #ddd;';
+            preview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+    });
+  }
+
   function showError(msg) {
     var el = document.getElementById('errorBanner');
     el.textContent = msg;
@@ -366,66 +386,37 @@
   }
 
   function submitListing() {
-    var title = document.getElementById('title').value.trim();
-    var description = document.getElementById('description').value.trim();
-    var category = document.getElementById('category').value;
-    var price = document.getElementById('price').value;
-    var condition = document.getElementById('condition').value;
-    var listingType = document.getElementById('listingType').value;
+    var formData = new FormData();
+    formData.append('title', document.getElementById('title').value.trim());
+    formData.append('description', document.getElementById('description').value.trim());
+    formData.append('category', document.getElementById('category').value);
+    formData.append('price', document.getElementById('price').value);
+    formData.append('quantity', document.getElementById('quantity').value);
+    formData.append('condition', document.getElementById('condition').value);
+    formData.append('listingType', document.getElementById('listingType').value);
 
-    // front end validation before hitting the API
-    if (!title || !description || !category || !price || !condition || !listingType) {
-      showError('Please fill in all required fields.');
-      return;
+    var photos = document.getElementById('photos').files;
+    for (var i = 0; i < photos.length; i++) {
+        formData.append('photos', photos[i]);
     }
 
-    if (title.length > 100) {
-      showError('Title must be 100 characters or less.');
-      return;
-    }
-
-    var btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.textContent = 'Submitting...';
-
+    var token = localStorage.getItem('token');
     fetch('/api/listings', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      },
-      body: JSON.stringify({
-        title: title,
-        description: description,
-        category: category,
-        price: parseFloat(price),
-        condition: condition,
-        listingType: listingType
-      })
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: formData
     })
-    .then(function(res) {
-      return res.json().then(function(data) {
-        return { status: res.status, data: data };
-      });
+    .then(r => r.json())
+    .then(data => {
+        if (data.listing) {
+            alert('Listing submitted for approval!');
+            window.location.href = '/Seller/Seller_Home.html';
+        } else {
+            alert(data.error || 'Something went wrong.');
+        }
     })
-    .then(function(result) {
-      if (result.status === 201) {
-        showSuccess('Listing submitted for approval! Redirecting...');
-        setTimeout(function() {
-          window.location.href = '/SkeletonPages/Seller/Seller_Home.html';
-        }, 1200);
-      } else {
-        showError(result.data.error || 'Something went wrong. Try again.');
-        btn.disabled = false;
-        btn.textContent = 'Submit Listing';
-      }
-    })
-    .catch(function() {
-      showError('Network error. Check that the backend is running.');
-      btn.disabled = false;
-      btn.textContent = 'Submit Listing';
-    });
-  }
+    .catch(() => alert('Could not connect to server.'));
+}
 
   function logout() {
     localStorage.removeItem('token');

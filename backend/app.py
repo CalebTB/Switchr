@@ -8,13 +8,19 @@ import jwt
 import os
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
-
-load_dotenv()
+from werkzeug.utils import secure_filename
+import uuid
 
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'SkeletonPages')
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 app = Flask(__name__, static_folder=FRONTEND_DIR)
 CORS(app)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+
+load_dotenv()
 
 # Configuration
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-change-in-production')
@@ -138,6 +144,18 @@ def init_db():
             ) THEN
                 ALTER TABLE users ADD COLUMN denial_reason TEXT;
             END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'listings' AND column_name = 'photo_urls'
+            ) THEN
+                ALTER TABLE listings ADD COLUMN photo_urls TEXT[] DEFAULT '{}';
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'listings' AND column_name = 'quantity'
+            ) THEN
+                ALTER TABLE listings ADD COLUMN quantity INTEGER DEFAULT 1;
+            END IF;
         END $$;
     ''')
     cur.execute('''
@@ -260,6 +278,9 @@ def format_listing(row):
     if d.get('updated_at'):
         d['updated_at'] = d['updated_at'].strftime('%Y-%m-%d')
     return d
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 # ============ AUTH ROUTES ============
@@ -368,14 +389,13 @@ def get_current_user():
 @app.route('/api/listings', methods=['POST'])
 @approved_required
 def create_listing():
-    data = request.get_json()
-
-    title = data.get('title', '').strip()
-    description = data.get('description', '').strip()
-    category = data.get('category', '')
-    price = data.get('price')
-    condition = data.get('condition', '')
-    listing_type = data.get('listingType', '')
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    category = request.form.get('category', '')
+    price = request.form.get('price')
+    condition = request.form.get('condition', '')
+    listing_type = request.form.get('listingType', '')
+    quantity = request.form.get('quantity', 1)
 
     if not title or not description or not category or not price or not condition or not listing_type:
         return jsonify({'error': 'All fields are required'}), 400
@@ -383,15 +403,26 @@ def create_listing():
     if len(title) > 100:
         return jsonify({'error': 'Title must be 100 characters or less'}), 400
 
+    # Handle photo uploads
+    photo_urls = []
+    files = request.files.getlist('photos')
+    for file in files:
+        if file and file.filename and allowed_file(file.filename):
+            ext = file.filename.rsplit('.', 1)[1].lower()
+            filename = f"{uuid.uuid4().hex}.{ext}"
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            photo_urls.append(f"/uploads/{filename}")
+
     try:
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(
             '''INSERT INTO listings
-               (seller_id, title, description, category, price, condition, listing_type, status)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, 'PENDING_APPROVAL')
-               RETURNING *''',
-            (request.user_id, title, description, category, float(price), condition, listing_type)
+            (seller_id, title, description, category, price, condition, listing_type, status, photo_urls, quantity)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 'PENDING_APPROVAL', %s, %s)
+            RETURNING *''',
+            (request.user_id, title, description, category, float(price),
+            condition, listing_type, photo_urls, int(quantity))
         )
         listing = cur.fetchone()
         conn.close()
@@ -985,6 +1016,9 @@ def index():
 @app.route('/<path:filename>')
 def serve_frontend(filename):
     return send_from_directory(FRONTEND_DIR, filename)
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 # ============ MAIN ============
