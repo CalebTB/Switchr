@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="../../css/shared.css">
   <script src="../../js/auth.js"></script>
   <style>
-    .main { max-width: 900px; }
+    .main { max-width: 1000px; }
     .header-bar h1 { font-size: 22px; }
 
     .card h3 {
@@ -21,10 +21,11 @@
       display: flex;
       gap: 24px;
       align-items: flex-start;
+      flex-wrap: wrap;
     }
 
-    .checkout-forms { flex: 1; }
-    .checkout-summary { width: 300px; }
+    .checkout-forms { flex: 1; min-width: 320px; }
+    .checkout-summary { width: 300px; min-width: 280px; }
 
     label {
       display: block;
@@ -142,6 +143,12 @@
       text-decoration: none;
       font-size: 14px;
     }
+
+    @media (max-width: 768px) {
+      .checkout-layout { flex-direction: column; }
+      .checkout-summary { width: 100%; }
+      .form-row { flex-direction: column; gap: 0; }
+    }
   </style>
 </head>
 <body>
@@ -231,7 +238,6 @@
             <label>Name on Card</label>
             <input type="text" id="cardName" placeholder="John Doe">
           </div>
-        </div>
         </div>
 
         <!-- Billing Address -->
