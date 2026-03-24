@@ -178,13 +178,27 @@
     html += '<div class="listing-right">';
     html += '<div class="card">';
     html += '<p class="price-display">$' + parseFloat(l.price).toFixed(2) + '</p>';
+    var qty = l.quantity || 0;
+    if (qty <= 0) {
+        html += '<p style="color:#c62828;font-weight:600;font-size:14px;margin-bottom:12px;">Sold Out</p>';
+    } else if (qty <= 3) {
+        html += '<p style="color:#e65100;font-weight:600;font-size:13px;margin-bottom:12px;">Only ' + qty + ' left in stock!</p>';
+    } else {
+        html += '<p style="color:#2d7a3a;font-weight:600;font-size:13px;margin-bottom:12px;">' + qty + ' in stock</p>';
+    }
 
     if (l.listing_type === 'SALE' || l.listing_type === 'BOTH') {
-      html += '<button class="btn primary" onclick="addToCart(' + l.id + ')">Add to Cart</button>';
-      html += '<a class="btn" href="/pages/buyer/cart.html" style="text-align:center; text-decoration:none;">View Cart</a>';
+      if (qty <= 0) {
+          html += '<button class="btn primary" disabled style="opacity:0.5;cursor:not-allowed;">Sold Out</button>';
+      } else {
+          html += '<button class="btn primary" onclick="addToCart(' + l.id + ')">Add to Cart</button>';
+          html += '<a class="btn" href="/pages/buyer/cart.html" style="text-align:center; text-decoration:none;">View Cart</a>';
+      }
     }
     if (l.listing_type === 'TRADE' || l.listing_type === 'BOTH') {
-      html += '<button class="btn" onclick="alert(\'Trade offer flow coming soon!\')">Offer Trade</button>';
+      if (qty > 0) {
+          html += '<button class="btn" onclick="alert(\'Trade offer flow coming soon!\')">Offer Trade</button>';
+      }
     }
 
     html += '<button class="btn" onclick="alert(\'Messaging coming soon!\')">Message Seller</button>';
@@ -199,7 +213,7 @@
     banner.textContent = 'Could not load listing. Please try again.';
     banner.style.display = 'block';
   });
-  
+
   function addToCart(listingId) {
     var token = localStorage.getItem('token');
     if (!token) {

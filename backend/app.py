@@ -8,13 +8,19 @@ import jwt
 import os
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
-
-load_dotenv()
+from werkzeug.utils import secure_filename
+import uuid
 
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 app = Flask(__name__, static_folder=FRONTEND_DIR)
 CORS(app)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+
+load_dotenv()
 
 # Configuration
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-change-in-production')
@@ -81,6 +87,54 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS orders (
+            id SERIAL PRIMARY KEY,
+            buyer_id INTEGER REFERENCES users(id),
+            subtotal NUMERIC(10,2) NOT NULL,
+            tax_rate NUMERIC(5,4) DEFAULT 0.08,
+            tax_amount NUMERIC(10,2) NOT NULL,
+            total NUMERIC(10,2) NOT NULL,
+            ship_first_name VARCHAR(100),
+            ship_last_name VARCHAR(100),
+            ship_address VARCHAR(255),
+            ship_city VARCHAR(100),
+            ship_state VARCHAR(50),
+            ship_zip VARCHAR(20),
+            bill_same_as_ship BOOLEAN DEFAULT TRUE,
+            bill_first_name VARCHAR(100),
+            bill_last_name VARCHAR(100),
+            bill_address VARCHAR(255),
+            bill_city VARCHAR(100),
+            bill_state VARCHAR(50),
+            bill_zip VARCHAR(20),
+            card_last_four VARCHAR(4),
+            card_name VARCHAR(100),
+            status VARCHAR(20) DEFAULT 'COMPLETED',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS order_items (
+            id SERIAL PRIMARY KEY,
+            order_id INTEGER REFERENCES orders(id),
+            listing_id INTEGER REFERENCES listings(id),
+            title VARCHAR(100) NOT NULL,
+            price NUMERIC(10,2) NOT NULL,
+            seller_id INTEGER REFERENCES users(id),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS notifications (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            message TEXT NOT NULL,
+            type VARCHAR(50) DEFAULT 'INFO',
+            is_read BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     # Add columns if tables already exist without them
     cur.execute('''
         DO $$
@@ -108,6 +162,18 @@ def init_db():
                 WHERE table_name = 'users' AND column_name = 'balance'
             ) THEN
                 ALTER TABLE users ADD COLUMN balance NUMERIC(10,2) DEFAULT 0.00;
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'listings' AND column_name = 'photo_urls'
+            ) THEN
+                ALTER TABLE listings ADD COLUMN photo_urls TEXT[] DEFAULT '{}';
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'listings' AND column_name = 'quantity'
+            ) THEN
+                ALTER TABLE listings ADD COLUMN quantity INTEGER DEFAULT 1;
             END IF;
         END $$;
     ''')
@@ -231,6 +297,9 @@ def format_listing(row):
     if d.get('updated_at'):
         d['updated_at'] = d['updated_at'].strftime('%Y-%m-%d')
     return d
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 # ============ AUTH ROUTES ============
@@ -339,14 +408,13 @@ def get_current_user():
 @app.route('/api/listings', methods=['POST'])
 @approved_required
 def create_listing():
-    data = request.get_json()
-
-    title = data.get('title', '').strip()
-    description = data.get('description', '').strip()
-    category = data.get('category', '')
-    price = data.get('price')
-    condition = data.get('condition', '')
-    listing_type = data.get('listingType', '')
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    category = request.form.get('category', '')
+    price = request.form.get('price')
+    condition = request.form.get('condition', '')
+    listing_type = request.form.get('listingType', '')
+    quantity = request.form.get('quantity', 1)
 
     if not title or not description or not category or not price or not condition or not listing_type:
         return jsonify({'error': 'All fields are required'}), 400
@@ -354,15 +422,26 @@ def create_listing():
     if len(title) > 100:
         return jsonify({'error': 'Title must be 100 characters or less'}), 400
 
+    # Handle photo uploads
+    photo_urls = []
+    files = request.files.getlist('photos')
+    for file in files:
+        if file and file.filename and allowed_file(file.filename):
+            ext = file.filename.rsplit('.', 1)[1].lower()
+            filename = f"{uuid.uuid4().hex}.{ext}"
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            photo_urls.append(f"/uploads/{filename}")
+
     try:
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(
             '''INSERT INTO listings
-               (seller_id, title, description, category, price, condition, listing_type, status)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, 'PENDING_APPROVAL')
-               RETURNING *''',
-            (request.user_id, title, description, category, float(price), condition, listing_type)
+            (seller_id, title, description, category, price, condition, listing_type, status, photo_urls, quantity)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 'PENDING_APPROVAL', %s, %s)
+            RETURNING *''',
+            (request.user_id, title, description, category, float(price),
+            condition, listing_type, photo_urls, int(quantity))
         )
         listing = cur.fetchone()
         conn.close()
@@ -890,72 +969,111 @@ def get_balance():
 
 # ============ TRANSACTION ROUTES ============
 
-# Checkout - buy items in cart, create transactions, mark listings as SOLD
+# Checkout - buy items in cart, create order, transactions, balance transfer
 @app.route('/api/checkout', methods=['POST'])
 @approved_required
 def checkout():
     data = request.get_json()
-    payment_method = data.get('payment_method', 'card')
-
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
-        conn = get_db()
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-
         # Get cart items
-        cur.execute(
-            '''SELECT c.listing_id, l.title, l.price, l.seller_id, l.status
-               FROM cart c
-               JOIN listings l ON c.listing_id = l.id
-               WHERE c.user_id = %s''',
-            (request.user_id,)
-        )
+        cur.execute('''
+            SELECT c.listing_id, l.title, l.price, l.seller_id, l.status
+            FROM cart c
+            JOIN listings l ON c.listing_id = l.id
+            WHERE c.user_id = %s
+        ''', (request.user_id,))
         cart_items = cur.fetchall()
 
         if not cart_items:
-            conn.close()
             return jsonify({'error': 'Cart is empty'}), 400
 
         # Check all listings still active
         for item in cart_items:
             if item['status'] != 'ACTIVE':
-                conn.close()
                 return jsonify({'error': 'Listing "' + item['title'] + '" is no longer available'}), 400
 
-        # Check buyer has enough balance
-        total_cost = sum(float(item['price']) for item in cart_items)
+        # Calculate totals
+        subtotal = sum(float(item['price']) for item in cart_items)
+        tax_rate = 0.08
+        tax_amount = round(subtotal * tax_rate, 2)
+        total = round(subtotal + tax_amount, 2)
 
+        # Check buyer has enough balance
         cur.execute('SELECT balance FROM users WHERE id = %s', (request.user_id,))
         buyer = cur.fetchone()
 
-        if float(buyer['balance']) < total_cost:
-            conn.close()
-            return jsonify({'error': 'Insufficient balance. You need $' + '{:.2f}'.format(total_cost) + ' but have $' + '{:.2f}'.format(float(buyer['balance']))}), 400
+        if float(buyer['balance']) < total:
+            return jsonify({'error': 'Insufficient balance. You need $' + '{:.2f}'.format(total) + ' but have $' + '{:.2f}'.format(float(buyer['balance']))}), 400
 
         # Deduct from buyer
         cur.execute(
             'UPDATE users SET balance = balance - %s WHERE id = %s',
-            (total_cost, request.user_id)
+            (total, request.user_id)
         )
 
-        transaction_ids = []
+        # Billing address
+        bill_same = data.get('billSameAsShip', True)
+        card_num = data.get('cardNumber', '').replace(' ', '')
+        card_last_four = card_num[-4:] if len(card_num) >= 4 else '0000'
 
-        # Create a transaction for each item
+        # Create order
+        cur.execute('''
+            INSERT INTO orders (
+                buyer_id, subtotal, tax_rate, tax_amount, total,
+                ship_first_name, ship_last_name, ship_address,
+                ship_city, ship_state, ship_zip,
+                bill_same_as_ship,
+                bill_first_name, bill_last_name, bill_address,
+                bill_city, bill_state, bill_zip,
+                card_last_four, card_name, status
+            ) VALUES (
+                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s,
+                %s,
+                %s, %s, %s, %s, %s, %s,
+                %s, %s, 'COMPLETED'
+            ) RETURNING id
+        ''', (
+            request.user_id, subtotal, tax_rate, tax_amount, total,
+            data.get('firstName'), data.get('lastName'), data.get('address'),
+            data.get('city'), data.get('state'), data.get('zip'),
+            bill_same,
+            data.get('firstName') if bill_same else data.get('billFirstName'),
+            data.get('lastName') if bill_same else data.get('billLastName'),
+            data.get('address') if bill_same else data.get('billAddress'),
+            data.get('city') if bill_same else data.get('billCity'),
+            data.get('state') if bill_same else data.get('billState'),
+            data.get('zip') if bill_same else data.get('billZip'),
+            card_last_four, data.get('cardName')
+        ))
+        order = cur.fetchone()
+        order_id = order['id']
+
+        transaction_ids = []
+        seller_ids = set()
+
         for item in cart_items:
+            # Create order item
+            cur.execute('''
+                INSERT INTO order_items (order_id, listing_id, title, price, seller_id)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (order_id, item['listing_id'], item['title'], item['price'], item['seller_id']))
+
+            # Create transaction record
             cur.execute(
                 '''INSERT INTO transactions (buyer_id, seller_id, listing_id, title, price, payment_method)
                    VALUES (%s, %s, %s, %s, %s, %s)
                    RETURNING id''',
                 (request.user_id, item['seller_id'], item['listing_id'],
-                 item['title'], float(item['price']), payment_method)
+                 item['title'], float(item['price']), 'balance')
             )
             txn = cur.fetchone()
             transaction_ids.append(txn['id'])
 
             # Mark listing as SOLD
-            cur.execute(
-                "UPDATE listings SET status = 'SOLD', updated_at = CURRENT_TIMESTAMP WHERE id = %s",
-                (item['listing_id'],)
-            )
+            cur.execute("UPDATE listings SET status='SOLD', updated_at = CURRENT_TIMESTAMP WHERE id=%s", (item['listing_id'],))
 
             # Credit seller
             cur.execute(
@@ -963,18 +1081,32 @@ def checkout():
                 (float(item['price']), item['seller_id'])
             )
 
-        # Clear buyer's cart
-        cur.execute('DELETE FROM cart WHERE user_id = %s', (request.user_id,))
+            seller_ids.add(item['seller_id'])
 
-        conn.close()
+        # Notify each seller
+        cur.execute('SELECT username FROM users WHERE id = %s', (request.user_id,))
+        buyer_info = cur.fetchone()
+        buyer_username = buyer_info['username']
+        for seller_id in seller_ids:
+            cur.execute('''
+                INSERT INTO notifications (user_id, message, type)
+                VALUES (%s, %s, 'SALE')
+            ''', (seller_id, 'Your item was purchased by ' + buyer_username + '! Order #' + str(order_id)))
+
+        # Clear cart
+        cur.execute("DELETE FROM cart WHERE user_id=%s", (request.user_id,))
 
         return jsonify({
-            'message': 'Purchase complete',
+            'message': 'Order placed successfully',
+            'order_id': order_id,
+            'total': total,
             'transaction_ids': transaction_ids
         }), 201
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
 
 
 # Get buyer's purchase history (invoices)
@@ -1081,6 +1213,9 @@ def index():
 @app.route('/<path:filename>')
 def serve_frontend(filename):
     return send_from_directory(FRONTEND_DIR, filename)
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 
 # ============ MAIN ============
