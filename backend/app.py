@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 import uuid
 
-FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'SkeletonPages')
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
@@ -1011,7 +1011,7 @@ def checkout():
 
 @app.route('/')
 def index():
-    return send_from_directory(os.path.join(FRONTEND_DIR, 'Buyer'), 'buyer.html')
+    return send_from_directory(os.path.join(FRONTEND_DIR, 'pages', 'buyer'), 'browse.html')
 
 @app.route('/<path:filename>')
 def serve_frontend(filename):

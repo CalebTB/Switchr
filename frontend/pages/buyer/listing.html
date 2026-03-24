@@ -5,77 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Listing Details - Switchr</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
-  <script src="../js/auth.js"></script>
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: #f7f6f3;
-      color: #1a1a1a;
-      min-height: 100vh;
-    }
-
-    nav {
-      background: #1a1a1a;
-      padding: 14px 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    nav .brand {
-      font-family: 'Syne', sans-serif;
-      color: #f0e040;
-      font-size: 22px;
-      text-decoration: none;
-      letter-spacing: 1px;
-    }
-
-    nav .nav-links a {
-      color: #ccc;
-      text-decoration: none;
-      margin-left: 20px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    nav .nav-links a:hover { color: white; }
-
-    .header-bar {
-      background: #fff;
-      border-bottom: 3px solid #f0e040;
-      padding: 16px 32px;
-    }
-
-    .breadcrumb {
-      font-size: 13px;
-      color: #999;
-    }
-
-    .breadcrumb a {
-      color: #666;
-      text-decoration: none;
-    }
-
-    .breadcrumb a:hover { color: #1a1a1a; }
-
-    .main {
-      max-width: 1100px;
-      margin: 32px auto;
-      padding: 0 24px;
-    }
-
-    .error-banner {
-      background: #fce4ec;
-      color: #c62828;
-      border: 1px solid #ef9a9a;
-      border-radius: 4px;
-      padding: 10px 14px;
-      margin-bottom: 20px;
-      font-size: 13px;
-      display: none;
-    }
+    .main { max-width: 1100px; }
 
     .listing-grid {
       display: flex;
@@ -85,20 +18,6 @@
 
     .listing-left { flex: 1; }
     .listing-right { width: 320px; }
-
-    .card {
-      background: white;
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      padding: 24px;
-      margin-bottom: 20px;
-    }
-
-    .card h3 {
-      font-family: 'Syne', sans-serif;
-      font-size: 16px;
-      margin-bottom: 14px;
-    }
 
     .photo-placeholder {
       display: flex;
@@ -149,74 +68,25 @@
       margin: 16px 0;
     }
 
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 3px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-
-    .badge.sale { background: #e8eaf6; color: #3949ab; }
-    .badge.trade { background: #f3e5f5; color: #6a1b9a; }
-    .badge.both { background: #e6f4ea; color: #2d7a3a; }
-
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 11px;
-      border-radius: 4px;
-      font-size: 14px;
-      font-family: 'DM Sans', sans-serif;
-      font-weight: 500;
-      cursor: pointer;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-      background: white;
-      color: #1a1a1a;
-      text-align: center;
-    }
-
-    .btn:hover { border-color: #1a1a1a; }
-
-    .btn.primary {
-      background: #1a1a1a;
-      color: white;
-      border-color: #1a1a1a;
-    }
-
-    .btn.primary:hover { background: #333; }
-
-    .btn.danger {
-      color: #c62828;
-      border-color: #ef9a9a;
-    }
-
-    .btn.danger:hover { border-color: #c62828; }
-
-    footer {
-      text-align: center;
-      padding: 24px;
-      font-size: 12px;
-      color: #aaa;
-      margin-top: 48px;
-    }
+    .btn { display: block; width: 100%; margin-bottom: 10px; }
   </style>
 </head>
 <body>
 
 <nav>
-  <a class="brand" href="/Buyer/buyer.html">Switchr</a>
-  <div class="nav-links">
-    <a href="/Buyer/buyer.html">Browse</a>
-    <span id="authLinks"></span>
+  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
+  <div class="nav-center">
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/offers/offers.html">Offers</a>
+    <a href="/pages/buyer/cart.html">Cart</a>
+    <a href="/pages/profile.html">Profile</a>
   </div>
+  <div class="nav-right" id="authLinks"></div>
 </nav>
 
 <div class="header-bar">
   <p class="breadcrumb">
-    <a href="/Buyer/buyer.html">&larr; Back to Browse</a>
+    <a href="/pages/buyer/browse.html">&larr; Back to Browse</a>
   </p>
 </div>
 
@@ -241,11 +111,17 @@
   var authLinks = document.getElementById('authLinks');
   if (isLoggedIn()) {
     var user = getUser();
-    var links = '<a href="/profile.html">' + (user ? user.username : 'Profile') + '</a>';
-    links += ' <a href="#" onclick="logout()">Logout</a>';
+    var links = '';
+    if (user && user.role === 'seller') {
+      links += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
+    }
+    if (user && user.role === 'admin') {
+      links += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
+    }
+    links += '<a href="#" onclick="logout()">Logout</a>';
     authLinks.innerHTML = links;
   } else {
-    authLinks.innerHTML = '<a href="/login.html">Login</a> <a href="/register.html">Sign Up</a>';
+    authLinks.innerHTML = '<a href="/pages/auth/login.html">Login</a>';
   }
 
   // get listing ID from URL
@@ -253,7 +129,7 @@
   var listingId = params.get('id');
 
   if (!listingId) {
-    window.location.href = '/Buyer/buyer.html';
+    window.location.href = '/pages/buyer/browse.html';
   }
 
   fetch('/api/listings/browse/' + listingId)
@@ -316,7 +192,7 @@
           html += '<button class="btn primary" disabled style="opacity:0.5;cursor:not-allowed;">Sold Out</button>';
       } else {
           html += '<button class="btn primary" onclick="addToCart(' + l.id + ')">Add to Cart</button>';
-          html += '<a class="btn" href="/Buyer/cart.html" style="text-align:center; text-decoration:none;">View Cart</a>';
+          html += '<a class="btn" href="/pages/buyer/cart.html" style="text-align:center; text-decoration:none;">View Cart</a>';
       }
     }
     if (l.listing_type === 'TRADE' || l.listing_type === 'BOTH') {
@@ -341,7 +217,7 @@
   function addToCart(listingId) {
     var token = localStorage.getItem('token');
     if (!token) {
-      window.location.href = '/login.html';
+      window.location.href = '/pages/auth/login.html';
       return;
     }
 
@@ -369,7 +245,7 @@
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login.html';
+    window.location.href = '/pages/auth/login.html';
   }
 </script>
 

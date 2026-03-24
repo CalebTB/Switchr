@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Switchr - Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
+  <style>
+    .main { max-width: 420px; }
+
+    .auth-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 32px;
+    }
+
+    .auth-card h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+
+    .auth-card .subtitle {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 24px;
+    }
+
+    .auth-field { margin-bottom: 18px; }
+
+    .auth-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 6px;
+    }
+
+    .auth-field input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      background: #fafaf8;
+      color: #1a1a1a;
+    }
+
+    .auth-field input:focus {
+      outline: none;
+      border-color: #1a1a1a;
+      background: white;
+    }
+
+    .btn-login {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 15px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .btn-login:hover { background: #333; }
+
+    .auth-error {
+      background: #fce4ec;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+      border-radius: 4px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .auth-error.warning {
+      background: #fff3e0;
+      color: #b36200;
+      border-color: #ffe0b2;
+    }
+
+    .auth-links {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #f0f0f0;
+      font-size: 13px;
+      color: #888;
+    }
+
+    .auth-links a {
+      color: #1a1a1a;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .auth-links a:hover { text-decoration: underline; }
+
+    .forgot-link {
+      display: block;
+      margin-top: 12px;
+      font-size: 12px;
+      color: #888;
+      text-decoration: none;
+    }
+
+    .forgot-link:hover { color: #1a1a1a; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
+  <div class="nav-center">
+    <a href="/pages/buyer/browse.html">Browse</a>
+  </div>
+  <div class="nav-right">
+    <a href="/pages/auth/login.html">Login</a>
+  </div>
+</nav>
+
+<div class="header-bar">
+  <h1>Welcome Back</h1>
+  <p class="meta">Sign in to your Switchr account</p>
+</div>
+
+<div class="main">
+
+  <div class="auth-card">
+    <h2>Login</h2>
+    <p class="subtitle">Enter your credentials to continue</p>
+
+    <div class="auth-error" id="errorMessage"></div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="auth-field">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required>
+      </div>
+
+      <div class="auth-field">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password" required>
+      </div>
+
+      <button type="submit" class="btn-login">Login</button>
+    </form>
+
+    <a href="#" class="forgot-link">Forgot your password?</a>
+
+    <div class="auth-links">
+      <p>Don't have an account? <a href="/pages/auth/register.html">Sign Up</a></p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <a href="/pages/terms.html">Terms</a>
+  <a href="/pages/privacy.html">Privacy</a>
+  <a href="#">Help</a>
+  <p style="margin-top:8px;">Switchr &mdash; Sprint 3 &mdash; CSE 4214</p>
+</footer>
+
+<script>
+  redirectIfLoggedIn();
+
+  async function handleLogin(event) {
+    event.preventDefault();
+
+    var email = document.getElementById('email').value;
+    var password = document.getElementById('password').value;
+    var errorEl = document.getElementById('errorMessage');
+
+    errorEl.style.display = 'none';
+    errorEl.classList.remove('warning');
+
+    var result = await login(email, password);
+
+    if (result.success) {
+      if (result.user.role === 'admin') {
+        window.location.href = '/pages/admin/dashboard.html';
+      } else if (result.user.status === 'denied') {
+        errorEl.textContent = 'Your account has been denied.';
+        errorEl.style.display = 'block';
+      } else if (result.user.status === 'pending') {
+        errorEl.classList.add('warning');
+        errorEl.textContent = 'Your account is pending admin approval. You can browse listings but cannot buy, sell, or trade yet.';
+        errorEl.style.display = 'block';
+      } else if (result.user.role === 'seller') {
+        window.location.href = '/pages/seller/dashboard.html';
+      } else {
+        window.location.href = '/pages/buyer/browse.html';
+      }
+    } else {
+      errorEl.textContent = result.error;
+      errorEl.style.display = 'block';
+    }
+  }
+</script>
+
+</body>
+</html>
