@@ -196,6 +196,65 @@
     }
 
     .btn-view:hover { background: #333; }
+
+    .compare-check {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: #888;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .compare-check input { width: auto; cursor: pointer; }
+
+    .compare-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1a1a1a;
+      color: white;
+      padding: 12px 32px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+    }
+
+    .compare-bar .compare-info {
+      font-size: 14px;
+    }
+
+    .compare-bar .compare-info span {
+      color: #f0e040;
+      font-weight: 700;
+    }
+
+    .compare-bar button {
+      padding: 8px 20px;
+      background: #f0e040;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .compare-bar button:hover { background: #e0d030; }
+
+    .compare-bar .btn-clear-compare {
+      background: transparent;
+      color: #888;
+      border: 1px solid #555;
+    }
+
+    .compare-bar .btn-clear-compare:hover { border-color: #aaa; color: white; }
   </style>
 </head>
 <body>
@@ -275,6 +334,14 @@
   </div>
 </div>
 
+<div class="compare-bar" id="compareBar">
+  <div class="compare-info"><span id="compareCount">0</span> items selected for comparison</div>
+  <div>
+    <button class="btn-clear-compare" onclick="clearCompare()">Clear</button>
+    <button onclick="goCompare()">Compare Now</button>
+  </div>
+</div>
+
 <footer>
   <a href="/pages/terms.html">Terms</a>
   <a href="/pages/privacy.html">Privacy</a>
@@ -300,6 +367,7 @@
   }
 
   var allListings = [];
+  var compareIds = JSON.parse(localStorage.getItem('compareIds') || '[]');
 
   fetch('/api/listings/browse')
   .then(function(res) { return res.json(); })
@@ -338,6 +406,8 @@
       html += '<div class="listing-actions">';
       html += '<span class="listing-price">$' + parseFloat(l.price).toFixed(2) + '</span>';
       html += '<a class="btn-view" href="/pages/buyer/listing.html?id=' + l.id + '">View Details</a>';
+      var checked = compareIds.indexOf(l.id) !== -1 ? ' checked' : '';
+      html += '<label class="compare-check"><input type="checkbox" onchange="toggleCompare(' + l.id + ')"' + checked + '> Compare</label>';
       html += '</div>';
       html += '</div>';
     });
@@ -370,9 +440,63 @@
     renderListings(allListings);
   }
 
+  function toggleCompare(id) {
+    var idx = compareIds.indexOf(id);
+    if (idx === -1) {
+      if (compareIds.length >= 4) {
+        alert('You can compare up to 4 items at a time.');
+        renderListings(allListings.filter(function(l) { return filterMatch(l); }));
+        return;
+      }
+      compareIds.push(id);
+    } else {
+      compareIds.splice(idx, 1);
+    }
+    localStorage.setItem('compareIds', JSON.stringify(compareIds));
+    updateCompareBar();
+  }
+
+  function updateCompareBar() {
+    var bar = document.getElementById('compareBar');
+    var count = document.getElementById('compareCount');
+    count.textContent = compareIds.length;
+    bar.style.display = compareIds.length > 0 ? 'flex' : 'none';
+  }
+
+  function clearCompare() {
+    compareIds = [];
+    localStorage.setItem('compareIds', JSON.stringify(compareIds));
+    updateCompareBar();
+    filterListings();
+  }
+
+  function goCompare() {
+    if (compareIds.length < 2) {
+      alert('Select at least 2 items to compare.');
+      return;
+    }
+    window.location.href = '/pages/buyer/compare.html?ids=' + compareIds.join(',');
+  }
+
+  function filterMatch(l) {
+    var search = document.getElementById('searchInput').value.toLowerCase();
+    var category = document.getElementById('filterCategory').value;
+    var condition = document.getElementById('filterCondition').value;
+    var type = document.getElementById('filterType').value;
+    if (search && l.title.toLowerCase().indexOf(search) === -1) return false;
+    if (category && l.category !== category) return false;
+    if (condition && l.condition !== condition) return false;
+    if (type && l.listing_type !== type) return false;
+    return true;
+  }
+
+  // Init compare bar on load
+  updateCompareBar();
+
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('compareIds');
     window.location.href = '/pages/auth/login.html';
   }
 </script>
