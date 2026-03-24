@@ -40,6 +40,18 @@ nav .nav-center a {
 
 nav .nav-center a:hover { color: white; }
 
+nav .nav-center a .cart-badge {
+  display: none;
+  background: #f0e040;
+  color: #1a1a1a;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 8px;
+  margin-left: 4px;
+  vertical-align: top;
+}
+
 nav .nav-right {
   display: flex;
   align-items: center;

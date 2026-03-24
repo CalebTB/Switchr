@@ -149,5 +149,31 @@ function updateNavLinks() {
     }
 }
 
+// Update cart badge count on nav
+function updateCartBadge() {
+    if (!isLoggedIn()) return;
+    var token = getToken();
+    fetch(API_URL + '/cart', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        var count = (data.cart || []).length;
+        var badges = document.querySelectorAll('.cart-badge');
+        for (var i = 0; i < badges.length; i++) {
+            if (count > 0) {
+                badges[i].textContent = count;
+                badges[i].style.display = 'inline-block';
+            } else {
+                badges[i].style.display = 'none';
+            }
+        }
+    })
+    .catch(function() {});
+}
+
 // Run on page load
-document.addEventListener('DOMContentLoaded', updateNavLinks);
+document.addEventListener('DOMContentLoaded', function() {
+    updateNavLinks();
+    updateCartBadge();
+});
