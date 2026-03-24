@@ -1,125 +1,348 @@
-<!-- profile.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Switchr - Profile</title>
-    <script src="../js/auth.js"></script>
-</head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile - Switchr</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/shared.css">
+  <script src="../js/auth.js"></script>
+  <style>
+    .main { max-width: 900px; }
+    .header-bar h1 { font-size: 22px; }
 
+    .profile-layout {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .profile-info { width: 320px; }
+    .profile-actions { flex: 1; }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+    }
+
+    .info-row:last-child { border-bottom: none; }
+
+    .info-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .info-value {
+      color: #1a1a1a;
+      font-weight: 500;
+    }
+
+    .balance-card {
+      background: #1a1a1a;
+      color: white;
+      border-radius: 6px;
+      padding: 24px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .balance-card .balance-label {
+      font-size: 12px;
+      color: #f0e040;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .balance-card .balance-amount {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+    }
+
+    .add-funds-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .add-funds-row input {
+      flex: 1;
+      min-width: 0;
+      padding: 9px 12px;
+      border: 1px solid #555;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      background: #333;
+      color: white;
+      box-sizing: border-box;
+    }
+
+    .add-funds-row input::placeholder { color: #888; }
+    .add-funds-row input:focus { outline: none; border-color: #f0e040; }
+
+    .add-funds-row button {
+      padding: 9px 16px;
+      background: #f0e040;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .add-funds-row button:hover { background: #e0d030; }
+
+    .quick-amounts {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .quick-amounts button {
+      padding: 5px 12px;
+      background: #333;
+      color: #ccc;
+      border: 1px solid #555;
+      border-radius: 3px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+    }
+
+    .quick-amounts button:hover { border-color: #f0e040; color: white; }
+
+    .fund-msg {
+      font-size: 12px;
+      margin-top: 8px;
+      display: none;
+    }
+  </style>
+</head>
 <body>
 
-    <!-- Header / Navigation -->
-    <header>
-        <h2>Switchr</h2>
+<nav>
+  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
+  <div class="nav-center">
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/buyer/purchases.html">Purchases</a>
+    <a href="/pages/buyer/cart.html">Cart</a>
+    <a href="/pages/profile.html">Profile</a>
+  </div>
+  <div class="nav-right" id="authLinks"></div>
+</nav>
 
-        <nav>
-            <a href="/pages/buyer/browse.html">Browse</a> |
-            <a href="/pages/offers/offers.html">Offers</a> |
-            <a href="#">Messages</a> |
-            <a href="/pages/profile.html">Profile</a>
-        </nav>
+<div class="header-bar">
+  <h1>My Profile</h1>
+</div>
 
-        <div id="authLinks">
-            <a href="/pages/auth/login.html">Login</a>
+<div class="main">
+
+  <div class="error-banner" id="errorBanner"></div>
+  <div class="success-banner" id="successBanner"></div>
+
+  <div class="profile-layout">
+
+    <!-- Left: Account Info -->
+    <div class="profile-info">
+
+      <!-- Wallet / Balance -->
+      <div class="balance-card">
+        <div class="balance-label">Switchr Balance</div>
+        <div class="balance-amount" id="balanceDisplay">$0.00</div>
+        <div class="add-funds-row">
+          <input type="number" id="fundAmount" placeholder="Amount" min="1" step="0.01">
+          <button onclick="addFunds()">Add Funds</button>
         </div>
-
-        <hr>
-    </header>
-
-    <!-- Main Content -->
-    <main>
-        <h1>My Profile</h1>
-        <p>(Skeleton only — no real data or saving.)</p>
-
-        <div style="display: flex; gap: 20px;">
-
-            <!-- Left: Current Profile Display -->
-            <section style="width: 320px; border: 1px solid black; padding: 10px;">
-                <h3>Current Info</h3>
-
-                <div style="width: 200px; height: 150px; border: 1px dashed black; display: flex; align-items: center; justify-content: center;">
-                    Profile Photo
-                </div>
-
-                <p><strong>Username:</strong> (placeholder)</p>
-                <p><strong>Email:</strong> (placeholder)</p>
-                <p><strong>Bio:</strong> (placeholder)</p>
-
-                <hr>
-
-                <p><strong>Account:</strong></p>
-                <p>Status: Active (placeholder)</p>
-            </section>
-
-            <!-- Right: Edit Profile Form -->
-            <section style="flex: 1; border: 1px solid black; padding: 10px;">
-                <h3>Edit Profile</h3>
-
-                <form>
-                    <label><strong>Username</strong></label><br>
-                    <input type="text" placeholder="Enter new username"><br><br>
-
-                    <label><strong>Email</strong></label><br>
-                    <input type="text" placeholder="Enter new email"><br><br>
-
-                    <label><strong>Bio</strong></label><br>
-                    <textarea rows="4" cols="60" placeholder="Short bio..."></textarea><br><br>
-
-                    <label><strong>Profile Photo</strong></label><br>
-                    <input type="file"><br><br>
-
-                    <button type="button">Save Changes (placeholder)</button>
-                </form>
-
-                <hr>
-
-                <h3>Change Password</h3>
-                <form>
-                    <label><strong>Current Password</strong></label><br>
-                    <input type="password" placeholder="Current password"><br><br>
-
-                    <label><strong>New Password</strong></label><br>
-                    <input type="password" placeholder="New password"><br><br>
-
-                    <label><strong>Confirm New Password</strong></label><br>
-                    <input type="password" placeholder="Confirm new password"><br><br>
-
-                    <button type="button">Update Password (placeholder)</button>
-                </form>
-            </section>
-
+        <div class="quick-amounts">
+          <button onclick="setFundAmount(25)">$25</button>
+          <button onclick="setFundAmount(50)">$50</button>
+          <button onclick="setFundAmount(100)">$100</button>
+          <button onclick="setFundAmount(500)">$500</button>
         </div>
+        <div class="fund-msg" id="fundMsg"></div>
+      </div>
 
-    </main>
+      <!-- Account Details -->
+      <div class="card">
+        <h3>Account Details</h3>
+        <div class="info-row">
+          <span class="info-label">Username</span>
+          <span class="info-value" id="infoUsername">--</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Email</span>
+          <span class="info-value" id="infoEmail">--</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Role</span>
+          <span class="info-value" id="infoRole">--</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Status</span>
+          <span id="infoStatus">--</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Member Since</span>
+          <span class="info-value" id="infoJoined">--</span>
+        </div>
+      </div>
 
-    <footer style="margin-top: 20px; border-top: 1px solid black; padding: 10px;">
-        <p>
-            <a href="/pages/terms.html">Terms</a> |
-            <a href="/pages/privacy.html">Privacy</a> |
-            <a href="#">Help</a>
+    </div>
+
+    <!-- Right: Quick Links -->
+    <div class="profile-actions">
+
+      <div class="card">
+        <h3>Quick Links</h3>
+        <p style="margin-bottom:12px;">
+          <a href="/pages/buyer/purchases.html" class="btn" style="margin-right:8px;">My Purchases</a>
+          <span id="sellerLinks"></span>
         </p>
+      </div>
 
-        <p style="font-size: 12px;">
-            Switchr Marketplace - Skeleton Version
-        </p>
-    </footer>
+      <div class="card">
+        <h3>Change Password</h3>
+        <div class="form-group">
+          <label>Current Password</label>
+          <input type="password" id="currentPassword" placeholder="Current password">
+        </div>
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" id="newPassword" placeholder="New password">
+        </div>
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <input type="password" id="confirmPassword" placeholder="Confirm new password">
+        </div>
+        <button class="btn primary" onclick="alert('Password change coming soon.')">Update Password</button>
+      </div>
 
-    <script>
-        requireAuth();
-        const authLinks = document.getElementById('authLinks');
-        if (isLoggedIn()) {
-            const user = getUser();
-            var links = '<span>' + (user ? user.username : 'User') + '</span> | ';
-            if (user && user.role === 'seller') {
-                links += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a> | ';
-            }
-            if (user && user.role === 'admin') {
-                links += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a> | ';
-            }
-            links += '<a href="#" onclick="logout()">Logout</a>';
-            authLinks.innerHTML = links;
-        }
-    </script>
+    </div>
+
+  </div>
+
+</div>
+
+<footer>Switchr &mdash; Sprint 3 &mdash; CSE 4214</footer>
+
+<script>
+  var token = localStorage.getItem('token');
+  var user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (!token) {
+    window.location.href = '/pages/auth/login.html';
+  }
+
+  // Nav auth links
+  var authLinks = document.getElementById('authLinks');
+  var navLinks = '';
+  if (user && user.role === 'seller') {
+    navLinks += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
+  }
+  if (user && user.role === 'admin') {
+    navLinks += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
+  }
+  navLinks += '<a href="#" onclick="logout()">Logout</a>';
+  authLinks.innerHTML = navLinks;
+
+  // Seller quick links
+  if (user && user.role === 'seller') {
+    document.getElementById('sellerLinks').innerHTML =
+      '<a href="/pages/seller/dashboard.html" class="btn" style="margin-right:8px;">Seller Dashboard</a>' +
+      '<a href="/pages/seller/sales.html" class="btn">My Sales</a>';
+  }
+
+  // Load profile from API
+  fetch('/api/auth/me', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (!data || !data.user) return;
+    var u = data.user;
+
+    document.getElementById('infoUsername').textContent = u.username;
+    document.getElementById('infoEmail').textContent = u.email;
+    document.getElementById('infoRole').textContent = u.role;
+
+    var statusBadge = '<span class="badge ' + u.status + '">' + u.status.toUpperCase() + '</span>';
+    document.getElementById('infoStatus').innerHTML = statusBadge;
+
+    var joined = u.created_at;
+    if (joined && joined.includes('T')) joined = joined.split('T')[0];
+    document.getElementById('infoJoined').textContent = joined || '--';
+  });
+
+  // Load balance
+  loadBalance();
+
+  function loadBalance() {
+    fetch('/api/wallet/balance', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      document.getElementById('balanceDisplay').textContent = '$' + parseFloat(data.balance).toFixed(2);
+    });
+  }
+
+  function setFundAmount(amount) {
+    document.getElementById('fundAmount').value = amount;
+  }
+
+  function addFunds() {
+    var amount = parseFloat(document.getElementById('fundAmount').value);
+    var msg = document.getElementById('fundMsg');
+
+    if (!amount || amount <= 0) {
+      msg.textContent = 'Enter a valid amount.';
+      msg.style.color = '#ef9a9a';
+      msg.style.display = 'block';
+      return;
+    }
+
+    fetch('/api/wallet/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ amount: amount })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.error) {
+        msg.textContent = data.error;
+        msg.style.color = '#ef9a9a';
+        msg.style.display = 'block';
+        return;
+      }
+      document.getElementById('balanceDisplay').textContent = '$' + parseFloat(data.balance).toFixed(2);
+      document.getElementById('fundAmount').value = '';
+      msg.textContent = '$' + amount.toFixed(2) + ' added!';
+      msg.style.color = '#a5d6a7';
+      msg.style.display = 'block';
+    });
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/pages/auth/login.html';
+  }
+</script>
 
 </body>
 </html>

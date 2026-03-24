@@ -39,6 +39,7 @@ def init_db():
             role VARCHAR(20) DEFAULT 'user',
             status VARCHAR(20) DEFAULT 'pending',
             denial_reason TEXT,
+            balance NUMERIC(10, 2) DEFAULT 0.00,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -101,6 +102,12 @@ def init_db():
                 WHERE table_name = 'users' AND column_name = 'denial_reason'
             ) THEN
                 ALTER TABLE users ADD COLUMN denial_reason TEXT;
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'users' AND column_name = 'balance'
+            ) THEN
+                ALTER TABLE users ADD COLUMN balance NUMERIC(10,2) DEFAULT 0.00;
             END IF;
         END $$;
     ''')
@@ -316,7 +323,7 @@ def login():
 def get_current_user():
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute('SELECT id, email, username, role, status, denial_reason, created_at FROM users WHERE id = %s', (request.user_id,))
+    cur.execute('SELECT id, email, username, role, status, denial_reason, balance, created_at FROM users WHERE id = %s', (request.user_id,))
     user = cur.fetchone()
     conn.close()
 
@@ -836,6 +843,51 @@ def remove_from_cart(listing_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# ============ WALLET ROUTES ============
+
+# Add funds to account
+@app.route('/api/wallet/add', methods=['POST'])
+@token_required
+def add_funds():
+    data = request.get_json()
+    amount = data.get('amount')
+
+    if not amount or float(amount) <= 0:
+        return jsonify({'error': 'Amount must be greater than 0'}), 400
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            'UPDATE users SET balance = balance + %s WHERE id = %s RETURNING balance',
+            (float(amount), request.user_id)
+        )
+        result = cur.fetchone()
+        conn.close()
+
+        return jsonify({'message': 'Funds added', 'balance': float(result['balance'])})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Get current balance
+@app.route('/api/wallet/balance', methods=['GET'])
+@token_required
+def get_balance():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('SELECT balance FROM users WHERE id = %s', (request.user_id,))
+        result = cur.fetchone()
+        conn.close()
+
+        return jsonify({'balance': float(result['balance'])})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 # ============ TRANSACTION ROUTES ============
 
 # Checkout - buy items in cart, create transactions, mark listings as SOLD
@@ -869,6 +921,22 @@ def checkout():
                 conn.close()
                 return jsonify({'error': 'Listing "' + item['title'] + '" is no longer available'}), 400
 
+        # Check buyer has enough balance
+        total_cost = sum(float(item['price']) for item in cart_items)
+
+        cur.execute('SELECT balance FROM users WHERE id = %s', (request.user_id,))
+        buyer = cur.fetchone()
+
+        if float(buyer['balance']) < total_cost:
+            conn.close()
+            return jsonify({'error': 'Insufficient balance. You need $' + '{:.2f}'.format(total_cost) + ' but have $' + '{:.2f}'.format(float(buyer['balance']))}), 400
+
+        # Deduct from buyer
+        cur.execute(
+            'UPDATE users SET balance = balance - %s WHERE id = %s',
+            (total_cost, request.user_id)
+        )
+
         transaction_ids = []
 
         # Create a transaction for each item
@@ -887,6 +955,12 @@ def checkout():
             cur.execute(
                 "UPDATE listings SET status = 'SOLD', updated_at = CURRENT_TIMESTAMP WHERE id = %s",
                 (item['listing_id'],)
+            )
+
+            # Credit seller
+            cur.execute(
+                'UPDATE users SET balance = balance + %s WHERE id = %s',
+                (float(item['price']), item['seller_id'])
             )
 
         # Clear buyer's cart
