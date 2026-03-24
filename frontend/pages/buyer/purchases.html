@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Purchases - Switchr</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
+  <style>
+    .main { max-width: 900px; }
+    .header-bar h1 { font-size: 22px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #e0e0e0;
+      font-size: 13px;
+    }
+
+    thead { background: #1a1a1a; color: white; }
+
+    th {
+      padding: 11px 14px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 12px;
+    }
+
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #333;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafaf7; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #e6f4ea;
+      color: #2d7a3a;
+    }
+
+    .view-link {
+      color: #1a1a1a;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+    }
+
+    .view-link:hover { border-color: #1a1a1a; }
+
+    .empty-msg {
+      text-align: center;
+      color: #aaa;
+      font-style: italic;
+      padding: 28px;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
+  <div class="nav-center">
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/buyer/purchases.html">My Purchases</a>
+    <a href="/pages/buyer/cart.html">Cart</a>
+    <a href="/pages/profile.html">Profile</a>
+  </div>
+  <div class="nav-right" id="authLinks"></div>
+</nav>
+
+<div class="header-bar">
+  <h1>My Purchases</h1>
+</div>
+
+<div class="main">
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Item</th>
+          <th>Seller</th>
+          <th>Price</th>
+          <th>Payment</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="purchasesBody">
+        <tr><td colspan="8" class="empty-msg">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Switchr &mdash; Sprint 3 &mdash; CSE 4214</footer>
+
+<script>
+  var token = localStorage.getItem('token');
+  var user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (!token) {
+    window.location.href = '/pages/auth/login.html';
+  }
+
+  var authLinks = document.getElementById('authLinks');
+  var links = '';
+  if (user && user.role === 'seller') {
+    links += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
+  }
+  if (user && user.role === 'admin') {
+    links += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
+  }
+  links += '<a href="#" onclick="logout()">Logout</a>';
+  authLinks.innerHTML = links;
+
+  fetch('/api/transactions/purchases', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    var tbody = document.getElementById('purchasesBody');
+    var txns = data.transactions || [];
+
+    if (txns.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">No purchases yet.</td></tr>';
+      return;
+    }
+
+    var html = '';
+    txns.forEach(function(t) {
+      html += '<tr>';
+      html += '<td>#' + t.id + '</td>';
+      html += '<td>' + t.title + '</td>';
+      html += '<td>' + t.seller_username + '</td>';
+      html += '<td>$' + parseFloat(t.price).toFixed(2) + '</td>';
+      html += '<td>' + t.payment_method + '</td>';
+      html += '<td><span class="badge">' + t.status + '</span></td>';
+      html += '<td>' + t.created_at + '</td>';
+      html += '<td><a class="view-link" href="/pages/buyer/invoice.html?id=' + t.id + '">View Invoice</a></td>';
+      html += '</tr>';
+    });
+
+    tbody.innerHTML = html;
+  });
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/pages/auth/login.html';
+  }
+</script>
+
+</body>
+</html>

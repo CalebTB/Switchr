@@ -67,6 +67,19 @@ def init_db():
             UNIQUE(user_id, listing_id)
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS transactions (
+            id SERIAL PRIMARY KEY,
+            buyer_id INTEGER REFERENCES users(id),
+            seller_id INTEGER REFERENCES users(id),
+            listing_id INTEGER REFERENCES listings(id),
+            title VARCHAR(100) NOT NULL,
+            price NUMERIC(10, 2) NOT NULL,
+            payment_method VARCHAR(50) DEFAULT 'card',
+            status VARCHAR(20) DEFAULT 'COMPLETED',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     # Add columns if tables already exist without them
     cur.execute('''
         DO $$
@@ -822,6 +835,168 @@ def remove_from_cart(listing_id):
         return jsonify({'message': 'Removed from cart'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# ============ TRANSACTION ROUTES ============
+
+# Checkout - buy items in cart, create transactions, mark listings as SOLD
+@app.route('/api/checkout', methods=['POST'])
+@approved_required
+def checkout():
+    data = request.get_json()
+    payment_method = data.get('payment_method', 'card')
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Get cart items
+        cur.execute(
+            '''SELECT c.listing_id, l.title, l.price, l.seller_id, l.status
+               FROM cart c
+               JOIN listings l ON c.listing_id = l.id
+               WHERE c.user_id = %s''',
+            (request.user_id,)
+        )
+        cart_items = cur.fetchall()
+
+        if not cart_items:
+            conn.close()
+            return jsonify({'error': 'Cart is empty'}), 400
+
+        # Check all listings still active
+        for item in cart_items:
+            if item['status'] != 'ACTIVE':
+                conn.close()
+                return jsonify({'error': 'Listing "' + item['title'] + '" is no longer available'}), 400
+
+        transaction_ids = []
+
+        # Create a transaction for each item
+        for item in cart_items:
+            cur.execute(
+                '''INSERT INTO transactions (buyer_id, seller_id, listing_id, title, price, payment_method)
+                   VALUES (%s, %s, %s, %s, %s, %s)
+                   RETURNING id''',
+                (request.user_id, item['seller_id'], item['listing_id'],
+                 item['title'], float(item['price']), payment_method)
+            )
+            txn = cur.fetchone()
+            transaction_ids.append(txn['id'])
+
+            # Mark listing as SOLD
+            cur.execute(
+                "UPDATE listings SET status = 'SOLD', updated_at = CURRENT_TIMESTAMP WHERE id = %s",
+                (item['listing_id'],)
+            )
+
+        # Clear buyer's cart
+        cur.execute('DELETE FROM cart WHERE user_id = %s', (request.user_id,))
+
+        conn.close()
+
+        return jsonify({
+            'message': 'Purchase complete',
+            'transaction_ids': transaction_ids
+        }), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Get buyer's purchase history (invoices)
+@app.route('/api/transactions/purchases', methods=['GET'])
+@token_required
+def get_purchases():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''SELECT t.*, u.username as seller_username
+               FROM transactions t
+               JOIN users u ON t.seller_id = u.id
+               WHERE t.buyer_id = %s
+               ORDER BY t.created_at DESC''',
+            (request.user_id,)
+        )
+        rows = cur.fetchall()
+        conn.close()
+
+        transactions = []
+        for row in rows:
+            d = dict(row)
+            if d.get('created_at'):
+                d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M')
+            transactions.append(d)
+
+        return jsonify({'transactions': transactions})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Get seller's sales history (invoices)
+@app.route('/api/transactions/sales', methods=['GET'])
+@token_required
+def get_sales():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''SELECT t.*, u.username as buyer_username
+               FROM transactions t
+               JOIN users u ON t.buyer_id = u.id
+               WHERE t.seller_id = %s
+               ORDER BY t.created_at DESC''',
+            (request.user_id,)
+        )
+        rows = cur.fetchall()
+        conn.close()
+
+        transactions = []
+        for row in rows:
+            d = dict(row)
+            if d.get('created_at'):
+                d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M')
+            transactions.append(d)
+
+        return jsonify({'transactions': transactions})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Get a single transaction/invoice by ID
+@app.route('/api/transactions/<int:txn_id>', methods=['GET'])
+@token_required
+def get_transaction(txn_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''SELECT t.*,
+                      buyer.username as buyer_username, buyer.email as buyer_email,
+                      seller.username as seller_username, seller.email as seller_email
+               FROM transactions t
+               JOIN users buyer ON t.buyer_id = buyer.id
+               JOIN users seller ON t.seller_id = seller.id
+               WHERE t.id = %s AND (t.buyer_id = %s OR t.seller_id = %s)''',
+            (txn_id, request.user_id, request.user_id)
+        )
+        txn = cur.fetchone()
+        conn.close()
+
+        if not txn:
+            return jsonify({'error': 'Transaction not found'}), 404
+
+        d = dict(txn)
+        if d.get('created_at'):
+            d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M')
+
+        return jsonify({'transaction': d})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 # ============ FRONTEND ROUTES ============
 

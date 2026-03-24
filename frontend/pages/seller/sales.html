@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Sales - Switchr</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
+  <style>
+    .main { max-width: 900px; }
+    .header-bar h1 { font-size: 22px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #e0e0e0;
+      font-size: 13px;
+    }
+
+    thead { background: #1a1a1a; color: white; }
+
+    th {
+      padding: 11px 14px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 12px;
+    }
+
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #333;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafaf7; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #e6f4ea;
+      color: #2d7a3a;
+    }
+
+    .view-link {
+      color: #1a1a1a;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+    }
+
+    .view-link:hover { border-color: #1a1a1a; }
+
+    .empty-msg {
+      text-align: center;
+      color: #aaa;
+      font-style: italic;
+      padding: 28px;
+    }
+
+    .total-banner {
+      background: #1a1a1a;
+      color: #f0e040;
+      padding: 14px 20px;
+      border-radius: 6px;
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="brand" href="/pages/seller/dashboard.html">Switchr</a>
+  <div class="nav-center">
+    <a href="/pages/seller/dashboard.html">Dashboard</a>
+    <a href="/pages/seller/sales.html">My Sales</a>
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/profile.html">Profile</a>
+  </div>
+  <div class="nav-right" id="authLinks"></div>
+</nav>
+
+<div class="header-bar">
+  <h1>My Sales</h1>
+  <p class="breadcrumb">
+    <a href="/pages/seller/dashboard.html">&larr; Back to Dashboard</a>
+  </p>
+</div>
+
+<div class="main">
+
+  <div class="total-banner">
+    <span>Total Earnings</span>
+    <span id="totalEarnings">$0.00</span>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Invoice #</th>
+          <th>Item</th>
+          <th>Buyer</th>
+          <th>Amount Received</th>
+          <th>Payment</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="salesBody">
+        <tr><td colspan="8" class="empty-msg">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer>Switchr &mdash; Sprint 3 &mdash; CSE 4214</footer>
+
+<script>
+  var token = localStorage.getItem('token');
+  var user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (!token) {
+    window.location.href = '/pages/auth/login.html';
+  }
+
+  var authLinks = document.getElementById('authLinks');
+  authLinks.innerHTML = '<a href="#" onclick="logout()">Logout</a>';
+
+  fetch('/api/transactions/sales', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    var tbody = document.getElementById('salesBody');
+    var txns = data.transactions || [];
+
+    if (txns.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">No sales yet.</td></tr>';
+      return;
+    }
+
+    var totalEarnings = 0;
+    var html = '';
+    txns.forEach(function(t) {
+      totalEarnings += parseFloat(t.price);
+      html += '<tr>';
+      html += '<td>#' + t.id + '</td>';
+      html += '<td>' + t.title + '</td>';
+      html += '<td>' + t.buyer_username + '</td>';
+      html += '<td>$' + parseFloat(t.price).toFixed(2) + '</td>';
+      html += '<td>' + t.payment_method + '</td>';
+      html += '<td><span class="badge">' + t.status + '</span></td>';
+      html += '<td>' + t.created_at + '</td>';
+      html += '<td><a class="view-link" href="/pages/buyer/invoice.html?id=' + t.id + '">View Invoice</a></td>';
+      html += '</tr>';
+    });
+
+    tbody.innerHTML = html;
+    document.getElementById('totalEarnings').textContent = '$' + totalEarnings.toFixed(2);
+  });
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/pages/auth/login.html';
+  }
+</script>
+
+</body>
+</html>
