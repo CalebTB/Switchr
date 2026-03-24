@@ -40,6 +40,18 @@ nav .nav-center a {
 
 nav .nav-center a:hover { color: white; }
 
+nav .nav-center a .cart-badge {
+  display: none;
+  background: #f0e040;
+  color: #1a1a1a;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 8px;
+  margin-left: 4px;
+  vertical-align: top;
+}
+
 nav .nav-right {
   display: flex;
   align-items: center;
@@ -132,6 +144,8 @@ nav .nav-right a:hover { color: white; }
 .badge.sold { background: #e8eaf6; color: #3949ab; }
 .badge.traded { background: #f3e5f5; color: #6a1b9a; }
 .badge.seller { background: #1a1a1a; color: #f0e040; }
+.badge.returned { background: #fff3e0; color: #b36200; }
+.badge.completed { background: #e6f4ea; color: #2d7a3a; }
 
 /* ============ BUTTONS ============ */
 .btn {

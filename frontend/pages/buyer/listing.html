@@ -69,6 +69,68 @@
     }
 
     .btn { display: block; width: 100%; margin-bottom: 10px; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 8px;
+      padding: 28px;
+      width: 90%;
+      max-width: 480px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+
+    .modal label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #888;
+      margin-bottom: 6px;
+    }
+
+    .modal select, .modal input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      background: #fafaf8;
+      margin-bottom: 16px;
+    }
+
+    .modal select:focus, .modal input:focus {
+      outline: none;
+      border-color: #1a1a1a;
+      background: white;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
@@ -78,7 +140,7 @@
   <div class="nav-center">
     <a href="/pages/buyer/browse.html">Browse</a>
     <a href="/pages/offers/offers.html">Offers</a>
-    <a href="/pages/buyer/cart.html">Cart</a>
+    <a href="/pages/buyer/cart.html">Cart <span class="cart-badge"></span></a>
     <a href="/pages/profile.html">Profile</a>
   </div>
   <div class="nav-right" id="authLinks"></div>
@@ -102,6 +164,27 @@
     </div>
   </div>
 
+</div>
+
+<!-- Trade Offer Modal -->
+<div class="modal-overlay" id="tradeModal">
+  <div class="modal">
+    <h3>Offer a Trade</h3>
+    <p style="font-size:13px;color:#888;margin-bottom:16px;">Select one of your active listings to offer in exchange.</p>
+
+    <label>Your Item to Offer</label>
+    <select id="tradeOfferListing">
+      <option value="">Loading your listings...</option>
+    </select>
+
+    <label>Add Cash (optional)</label>
+    <input type="number" id="tradeCashOffer" placeholder="0.00" min="0" step="0.01">
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeTradeModal()">Cancel</button>
+      <button class="btn primary" onclick="submitTrade()">Send Trade Offer</button>
+    </div>
+  </div>
 </div>
 
 <footer>Switchr &mdash; Sprint 3 &mdash; CSE 4214</footer>
@@ -197,7 +280,7 @@
     }
     if (l.listing_type === 'TRADE' || l.listing_type === 'BOTH') {
       if (qty > 0) {
-          html += '<button class="btn" onclick="alert(\'Trade offer flow coming soon!\')">Offer Trade</button>';
+          html += '<button class="btn" onclick="openTradeModal(' + l.id + ')">Offer Trade</button>';
       }
     }
 
@@ -239,6 +322,82 @@
     })
     .catch(function() {
       alert('Network error. Try again.');
+    });
+  }
+
+  var tradeWantedId = null;
+
+  function openTradeModal(wantedListingId) {
+    var token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/pages/auth/login.html';
+      return;
+    }
+
+    tradeWantedId = wantedListingId;
+
+    // Load user's active listings
+    fetch('/api/listings/mine', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var select = document.getElementById('tradeOfferListing');
+      var listings = data.listings || [];
+
+      if (listings.length === 0) {
+        select.innerHTML = '<option value="">You have no active listings to trade</option>';
+      } else {
+        var html = '<option value="">-- Select your item --</option>';
+        listings.forEach(function(l) {
+          html += '<option value="' + l.id + '">' + l.title + ' ($' + parseFloat(l.price).toFixed(2) + ' - ' + l.condition + ')</option>';
+        });
+        select.innerHTML = html;
+      }
+
+      document.getElementById('tradeCashOffer').value = '';
+      document.getElementById('tradeModal').classList.add('active');
+    });
+  }
+
+  function closeTradeModal() {
+    document.getElementById('tradeModal').classList.remove('active');
+    tradeWantedId = null;
+  }
+
+  function submitTrade() {
+    var offeredId = document.getElementById('tradeOfferListing').value;
+    var cashOffer = parseFloat(document.getElementById('tradeCashOffer').value) || 0;
+    var token = localStorage.getItem('token');
+
+    if (!offeredId) {
+      alert('Please select one of your items to offer.');
+      return;
+    }
+
+    fetch('/api/trades', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        offered_listing_id: parseInt(offeredId),
+        wanted_listing_id: tradeWantedId,
+        cash_offer: cashOffer
+      })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.error) {
+        alert(data.error);
+      } else {
+        alert('Trade offer sent! The seller will be notified.');
+        closeTradeModal();
+      }
+    })
+    .catch(function() {
+      alert('Could not send trade offer. Try again.');
     });
   }
 

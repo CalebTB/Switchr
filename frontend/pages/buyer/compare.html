@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compare Items - Switchr</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
+  <style>
+    .main { max-width: 1100px; }
+    .header-bar h1 { font-size: 22px; }
+
+    .compare-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .compare-col {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .compare-col-header {
+      background: #1a1a1a;
+      color: white;
+      padding: 14px 16px;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .compare-img {
+      width: 100%;
+      height: 140px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #aaa;
+      background: #fafaf8;
+    }
+
+    .compare-rows { padding: 0; }
+
+    .compare-row {
+      padding: 10px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+    }
+
+    .compare-row:last-child { border-bottom: none; }
+
+    .compare-row .row-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #999;
+      margin-bottom: 3px;
+    }
+
+    .compare-row .row-value {
+      color: #1a1a1a;
+      font-weight: 500;
+    }
+
+    .compare-row .row-value.price {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .compare-row .row-value.highlight {
+      color: #2d7a3a;
+      font-weight: 700;
+    }
+
+    .compare-actions {
+      padding: 12px 16px;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      gap: 8px;
+    }
+
+    .compare-actions a {
+      flex: 1;
+      text-align: center;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #666;
+      text-decoration: none;
+    }
+
+    .back-link:hover { color: #1a1a1a; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
+  <div class="nav-center">
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/offers/offers.html">Offers</a>
+    <a href="/pages/buyer/cart.html">Cart <span class="cart-badge"></span></a>
+    <a href="/pages/profile.html">Profile</a>
+  </div>
+  <div class="nav-right" id="authLinks"></div>
+</nav>
+
+<div class="header-bar">
+  <h1>Compare Items</h1>
+  <p class="breadcrumb">
+    <a href="/pages/buyer/browse.html">&larr; Back to Browse</a>
+  </p>
+</div>
+
+<div class="main">
+  <div class="compare-grid" id="compareGrid">
+    <p class="empty-msg">Loading...</p>
+  </div>
+</div>
+
+<footer>
+  <a href="/pages/terms.html">Terms</a>
+  <a href="/pages/privacy.html">Privacy</a>
+  <a href="#">Help</a>
+  <p style="margin-top:8px;">Switchr &mdash; Sprint 3 &mdash; CSE 4214</p>
+</footer>
+
+<script>
+  var authLinks = document.getElementById('authLinks');
+  if (isLoggedIn()) {
+    var user = getUser();
+    var links = '';
+    if (user && user.role === 'seller') {
+      links += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
+    }
+    if (user && user.role === 'admin') {
+      links += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
+    }
+    links += '<a href="#" onclick="logout()">Logout</a>';
+    authLinks.innerHTML = links;
+  } else {
+    authLinks.innerHTML = '<a href="/pages/auth/login.html">Login</a>';
+  }
+
+  var params = new URLSearchParams(window.location.search);
+  var idsParam = params.get('ids');
+
+  if (!idsParam) {
+    window.location.href = '/pages/buyer/browse.html';
+  }
+
+  var ids = idsParam.split(',').map(Number);
+
+  // Fetch all browse listings and filter to selected IDs
+  fetch('/api/listings/browse')
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    var all = data.listings || [];
+    var items = [];
+    ids.forEach(function(id) {
+      var found = all.find(function(l) { return l.id === id; });
+      if (found) items.push(found);
+    });
+
+    if (items.length < 2) {
+      document.getElementById('compareGrid').innerHTML = '<p class="empty-msg">Not enough items to compare. Go back and select at least 2.</p>';
+      return;
+    }
+
+    // Find lowest price for highlighting
+    var lowestPrice = Math.min.apply(null, items.map(function(i) { return parseFloat(i.price); }));
+
+    var grid = document.getElementById('compareGrid');
+    var html = '';
+
+    items.forEach(function(l) {
+      var price = parseFloat(l.price);
+      var isLowest = price === lowestPrice && items.length > 1;
+      var typeLabel = l.listing_type === 'SALE' ? 'For Sale' : l.listing_type === 'TRADE' ? 'For Trade' : 'Sale or Trade';
+
+      html += '<div class="compare-col">';
+      html += '<div class="compare-col-header">' + l.title + '</div>';
+      html += '<div class="compare-img">IMG</div>';
+      html += '<div class="compare-rows">';
+
+      html += '<div class="compare-row"><div class="row-label">Price</div>';
+      html += '<div class="row-value price' + (isLowest ? ' highlight' : '') + '">$' + price.toFixed(2);
+      if (isLowest) html += ' (Lowest)';
+      html += '</div></div>';
+
+      html += '<div class="compare-row"><div class="row-label">Category</div><div class="row-value">' + l.category + '</div></div>';
+      html += '<div class="compare-row"><div class="row-label">Condition</div><div class="row-value">' + l.condition + '</div></div>';
+      html += '<div class="compare-row"><div class="row-label">Type</div><div class="row-value">' + typeLabel + '</div></div>';
+      html += '<div class="compare-row"><div class="row-label">Seller</div><div class="row-value">' + l.seller_username + '</div></div>';
+      html += '<div class="compare-row"><div class="row-label">Description</div><div class="row-value" style="font-size:12px;color:#666;">' + l.description + '</div></div>';
+
+      html += '</div>';
+
+      html += '<div class="compare-actions">';
+      html += '<a class="btn primary small" href="/pages/buyer/listing.html?id=' + l.id + '">View</a>';
+      html += '</div>';
+
+      html += '</div>';
+    });
+
+    grid.innerHTML = html;
+  })
+  .catch(function() {
+    document.getElementById('compareGrid').innerHTML = '<p class="empty-msg">Could not load items.</p>';
+  });
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('compareIds');
+    window.location.href = '/pages/auth/login.html';
+  }
+</script>
+
+</body>
+</html>

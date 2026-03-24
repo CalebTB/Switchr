@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://b@localhost:5432/switchr')
+DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://admin@localhost:5432/switchr')
 
 def get_db():
     conn = psycopg2.connect(DATABASE_URL)

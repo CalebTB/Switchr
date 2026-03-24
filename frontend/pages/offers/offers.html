@@ -26,7 +26,6 @@
       cursor: pointer;
       border-bottom: 2px solid transparent;
       margin-bottom: -2px;
-      transition: color 0.15s, border-color 0.15s;
     }
 
     .tab:hover { color: #1a1a1a; }
@@ -63,7 +62,6 @@
       justify-content: space-between;
       align-items: center;
       gap: 16px;
-      transition: border-color 0.15s;
     }
 
     .offer-card:hover { border-color: #f0e040; }
@@ -72,34 +70,27 @@
 
     .offer-info h4 {
       font-family: 'Syne', sans-serif;
-      font-size: 16px;
+      font-size: 15px;
       margin-bottom: 6px;
     }
 
     .offer-meta {
       display: flex;
-      gap: 16px;
+      gap: 12px;
       font-size: 12px;
       color: #888;
       flex-wrap: wrap;
     }
 
-    .offer-meta span {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
     .offer-value {
       text-align: right;
-      min-width: 120px;
+      min-width: 140px;
     }
 
     .offer-value .price {
       font-family: 'Syne', sans-serif;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
-      color: #1a1a1a;
     }
 
     .offer-value .detail {
@@ -110,13 +101,16 @@
 
     .offer-actions {
       display: flex;
-      flex-direction: column;
       gap: 6px;
-      min-width: 100px;
     }
 
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
+
+    @media (max-width: 600px) {
+      .offer-card { flex-direction: column; align-items: flex-start; }
+      .offer-value { text-align: left; }
+    }
   </style>
 </head>
 <body>
@@ -126,175 +120,34 @@
   <div class="nav-center">
     <a href="/pages/buyer/browse.html">Browse</a>
     <a href="/pages/offers/offers.html">Offers</a>
-    <a href="/pages/buyer/cart.html">Cart</a>
+    <a href="/pages/buyer/cart.html">Cart <span class="cart-badge"></span></a>
     <a href="/pages/profile.html">Profile</a>
   </div>
   <div class="nav-right" id="authLinks"></div>
 </nav>
 
 <div class="header-bar">
-  <h1>My Offers</h1>
-  <p class="meta">Manage your incoming and outgoing offers</p>
+  <h1>My Trade Offers</h1>
+  <p class="meta">Manage your incoming and outgoing trade offers</p>
 </div>
 
 <div class="main">
 
   <div class="tabs">
     <button class="tab active" onclick="switchTab('incoming')">
-      Incoming <span class="count" id="incomingCount">3</span>
+      Incoming <span class="count" id="incomingCount">0</span>
     </button>
     <button class="tab" onclick="switchTab('outgoing')">
-      Outgoing <span class="count" id="outgoingCount">2</span>
+      Outgoing <span class="count" id="outgoingCount">0</span>
     </button>
   </div>
 
-  <!-- Incoming Offers Panel -->
   <div id="incomingPanel" class="tab-panel active">
-
-    <div class="filter-row">
-      <select id="incomingStatusFilter" onchange="filterOffers('incoming')">
-        <option value="">All Statuses</option>
-        <option value="pending">Pending</option>
-        <option value="countered">Countered</option>
-        <option value="accepted">Accepted</option>
-        <option value="rejected">Rejected</option>
-      </select>
-      <select id="incomingTypeFilter" onchange="filterOffers('incoming')">
-        <option value="">All Types</option>
-        <option value="purchase">Purchase</option>
-        <option value="trade">Trade</option>
-      </select>
-    </div>
-
-    <div id="incomingOffers">
-      <!-- Placeholder offer 1 -->
-      <div class="offer-card" data-status="pending" data-type="trade">
-        <div class="offer-info">
-          <h4>MacBook Air M1</h4>
-          <div class="offer-meta">
-            <span>From: <strong>john_doe</strong></span>
-            <span><span class="badge trade">Trade</span></span>
-            <span><span class="badge pending">Pending</span></span>
-            <span>Offer ID: OFF-1001</span>
-          </div>
-        </div>
-        <div class="offer-value">
-          <div class="price">Items + $50</div>
-          <div class="detail">simulated cash</div>
-        </div>
-        <div class="offer-actions">
-          <a href="offer-detail.html" class="btn primary small">View</a>
-          <button class="btn small" onclick="alert('Placeholder')">Accept</button>
-          <button class="btn danger small" onclick="alert('Placeholder')">Reject</button>
-        </div>
-      </div>
-
-      <!-- Placeholder offer 2 -->
-      <div class="offer-card" data-status="pending" data-type="purchase">
-        <div class="offer-info">
-          <h4>iPhone 13 - 128GB</h4>
-          <div class="offer-meta">
-            <span>From: <strong>tech_buyer42</strong></span>
-            <span><span class="badge purchase">Purchase</span></span>
-            <span><span class="badge pending">Pending</span></span>
-            <span>Offer ID: OFF-1002</span>
-          </div>
-        </div>
-        <div class="offer-value">
-          <div class="price">$399.00</div>
-          <div class="detail">purchase offer</div>
-        </div>
-        <div class="offer-actions">
-          <a href="offer-detail.html" class="btn primary small">View</a>
-          <button class="btn small" onclick="alert('Placeholder')">Accept</button>
-          <button class="btn danger small" onclick="alert('Placeholder')">Reject</button>
-        </div>
-      </div>
-
-      <!-- Placeholder offer 3 -->
-      <div class="offer-card" data-status="countered" data-type="trade">
-        <div class="offer-info">
-          <h4>Sony WH-1000XM4</h4>
-          <div class="offer-meta">
-            <span>From: <strong>audio_fan</strong></span>
-            <span><span class="badge trade">Trade</span></span>
-            <span><span class="badge countered">Countered</span></span>
-            <span>Offer ID: OFF-1003</span>
-          </div>
-        </div>
-        <div class="offer-value">
-          <div class="price">Item swap</div>
-          <div class="detail">no cash added</div>
-        </div>
-        <div class="offer-actions">
-          <a href="offer-detail.html" class="btn primary small">View</a>
-        </div>
-      </div>
-    </div>
-
+    <div id="incomingOffers"><p class="empty-msg">Loading...</p></div>
   </div>
 
-  <!-- Outgoing Offers Panel -->
   <div id="outgoingPanel" class="tab-panel">
-
-    <div class="filter-row">
-      <select id="outgoingStatusFilter" onchange="filterOffers('outgoing')">
-        <option value="">All Statuses</option>
-        <option value="pending">Pending</option>
-        <option value="countered">Countered</option>
-        <option value="accepted">Accepted</option>
-        <option value="rejected">Rejected</option>
-      </select>
-      <select id="outgoingTypeFilter" onchange="filterOffers('outgoing')">
-        <option value="">All Types</option>
-        <option value="purchase">Purchase</option>
-        <option value="trade">Trade</option>
-      </select>
-    </div>
-
-    <div id="outgoingOffers">
-      <!-- Placeholder offer 1 -->
-      <div class="offer-card" data-status="pending" data-type="trade">
-        <div class="offer-info">
-          <h4>iPad Pro 11"</h4>
-          <div class="offer-meta">
-            <span>To: <strong>tablet_seller</strong></span>
-            <span><span class="badge trade">Trade</span></span>
-            <span><span class="badge pending">Pending</span></span>
-            <span>Offer ID: OFF-2001</span>
-          </div>
-        </div>
-        <div class="offer-value">
-          <div class="price">My listing + $0</div>
-          <div class="detail">even trade</div>
-        </div>
-        <div class="offer-actions">
-          <a href="offer-detail.html" class="btn primary small">View</a>
-          <button class="btn danger small" onclick="alert('Placeholder')">Cancel</button>
-        </div>
-      </div>
-
-      <!-- Placeholder offer 2 -->
-      <div class="offer-card" data-status="rejected" data-type="purchase">
-        <div class="offer-info">
-          <h4>Gaming Headset</h4>
-          <div class="offer-meta">
-            <span>To: <strong>gamer_shop</strong></span>
-            <span><span class="badge purchase">Purchase</span></span>
-            <span><span class="badge rejected">Rejected</span></span>
-            <span>Offer ID: OFF-2002</span>
-          </div>
-        </div>
-        <div class="offer-value">
-          <div class="price">$70.00</div>
-          <div class="detail">purchase offer</div>
-        </div>
-        <div class="offer-actions">
-          <a href="offer-detail.html" class="btn primary small">View</a>
-        </div>
-      </div>
-    </div>
-
+    <div id="outgoingOffers"><p class="empty-msg">Loading...</p></div>
   </div>
 
 </div>
@@ -309,7 +162,7 @@
 <script>
   requireAuth();
 
-  // Auth header
+  var token = localStorage.getItem('token');
   var authLinks = document.getElementById('authLinks');
   if (isLoggedIn()) {
     var user = getUser();
@@ -322,15 +175,151 @@
     }
     links += '<a href="#" onclick="logout()">Logout</a>';
     authLinks.innerHTML = links;
-  } else {
-    authLinks.innerHTML = '<a href="/pages/auth/login.html">Login</a>';
   }
 
-  // Tab switching
+  // Load trades
+  fetch('/api/trades', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    var incoming = data.incoming || [];
+    var outgoing = data.outgoing || [];
+
+    document.getElementById('incomingCount').textContent = incoming.length;
+    document.getElementById('outgoingCount').textContent = outgoing.length;
+
+    renderIncoming(incoming);
+    renderOutgoing(outgoing);
+  });
+
+  function renderIncoming(trades) {
+    var container = document.getElementById('incomingOffers');
+    if (trades.length === 0) {
+      container.innerHTML = '<p class="empty-msg">No incoming trade offers.</p>';
+      return;
+    }
+
+    var html = '';
+    trades.forEach(function(t) {
+      var statusClass = t.status.toLowerCase();
+      html += '<div class="offer-card">';
+      html += '<div class="offer-info">';
+      html += '<h4>Wants your: ' + t.wanted_title + '</h4>';
+      html += '<div class="offer-meta">';
+      html += '<span>From: <strong>' + t.sender_username + '</strong></span>';
+      html += '<span><span class="badge trade">Trade</span></span>';
+      html += '<span><span class="badge ' + statusClass + '">' + t.status + '</span></span>';
+      html += '<span>' + t.created_at + '</span>';
+      html += '</div>';
+      html += '</div>';
+
+      html += '<div class="offer-value">';
+      html += '<div class="price">' + t.offered_title + '</div>';
+      html += '<div class="detail">$' + parseFloat(t.offered_price).toFixed(2) + ' value';
+      if (parseFloat(t.cash_offer) > 0) {
+        html += ' + $' + parseFloat(t.cash_offer).toFixed(2) + ' cash';
+      }
+      html += '</div>';
+      html += '</div>';
+
+      html += '<div class="offer-actions">';
+      if (t.status === 'PENDING') {
+        html += '<button class="btn primary small" onclick="acceptTrade(' + t.id + ')">Accept</button>';
+        html += '<button class="btn danger small" onclick="rejectTrade(' + t.id + ')">Reject</button>';
+      }
+      html += '</div>';
+
+      html += '</div>';
+    });
+
+    container.innerHTML = html;
+  }
+
+  function renderOutgoing(trades) {
+    var container = document.getElementById('outgoingOffers');
+    if (trades.length === 0) {
+      container.innerHTML = '<p class="empty-msg">No outgoing trade offers.</p>';
+      return;
+    }
+
+    var html = '';
+    trades.forEach(function(t) {
+      var statusClass = t.status.toLowerCase();
+      html += '<div class="offer-card">';
+      html += '<div class="offer-info">';
+      html += '<h4>You want: ' + t.wanted_title + '</h4>';
+      html += '<div class="offer-meta">';
+      html += '<span>To: <strong>' + t.receiver_username + '</strong></span>';
+      html += '<span><span class="badge trade">Trade</span></span>';
+      html += '<span><span class="badge ' + statusClass + '">' + t.status + '</span></span>';
+      html += '<span>' + t.created_at + '</span>';
+      html += '</div>';
+      html += '</div>';
+
+      html += '<div class="offer-value">';
+      html += '<div class="price">' + t.offered_title + '</div>';
+      html += '<div class="detail">Your offer: $' + parseFloat(t.offered_price).toFixed(2) + ' value';
+      if (parseFloat(t.cash_offer) > 0) {
+        html += ' + $' + parseFloat(t.cash_offer).toFixed(2) + ' cash';
+      }
+      html += '</div>';
+      html += '</div>';
+
+      html += '<div class="offer-actions">';
+      if (t.status === 'PENDING') {
+        html += '<button class="btn danger small" onclick="cancelTrade(' + t.id + ')">Cancel</button>';
+      }
+      html += '</div>';
+
+      html += '</div>';
+    });
+
+    container.innerHTML = html;
+  }
+
+  function acceptTrade(id) {
+    if (!confirm('Accept this trade? Both listings will be swapped.')) return;
+    fetch('/api/trades/' + id + '/accept', {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      alert(data.message || data.error);
+      window.location.reload();
+    });
+  }
+
+  function rejectTrade(id) {
+    if (!confirm('Reject this trade offer?')) return;
+    fetch('/api/trades/' + id + '/reject', {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      alert(data.message || data.error);
+      window.location.reload();
+    });
+  }
+
+  function cancelTrade(id) {
+    if (!confirm('Cancel your trade offer?')) return;
+    fetch('/api/trades/' + id + '/cancel', {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      alert(data.message || data.error);
+      window.location.reload();
+    });
+  }
+
   function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
     document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
-
     if (tab === 'incoming') {
       document.querySelector('.tab:nth-child(1)').classList.add('active');
       document.getElementById('incomingPanel').classList.add('active');
@@ -338,25 +327,6 @@
       document.querySelector('.tab:nth-child(2)').classList.add('active');
       document.getElementById('outgoingPanel').classList.add('active');
     }
-  }
-
-  // Filter offers within a tab
-  function filterOffers(tab) {
-    var statusFilter = document.getElementById(tab + 'StatusFilter').value.toLowerCase();
-    var typeFilter = document.getElementById(tab + 'TypeFilter').value.toLowerCase();
-    var container = document.getElementById(tab + 'Offers');
-    var cards = container.querySelectorAll('.offer-card');
-
-    cards.forEach(function(card) {
-      var status = card.getAttribute('data-status');
-      var type = card.getAttribute('data-type');
-      var show = true;
-
-      if (statusFilter && status !== statusFilter) show = false;
-      if (typeFilter && type !== typeFilter) show = false;
-
-      card.style.display = show ? '' : 'none';
-    });
   }
 
   function logout() {

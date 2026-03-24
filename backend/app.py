@@ -45,6 +45,7 @@ def init_db():
             role VARCHAR(20) DEFAULT 'user',
             status VARCHAR(20) DEFAULT 'pending',
             denial_reason TEXT,
+            balance NUMERIC(10, 2) DEFAULT 0.00,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -71,6 +72,19 @@ def init_db():
             listing_id INTEGER REFERENCES listings(id),
             added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(user_id, listing_id)
+        )
+    ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS transactions (
+            id SERIAL PRIMARY KEY,
+            buyer_id INTEGER REFERENCES users(id),
+            seller_id INTEGER REFERENCES users(id),
+            listing_id INTEGER REFERENCES listings(id),
+            title VARCHAR(100) NOT NULL,
+            price NUMERIC(10, 2) NOT NULL,
+            payment_method VARCHAR(50) DEFAULT 'card',
+            status VARCHAR(20) DEFAULT 'COMPLETED',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     cur.execute('''
@@ -121,7 +135,19 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS trades (
+            id SERIAL PRIMARY KEY,
+            sender_id INTEGER REFERENCES users(id),
+            receiver_id INTEGER REFERENCES users(id),
+            offered_listing_id INTEGER REFERENCES listings(id),
+            wanted_listing_id INTEGER REFERENCES listings(id),
+            cash_offer NUMERIC(10, 2) DEFAULT 0.00,
+            status VARCHAR(20) DEFAULT 'PENDING',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     # Add columns if tables already exist without them
     cur.execute('''
         DO $$
@@ -143,6 +169,12 @@ def init_db():
                 WHERE table_name = 'users' AND column_name = 'denial_reason'
             ) THEN
                 ALTER TABLE users ADD COLUMN denial_reason TEXT;
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'users' AND column_name = 'balance'
+            ) THEN
+                ALTER TABLE users ADD COLUMN balance NUMERIC(10,2) DEFAULT 0.00;
             END IF;
             IF NOT EXISTS (
                 SELECT 1 FROM information_schema.columns
@@ -373,7 +405,7 @@ def login():
 def get_current_user():
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute('SELECT id, email, username, role, status, denial_reason, created_at FROM users WHERE id = %s', (request.user_id,))
+    cur.execute('SELECT id, email, username, role, status, denial_reason, balance, created_at FROM users WHERE id = %s', (request.user_id,))
     user = cur.fetchone()
     conn.close()
 
@@ -903,8 +935,56 @@ def remove_from_cart(listing_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/checkout', methods=['POST'])
+# ============ WALLET ROUTES ============
+
+# Add funds to account
+@app.route('/api/wallet/add', methods=['POST'])
 @token_required
+def add_funds():
+    data = request.get_json()
+    amount = data.get('amount')
+
+    if not amount or float(amount) <= 0:
+        return jsonify({'error': 'Amount must be greater than 0'}), 400
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            'UPDATE users SET balance = balance + %s WHERE id = %s RETURNING balance',
+            (float(amount), request.user_id)
+        )
+        result = cur.fetchone()
+        conn.close()
+
+        return jsonify({'message': 'Funds added', 'balance': float(result['balance'])})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Get current balance
+@app.route('/api/wallet/balance', methods=['GET'])
+@token_required
+def get_balance():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('SELECT balance FROM users WHERE id = %s', (request.user_id,))
+        result = cur.fetchone()
+        conn.close()
+
+        return jsonify({'balance': float(result['balance'])})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ============ TRANSACTION ROUTES ============
+
+# Checkout - buy items in cart, create order, transactions, balance transfer
+@app.route('/api/checkout', methods=['POST'])
+@approved_required
 def checkout():
     data = request.get_json()
     conn = get_db()
@@ -925,13 +1005,26 @@ def checkout():
         # Check all listings still active
         for item in cart_items:
             if item['status'] != 'ACTIVE':
-                return jsonify({'error': f'Listing "{item["title"]}" is no longer available'}), 400
+                return jsonify({'error': 'Listing "' + item['title'] + '" is no longer available'}), 400
 
         # Calculate totals
         subtotal = sum(float(item['price']) for item in cart_items)
         tax_rate = 0.08
         tax_amount = round(subtotal * tax_rate, 2)
         total = round(subtotal + tax_amount, 2)
+
+        # Check buyer has enough balance
+        cur.execute('SELECT balance FROM users WHERE id = %s', (request.user_id,))
+        buyer = cur.fetchone()
+
+        if float(buyer['balance']) < total:
+            return jsonify({'error': 'Insufficient balance. You need $' + '{:.2f}'.format(total) + ' but have $' + '{:.2f}'.format(float(buyer['balance']))}), 400
+
+        # Deduct from buyer
+        cur.execute(
+            'UPDATE users SET balance = balance - %s WHERE id = %s',
+            (total, request.user_id)
+        )
 
         # Billing address
         bill_same = data.get('billSameAsShip', True)
@@ -971,27 +1064,47 @@ def checkout():
         order = cur.fetchone()
         order_id = order['id']
 
-        # Create order items, mark listings SOLD, notify sellers
+        transaction_ids = []
         seller_ids = set()
+
         for item in cart_items:
+            # Create order item
             cur.execute('''
                 INSERT INTO order_items (order_id, listing_id, title, price, seller_id)
                 VALUES (%s, %s, %s, %s, %s)
             ''', (order_id, item['listing_id'], item['title'], item['price'], item['seller_id']))
 
-            cur.execute("UPDATE listings SET status='SOLD' WHERE id=%s", (item['listing_id'],))
+            # Create transaction record
+            cur.execute(
+                '''INSERT INTO transactions (buyer_id, seller_id, listing_id, title, price, payment_method)
+                   VALUES (%s, %s, %s, %s, %s, %s)
+                   RETURNING id''',
+                (request.user_id, item['seller_id'], item['listing_id'],
+                 item['title'], float(item['price']), 'balance')
+            )
+            txn = cur.fetchone()
+            transaction_ids.append(txn['id'])
+
+            # Mark listing as SOLD
+            cur.execute("UPDATE listings SET status='SOLD', updated_at = CURRENT_TIMESTAMP WHERE id=%s", (item['listing_id'],))
+
+            # Credit seller
+            cur.execute(
+                'UPDATE users SET balance = balance + %s WHERE id = %s',
+                (float(item['price']), item['seller_id'])
+            )
+
             seller_ids.add(item['seller_id'])
 
         # Notify each seller
-        # Get buyer username from DB
         cur.execute('SELECT username FROM users WHERE id = %s', (request.user_id,))
-        buyer = cur.fetchone()
-        buyer_username = buyer['username']
+        buyer_info = cur.fetchone()
+        buyer_username = buyer_info['username']
         for seller_id in seller_ids:
             cur.execute('''
                 INSERT INTO notifications (user_id, message, type)
                 VALUES (%s, %s, 'SALE')
-            ''', (seller_id, f"Your item was purchased by {buyer_username}! Order #{order_id}"))
+            ''', (seller_id, 'Your item was purchased by ' + buyer_username + '! Order #' + str(order_id)))
 
         # Clear cart
         cur.execute("DELETE FROM cart WHERE user_id=%s", (request.user_id,))
@@ -999,13 +1112,423 @@ def checkout():
         return jsonify({
             'message': 'Order placed successfully',
             'order_id': order_id,
-            'total': total
+            'total': total,
+            'transaction_ids': transaction_ids
         }), 201
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
+
+# Get buyer's purchase history (invoices)
+@app.route('/api/transactions/purchases', methods=['GET'])
+@token_required
+def get_purchases():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''SELECT t.*, u.username as seller_username
+               FROM transactions t
+               JOIN users u ON t.seller_id = u.id
+               WHERE t.buyer_id = %s
+               ORDER BY t.created_at DESC''',
+            (request.user_id,)
+        )
+        rows = cur.fetchall()
+        conn.close()
+
+        transactions = []
+        for row in rows:
+            d = dict(row)
+            if d.get('created_at'):
+                d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M')
+            transactions.append(d)
+
+        return jsonify({'transactions': transactions})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Get seller's sales history (invoices)
+@app.route('/api/transactions/sales', methods=['GET'])
+@token_required
+def get_sales():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''SELECT t.*, u.username as buyer_username
+               FROM transactions t
+               JOIN users u ON t.buyer_id = u.id
+               WHERE t.seller_id = %s
+               ORDER BY t.created_at DESC''',
+            (request.user_id,)
+        )
+        rows = cur.fetchall()
+        conn.close()
+
+        transactions = []
+        for row in rows:
+            d = dict(row)
+            if d.get('created_at'):
+                d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M')
+            transactions.append(d)
+
+        return jsonify({'transactions': transactions})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Get a single transaction/invoice by ID
+@app.route('/api/transactions/<int:txn_id>', methods=['GET'])
+@token_required
+def get_transaction(txn_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''SELECT t.*,
+                      buyer.username as buyer_username, buyer.email as buyer_email,
+                      seller.username as seller_username, seller.email as seller_email
+               FROM transactions t
+               JOIN users buyer ON t.buyer_id = buyer.id
+               JOIN users seller ON t.seller_id = seller.id
+               WHERE t.id = %s AND (t.buyer_id = %s OR t.seller_id = %s)''',
+            (txn_id, request.user_id, request.user_id)
+        )
+        txn = cur.fetchone()
+        conn.close()
+
+        if not txn:
+            return jsonify({'error': 'Transaction not found'}), 404
+
+        d = dict(txn)
+        if d.get('created_at'):
+            d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M')
+
+        return jsonify({'transaction': d})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ============ TRADE ROUTES ============
+
+# Send a trade offer
+@app.route('/api/trades', methods=['POST'])
+@approved_required
+def create_trade():
+    data = request.get_json()
+    offered_listing_id = data.get('offered_listing_id')
+    wanted_listing_id = data.get('wanted_listing_id')
+    cash_offer = float(data.get('cash_offer', 0))
+
+    if not offered_listing_id or not wanted_listing_id:
+        return jsonify({'error': 'Both offered and wanted listing IDs are required'}), 400
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Verify sender owns the offered listing and it's ACTIVE
+        cur.execute('SELECT * FROM listings WHERE id = %s AND seller_id = %s AND status = %s',
+                    (offered_listing_id, request.user_id, 'ACTIVE'))
+        offered = cur.fetchone()
+        if not offered:
+            conn.close()
+            return jsonify({'error': 'Your offered listing is not available'}), 400
+
+        # Verify wanted listing exists and is ACTIVE
+        cur.execute('SELECT * FROM listings WHERE id = %s AND status = %s', (wanted_listing_id, 'ACTIVE'))
+        wanted = cur.fetchone()
+        if not wanted:
+            conn.close()
+            return jsonify({'error': 'The listing you want is not available'}), 400
+
+        # Can't trade with yourself
+        if wanted['seller_id'] == request.user_id:
+            conn.close()
+            return jsonify({'error': 'You cannot trade with yourself'}), 400
+
+        # Check balance if cash is offered
+        if cash_offer > 0:
+            cur.execute('SELECT balance FROM users WHERE id = %s', (request.user_id,))
+            sender = cur.fetchone()
+            if float(sender['balance']) < cash_offer:
+                conn.close()
+                return jsonify({'error': 'Insufficient balance for cash portion'}), 400
+
+        # Create trade
+        cur.execute(
+            '''INSERT INTO trades (sender_id, receiver_id, offered_listing_id, wanted_listing_id, cash_offer)
+               VALUES (%s, %s, %s, %s, %s)
+               RETURNING id''',
+            (request.user_id, wanted['seller_id'], offered_listing_id, wanted_listing_id, cash_offer)
+        )
+        trade = cur.fetchone()
+
+        # Notify the receiver
+        cur.execute('SELECT username FROM users WHERE id = %s', (request.user_id,))
+        sender_info = cur.fetchone()
+        msg = sender_info['username'] + ' wants to trade "' + offered['title'] + '" for your "' + wanted['title'] + '"'
+        if cash_offer > 0:
+            msg += ' + $' + '{:.2f}'.format(cash_offer) + ' cash'
+        cur.execute(
+            "INSERT INTO notifications (user_id, message, type) VALUES (%s, %s, 'TRADE')",
+            (wanted['seller_id'], msg)
+        )
+
+        conn.close()
+        return jsonify({'message': 'Trade offer sent', 'trade_id': trade['id']}), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Get my trade offers (incoming and outgoing)
+@app.route('/api/trades', methods=['GET'])
+@token_required
+def get_trades():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Incoming trades (I'm the receiver)
+        cur.execute('''
+            SELECT t.*,
+                   sender.username as sender_username,
+                   ol.title as offered_title, ol.price as offered_price, ol.condition as offered_condition,
+                   wl.title as wanted_title, wl.price as wanted_price
+            FROM trades t
+            JOIN users sender ON t.sender_id = sender.id
+            JOIN listings ol ON t.offered_listing_id = ol.id
+            JOIN listings wl ON t.wanted_listing_id = wl.id
+            WHERE t.receiver_id = %s
+            ORDER BY t.created_at DESC
+        ''', (request.user_id,))
+        incoming = cur.fetchall()
+
+        # Outgoing trades (I'm the sender)
+        cur.execute('''
+            SELECT t.*,
+                   receiver.username as receiver_username,
+                   ol.title as offered_title, ol.price as offered_price, ol.condition as offered_condition,
+                   wl.title as wanted_title, wl.price as wanted_price
+            FROM trades t
+            JOIN users receiver ON t.receiver_id = receiver.id
+            JOIN listings ol ON t.offered_listing_id = ol.id
+            JOIN listings wl ON t.wanted_listing_id = wl.id
+            WHERE t.sender_id = %s
+            ORDER BY t.created_at DESC
+        ''', (request.user_id,))
+        outgoing = cur.fetchall()
+
+        conn.close()
+
+        def fmt(rows):
+            result = []
+            for row in rows:
+                d = dict(row)
+                if d.get('created_at'):
+                    d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M')
+                if d.get('updated_at'):
+                    d['updated_at'] = d['updated_at'].strftime('%Y-%m-%d %H:%M')
+                result.append(d)
+            return result
+
+        return jsonify({'incoming': fmt(incoming), 'outgoing': fmt(outgoing)})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Accept a trade
+@app.route('/api/trades/<int:trade_id>/accept', methods=['PUT'])
+@approved_required
+def accept_trade(trade_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute('SELECT * FROM trades WHERE id = %s AND receiver_id = %s', (trade_id, request.user_id))
+        trade = cur.fetchone()
+
+        if not trade:
+            return jsonify({'error': 'Trade not found'}), 404
+        if trade['status'] != 'PENDING':
+            return jsonify({'error': 'Trade is no longer pending'}), 400
+
+        # Verify both listings still ACTIVE
+        cur.execute('SELECT * FROM listings WHERE id = %s AND status = %s', (trade['offered_listing_id'], 'ACTIVE'))
+        offered = cur.fetchone()
+        cur.execute('SELECT * FROM listings WHERE id = %s AND status = %s', (trade['wanted_listing_id'], 'ACTIVE'))
+        wanted = cur.fetchone()
+
+        if not offered or not wanted:
+            return jsonify({'error': 'One or both listings are no longer available'}), 400
+
+        cash = float(trade['cash_offer'])
+
+        # Handle cash portion if any
+        if cash > 0:
+            cur.execute('SELECT balance FROM users WHERE id = %s', (trade['sender_id'],))
+            sender_bal = cur.fetchone()
+            if float(sender_bal['balance']) < cash:
+                return jsonify({'error': 'Sender has insufficient balance for cash portion'}), 400
+            cur.execute('UPDATE users SET balance = balance - %s WHERE id = %s', (cash, trade['sender_id']))
+            cur.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (cash, trade['receiver_id']))
+
+        # Swap ownership: offered listing goes to receiver, wanted listing goes to sender
+        cur.execute('UPDATE listings SET seller_id = %s, status = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s',
+                    (trade['receiver_id'], 'TRADED', trade['offered_listing_id']))
+        cur.execute('UPDATE listings SET seller_id = %s, status = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s',
+                    (trade['sender_id'], 'TRADED', trade['wanted_listing_id']))
+
+        # Mark trade as accepted
+        cur.execute("UPDATE trades SET status = 'ACCEPTED', updated_at = CURRENT_TIMESTAMP WHERE id = %s", (trade_id,))
+
+        # Notify sender
+        cur.execute('SELECT username FROM users WHERE id = %s', (request.user_id,))
+        receiver_info = cur.fetchone()
+        cur.execute(
+            "INSERT INTO notifications (user_id, message, type) VALUES (%s, %s, 'TRADE')",
+            (trade['sender_id'], receiver_info['username'] + ' accepted your trade offer! Trade #' + str(trade_id))
+        )
+
+        return jsonify({'message': 'Trade accepted'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+# Reject a trade
+@app.route('/api/trades/<int:trade_id>/reject', methods=['PUT'])
+@token_required
+def reject_trade(trade_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute('SELECT * FROM trades WHERE id = %s AND receiver_id = %s', (trade_id, request.user_id))
+        trade = cur.fetchone()
+
+        if not trade:
+            return jsonify({'error': 'Trade not found'}), 404
+        if trade['status'] != 'PENDING':
+            return jsonify({'error': 'Trade is no longer pending'}), 400
+
+        cur.execute("UPDATE trades SET status = 'REJECTED', updated_at = CURRENT_TIMESTAMP WHERE id = %s", (trade_id,))
+
+        # Notify sender
+        cur.execute('SELECT username FROM users WHERE id = %s', (request.user_id,))
+        receiver_info = cur.fetchone()
+        cur.execute(
+            "INSERT INTO notifications (user_id, message, type) VALUES (%s, %s, 'TRADE')",
+            (trade['sender_id'], receiver_info['username'] + ' rejected your trade offer. Trade #' + str(trade_id))
+        )
+
+        return jsonify({'message': 'Trade rejected'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+# Cancel a trade (sender cancels their own outgoing trade)
+@app.route('/api/trades/<int:trade_id>/cancel', methods=['PUT'])
+@token_required
+def cancel_trade(trade_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute('SELECT * FROM trades WHERE id = %s AND sender_id = %s', (trade_id, request.user_id))
+        trade = cur.fetchone()
+
+        if not trade:
+            return jsonify({'error': 'Trade not found'}), 404
+        if trade['status'] != 'PENDING':
+            return jsonify({'error': 'Trade is no longer pending'}), 400
+
+        cur.execute("UPDATE trades SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE id = %s", (trade_id,))
+
+        return jsonify({'message': 'Trade cancelled'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+# Get sender's own active listings (for trade offer modal)
+@app.route('/api/listings/mine', methods=['GET'])
+@token_required
+def get_my_listings():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            "SELECT id, title, price, condition, listing_type FROM listings WHERE seller_id = %s AND status = 'ACTIVE' ORDER BY title",
+            (request.user_id,)
+        )
+        rows = cur.fetchall()
+        conn.close()
+        return jsonify({'listings': [dict(r) for r in rows]})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Return a purchase - buyer initiates, refunds balance
+@app.route('/api/transactions/<int:txn_id>/return', methods=['PUT'])
+@token_required
+def return_transaction(txn_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        # Get the transaction, must belong to buyer
+        cur.execute('SELECT * FROM transactions WHERE id = %s AND buyer_id = %s', (txn_id, request.user_id))
+        txn = cur.fetchone()
+
+        if not txn:
+            return jsonify({'error': 'Transaction not found'}), 404
+
+        if txn['status'] == 'RETURNED':
+            return jsonify({'error': 'This item has already been returned'}), 400
+
+        price = float(txn['price'])
+
+        # Refund buyer
+        cur.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (price, txn['buyer_id']))
+
+        # Deduct from seller
+        cur.execute('UPDATE users SET balance = balance - %s WHERE id = %s', (price, txn['seller_id']))
+
+        # Mark transaction as RETURNED
+        cur.execute("UPDATE transactions SET status = 'RETURNED' WHERE id = %s", (txn_id,))
+
+        # Set listing back to ACTIVE
+        cur.execute("UPDATE listings SET status = 'ACTIVE', updated_at = CURRENT_TIMESTAMP WHERE id = %s", (txn['listing_id'],))
+
+        # Notify seller
+        cur.execute('SELECT username FROM users WHERE id = %s', (request.user_id,))
+        buyer = cur.fetchone()
+        cur.execute('''
+            INSERT INTO notifications (user_id, message, type)
+            VALUES (%s, %s, 'RETURN')
+        ''', (txn['seller_id'], buyer['username'] + ' returned "' + txn['title'] + '". $' + '{:.2f}'.format(price) + ' has been deducted from your balance.'))
+
+        return jsonify({'message': 'Return processed. $' + '{:.2f}'.format(price) + ' refunded to your balance.'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
 
 # ============ FRONTEND ROUTES ============
 
