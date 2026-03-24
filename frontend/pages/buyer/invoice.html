@@ -174,7 +174,8 @@
     html += '<div class="invoice-header">';
     html += '<div><h2>Switchr Invoice</h2><p style="font-size:13px;color:#999;">Transaction #' + t.id + '</p></div>';
     html += '<div class="invoice-meta">';
-    html += '<p><span class="badge">' + t.status + '</span></p>';
+    var statusClass = t.status.toLowerCase();
+    html += '<p><span class="badge ' + statusClass + '">' + t.status + '</span></p>';
     html += '<p>' + t.created_at + '</p>';
     html += '</div>';
     html += '</div>';
@@ -191,11 +192,34 @@
 
     html += '<div class="invoice-total">Total: $' + parseFloat(t.price).toFixed(2) + '</div>';
 
+    if (isBuyer && t.status === 'COMPLETED') {
+      html += '<div style="margin-top:20px;text-align:right;">';
+      html += '<button class="btn danger" onclick="returnItem(' + t.id + ')">Return Item</button>';
+      html += '</div>';
+    }
+
     document.getElementById('invoiceCard').innerHTML = html;
   })
   .catch(function() {
     document.getElementById('invoiceCard').innerHTML = '<p style="color:#c62828;">Could not load invoice.</p>';
   });
+
+  function returnItem(id) {
+    if (!confirm('Are you sure you want to return this item?')) return;
+    fetch('/api/transactions/' + id + '/return', {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.error) {
+        alert(data.error);
+      } else {
+        alert(data.message);
+        window.location.reload();
+      }
+    });
+  }
 
   function logout() {
     localStorage.removeItem('token');

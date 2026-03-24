@@ -150,14 +150,38 @@
       html += '<td>' + t.seller_username + '</td>';
       html += '<td>$' + parseFloat(t.price).toFixed(2) + '</td>';
       html += '<td>' + t.payment_method + '</td>';
-      html += '<td><span class="badge">' + t.status + '</span></td>';
+      var statusClass = t.status.toLowerCase();
+      html += '<td><span class="badge ' + statusClass + '">' + t.status + '</span></td>';
       html += '<td>' + t.created_at + '</td>';
-      html += '<td class="tbl-actions"><a href="/pages/buyer/invoice.html?id=' + t.id + '">View Invoice</a></td>';
+      html += '<td class="tbl-actions">';
+      html += '<a href="/pages/buyer/invoice.html?id=' + t.id + '">Invoice</a>';
+      if (t.status === 'COMPLETED') {
+        html += '<a class="del" onclick="returnItem(' + t.id + ')">Return</a>';
+      }
+      html += '</td>';
       html += '</tr>';
     });
 
     tbody.innerHTML = html;
   });
+
+  function returnItem(txnId) {
+    if (!confirm('Are you sure you want to return this item? The refund will be added back to your balance.')) return;
+
+    fetch('/api/transactions/' + txnId + '/return', {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.error) {
+        alert(data.error);
+      } else {
+        alert(data.message);
+        window.location.reload();
+      }
+    });
+  }
 
   function logout() {
     localStorage.removeItem('token');

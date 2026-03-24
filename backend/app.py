@@ -1204,6 +1204,53 @@ def get_transaction(txn_id):
         return jsonify({'error': str(e)}), 500
 
 
+# Return a purchase - buyer initiates, refunds balance
+@app.route('/api/transactions/<int:txn_id>/return', methods=['PUT'])
+@token_required
+def return_transaction(txn_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        # Get the transaction, must belong to buyer
+        cur.execute('SELECT * FROM transactions WHERE id = %s AND buyer_id = %s', (txn_id, request.user_id))
+        txn = cur.fetchone()
+
+        if not txn:
+            return jsonify({'error': 'Transaction not found'}), 404
+
+        if txn['status'] == 'RETURNED':
+            return jsonify({'error': 'This item has already been returned'}), 400
+
+        price = float(txn['price'])
+
+        # Refund buyer
+        cur.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (price, txn['buyer_id']))
+
+        # Deduct from seller
+        cur.execute('UPDATE users SET balance = balance - %s WHERE id = %s', (price, txn['seller_id']))
+
+        # Mark transaction as RETURNED
+        cur.execute("UPDATE transactions SET status = 'RETURNED' WHERE id = %s", (txn_id,))
+
+        # Set listing back to ACTIVE
+        cur.execute("UPDATE listings SET status = 'ACTIVE', updated_at = CURRENT_TIMESTAMP WHERE id = %s", (txn['listing_id'],))
+
+        # Notify seller
+        cur.execute('SELECT username FROM users WHERE id = %s', (request.user_id,))
+        buyer = cur.fetchone()
+        cur.execute('''
+            INSERT INTO notifications (user_id, message, type)
+            VALUES (%s, %s, 'RETURN')
+        ''', (txn['seller_id'], buyer['username'] + ' returned "' + txn['title'] + '". $' + '{:.2f}'.format(price) + ' has been deducted from your balance.'))
+
+        return jsonify({'message': 'Return processed. $' + '{:.2f}'.format(price) + ' refunded to your balance.'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
 # ============ FRONTEND ROUTES ============
 
 @app.route('/')
