@@ -135,6 +135,19 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS trades (
+            id SERIAL PRIMARY KEY,
+            sender_id INTEGER REFERENCES users(id),
+            receiver_id INTEGER REFERENCES users(id),
+            offered_listing_id INTEGER REFERENCES listings(id),
+            wanted_listing_id INTEGER REFERENCES listings(id),
+            cash_offer NUMERIC(10, 2) DEFAULT 0.00,
+            status VARCHAR(20) DEFAULT 'PENDING',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     # Add columns if tables already exist without them
     cur.execute('''
         DO $$
@@ -1200,6 +1213,272 @@ def get_transaction(txn_id):
 
         return jsonify({'transaction': d})
 
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ============ TRADE ROUTES ============
+
+# Send a trade offer
+@app.route('/api/trades', methods=['POST'])
+@approved_required
+def create_trade():
+    data = request.get_json()
+    offered_listing_id = data.get('offered_listing_id')
+    wanted_listing_id = data.get('wanted_listing_id')
+    cash_offer = float(data.get('cash_offer', 0))
+
+    if not offered_listing_id or not wanted_listing_id:
+        return jsonify({'error': 'Both offered and wanted listing IDs are required'}), 400
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Verify sender owns the offered listing and it's ACTIVE
+        cur.execute('SELECT * FROM listings WHERE id = %s AND seller_id = %s AND status = %s',
+                    (offered_listing_id, request.user_id, 'ACTIVE'))
+        offered = cur.fetchone()
+        if not offered:
+            conn.close()
+            return jsonify({'error': 'Your offered listing is not available'}), 400
+
+        # Verify wanted listing exists and is ACTIVE
+        cur.execute('SELECT * FROM listings WHERE id = %s AND status = %s', (wanted_listing_id, 'ACTIVE'))
+        wanted = cur.fetchone()
+        if not wanted:
+            conn.close()
+            return jsonify({'error': 'The listing you want is not available'}), 400
+
+        # Can't trade with yourself
+        if wanted['seller_id'] == request.user_id:
+            conn.close()
+            return jsonify({'error': 'You cannot trade with yourself'}), 400
+
+        # Check balance if cash is offered
+        if cash_offer > 0:
+            cur.execute('SELECT balance FROM users WHERE id = %s', (request.user_id,))
+            sender = cur.fetchone()
+            if float(sender['balance']) < cash_offer:
+                conn.close()
+                return jsonify({'error': 'Insufficient balance for cash portion'}), 400
+
+        # Create trade
+        cur.execute(
+            '''INSERT INTO trades (sender_id, receiver_id, offered_listing_id, wanted_listing_id, cash_offer)
+               VALUES (%s, %s, %s, %s, %s)
+               RETURNING id''',
+            (request.user_id, wanted['seller_id'], offered_listing_id, wanted_listing_id, cash_offer)
+        )
+        trade = cur.fetchone()
+
+        # Notify the receiver
+        cur.execute('SELECT username FROM users WHERE id = %s', (request.user_id,))
+        sender_info = cur.fetchone()
+        msg = sender_info['username'] + ' wants to trade "' + offered['title'] + '" for your "' + wanted['title'] + '"'
+        if cash_offer > 0:
+            msg += ' + $' + '{:.2f}'.format(cash_offer) + ' cash'
+        cur.execute(
+            "INSERT INTO notifications (user_id, message, type) VALUES (%s, %s, 'TRADE')",
+            (wanted['seller_id'], msg)
+        )
+
+        conn.close()
+        return jsonify({'message': 'Trade offer sent', 'trade_id': trade['id']}), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Get my trade offers (incoming and outgoing)
+@app.route('/api/trades', methods=['GET'])
+@token_required
+def get_trades():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Incoming trades (I'm the receiver)
+        cur.execute('''
+            SELECT t.*,
+                   sender.username as sender_username,
+                   ol.title as offered_title, ol.price as offered_price, ol.condition as offered_condition,
+                   wl.title as wanted_title, wl.price as wanted_price
+            FROM trades t
+            JOIN users sender ON t.sender_id = sender.id
+            JOIN listings ol ON t.offered_listing_id = ol.id
+            JOIN listings wl ON t.wanted_listing_id = wl.id
+            WHERE t.receiver_id = %s
+            ORDER BY t.created_at DESC
+        ''', (request.user_id,))
+        incoming = cur.fetchall()
+
+        # Outgoing trades (I'm the sender)
+        cur.execute('''
+            SELECT t.*,
+                   receiver.username as receiver_username,
+                   ol.title as offered_title, ol.price as offered_price, ol.condition as offered_condition,
+                   wl.title as wanted_title, wl.price as wanted_price
+            FROM trades t
+            JOIN users receiver ON t.receiver_id = receiver.id
+            JOIN listings ol ON t.offered_listing_id = ol.id
+            JOIN listings wl ON t.wanted_listing_id = wl.id
+            WHERE t.sender_id = %s
+            ORDER BY t.created_at DESC
+        ''', (request.user_id,))
+        outgoing = cur.fetchall()
+
+        conn.close()
+
+        def fmt(rows):
+            result = []
+            for row in rows:
+                d = dict(row)
+                if d.get('created_at'):
+                    d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M')
+                if d.get('updated_at'):
+                    d['updated_at'] = d['updated_at'].strftime('%Y-%m-%d %H:%M')
+                result.append(d)
+            return result
+
+        return jsonify({'incoming': fmt(incoming), 'outgoing': fmt(outgoing)})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# Accept a trade
+@app.route('/api/trades/<int:trade_id>/accept', methods=['PUT'])
+@approved_required
+def accept_trade(trade_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute('SELECT * FROM trades WHERE id = %s AND receiver_id = %s', (trade_id, request.user_id))
+        trade = cur.fetchone()
+
+        if not trade:
+            return jsonify({'error': 'Trade not found'}), 404
+        if trade['status'] != 'PENDING':
+            return jsonify({'error': 'Trade is no longer pending'}), 400
+
+        # Verify both listings still ACTIVE
+        cur.execute('SELECT * FROM listings WHERE id = %s AND status = %s', (trade['offered_listing_id'], 'ACTIVE'))
+        offered = cur.fetchone()
+        cur.execute('SELECT * FROM listings WHERE id = %s AND status = %s', (trade['wanted_listing_id'], 'ACTIVE'))
+        wanted = cur.fetchone()
+
+        if not offered or not wanted:
+            return jsonify({'error': 'One or both listings are no longer available'}), 400
+
+        cash = float(trade['cash_offer'])
+
+        # Handle cash portion if any
+        if cash > 0:
+            cur.execute('SELECT balance FROM users WHERE id = %s', (trade['sender_id'],))
+            sender_bal = cur.fetchone()
+            if float(sender_bal['balance']) < cash:
+                return jsonify({'error': 'Sender has insufficient balance for cash portion'}), 400
+            cur.execute('UPDATE users SET balance = balance - %s WHERE id = %s', (cash, trade['sender_id']))
+            cur.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (cash, trade['receiver_id']))
+
+        # Swap ownership: offered listing goes to receiver, wanted listing goes to sender
+        cur.execute('UPDATE listings SET seller_id = %s, status = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s',
+                    (trade['receiver_id'], 'TRADED', trade['offered_listing_id']))
+        cur.execute('UPDATE listings SET seller_id = %s, status = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s',
+                    (trade['sender_id'], 'TRADED', trade['wanted_listing_id']))
+
+        # Mark trade as accepted
+        cur.execute("UPDATE trades SET status = 'ACCEPTED', updated_at = CURRENT_TIMESTAMP WHERE id = %s", (trade_id,))
+
+        # Notify sender
+        cur.execute('SELECT username FROM users WHERE id = %s', (request.user_id,))
+        receiver_info = cur.fetchone()
+        cur.execute(
+            "INSERT INTO notifications (user_id, message, type) VALUES (%s, %s, 'TRADE')",
+            (trade['sender_id'], receiver_info['username'] + ' accepted your trade offer! Trade #' + str(trade_id))
+        )
+
+        return jsonify({'message': 'Trade accepted'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+# Reject a trade
+@app.route('/api/trades/<int:trade_id>/reject', methods=['PUT'])
+@token_required
+def reject_trade(trade_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute('SELECT * FROM trades WHERE id = %s AND receiver_id = %s', (trade_id, request.user_id))
+        trade = cur.fetchone()
+
+        if not trade:
+            return jsonify({'error': 'Trade not found'}), 404
+        if trade['status'] != 'PENDING':
+            return jsonify({'error': 'Trade is no longer pending'}), 400
+
+        cur.execute("UPDATE trades SET status = 'REJECTED', updated_at = CURRENT_TIMESTAMP WHERE id = %s", (trade_id,))
+
+        # Notify sender
+        cur.execute('SELECT username FROM users WHERE id = %s', (request.user_id,))
+        receiver_info = cur.fetchone()
+        cur.execute(
+            "INSERT INTO notifications (user_id, message, type) VALUES (%s, %s, 'TRADE')",
+            (trade['sender_id'], receiver_info['username'] + ' rejected your trade offer. Trade #' + str(trade_id))
+        )
+
+        return jsonify({'message': 'Trade rejected'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+# Cancel a trade (sender cancels their own outgoing trade)
+@app.route('/api/trades/<int:trade_id>/cancel', methods=['PUT'])
+@token_required
+def cancel_trade(trade_id):
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        cur.execute('SELECT * FROM trades WHERE id = %s AND sender_id = %s', (trade_id, request.user_id))
+        trade = cur.fetchone()
+
+        if not trade:
+            return jsonify({'error': 'Trade not found'}), 404
+        if trade['status'] != 'PENDING':
+            return jsonify({'error': 'Trade is no longer pending'}), 400
+
+        cur.execute("UPDATE trades SET status = 'CANCELLED', updated_at = CURRENT_TIMESTAMP WHERE id = %s", (trade_id,))
+
+        return jsonify({'message': 'Trade cancelled'})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+# Get sender's own active listings (for trade offer modal)
+@app.route('/api/listings/mine', methods=['GET'])
+@token_required
+def get_my_listings():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            "SELECT id, title, price, condition, listing_type FROM listings WHERE seller_id = %s AND status = 'ACTIVE' ORDER BY title",
+            (request.user_id,)
+        )
+        rows = cur.fetchall()
+        conn.close()
+        return jsonify({'listings': [dict(r) for r in rows]})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
