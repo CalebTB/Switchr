@@ -976,7 +976,30 @@ def get_balance():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
+    
+@app.route('/api/notifications', methods=['GET'])
+@token_required
+def get_notifications():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('''
+            SELECT * FROM notifications
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+            LIMIT 20
+        ''', (request.user_id,))
+        rows = cur.fetchall()
+        conn.close()
+        notifs = []
+        for row in rows:
+            d = dict(row)
+            if d.get('created_at'):
+                d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M')
+            notifs.append(d)
+        return jsonify({'notifications': notifs})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ============ TRANSACTION ROUTES ============
 
