@@ -1128,6 +1128,12 @@ def checkout():
                 VALUES (%s, %s, 'SALE')
             ''', (seller_id, 'Your item was purchased by ' + buyer_username + '! Order #' + str(order_id)))
 
+        # Notify buyer that order was confirmed
+        cur.execute('''
+            INSERT INTO notifications (user_id, message, type)
+            VALUES (%s, %s, 'PURCHASE')
+        ''', (request.user_id, 'Your order #' + str(order_id) + ' has been confirmed! Total paid: $' + str(total)))
+
         # Clear cart
         cur.execute("DELETE FROM cart WHERE user_id=%s", (request.user_id,))
 
