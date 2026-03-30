@@ -283,22 +283,10 @@
     .then(data => {
         if (data.listing) {
             alert('Listing submitted for approval!');
-            window.location.href = '/Seller/Seller_Home.html';
+            window.location.href = '/pages/seller/dashboard.html';
         } else {
             alert(data.error || 'Something went wrong.');
         }
-    })
-    .then(function(result) {
-      if (result.status === 201) {
-        showSuccess('Listing submitted for approval! Redirecting...');
-        setTimeout(function() {
-          window.location.href = '/pages/seller/dashboard.html';
-        }, 1200);
-      } else {
-        showError(result.data.error || 'Something went wrong. Try again.');
-        btn.disabled = false;
-        btn.textContent = 'Submit Listing';
-      }
     })
     .catch(function() {
       showError('Network error. Check that the backend is running.');

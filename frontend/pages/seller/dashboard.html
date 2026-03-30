@@ -52,6 +52,25 @@
     .action-card.primary .card-label { color: #f0e040; }
 
     .empty-msg { padding: 28px; }
+
+    .notif-item {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-left: 4px solid #f0e040;
+      border-radius: 4px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notif-item.unread { border-left-color: #1a1a1a; background: #fafaf7; }
+    .notif-item .notif-time { font-size: 11px; color: #aaa; margin-left: 16px; white-space: nowrap; }
+    .notif-type-SALE { border-left-color: #2d7a3a; }
+    .notif-type-TRADE { border-left-color: #1565c0; }
+    .notif-type-RETURN { border-left-color: #c62828; }
   </style>
 </head>
 <body>
@@ -98,6 +117,14 @@
       <div class="card-label">Account</div>
       My Profile
     </a>
+  </div>
+
+  <!-- Notifications -->
+  <div id="notificationsSection" style="margin-bottom:24px;display:none;">
+    <div class="section-head">
+      <h2>Notifications <span id="notifBadge" style="background:#f0e040;color:#1a1a1a;font-size:12px;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'DM Sans',sans-serif;"></span></h2>
+    </div>
+    <div id="notificationsList"></div>
   </div>
 
   <div class="section-head">
@@ -222,6 +249,8 @@
     banner.style.display = 'block';
   });
 
+  loadNotifications();
+
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -268,6 +297,38 @@ function deleteListing(id) {
 
       row.style.display = show ? '' : 'none';
     });
+  }
+
+  function loadNotifications() {
+    var token = localStorage.getItem('token');
+    fetch('/api/notifications', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var notifs = data.notifications || [];
+      if (notifs.length === 0) return;
+
+      var section = document.getElementById('notificationsSection');
+      var list = document.getElementById('notificationsList');
+      var badge = document.getElementById('notifBadge');
+
+      var unread = notifs.filter(function(n) { return !n.is_read; }).length;
+      if (unread > 0) badge.textContent = unread + ' new';
+
+      var html = '';
+      notifs.forEach(function(n) {
+        var cls = 'notif-item notif-type-' + n.type + (n.is_read ? '' : ' unread');
+        html += '<div class="' + cls + '">';
+        html += '<span>' + n.message + '</span>';
+        html += '<span class="notif-time">' + (n.created_at || '') + '</span>';
+        html += '</div>';
+      });
+
+      list.innerHTML = html;
+      section.style.display = 'block';
+    })
+    .catch(function() {});
   }
 </script>
 

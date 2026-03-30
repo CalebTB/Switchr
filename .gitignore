@@ -3,3 +3,6 @@ __pycache__/
 .env
 backend/uploads/*
 !backend/uploads/.gitkeep
+venv/
+.DS_Store
+*.DS_Store

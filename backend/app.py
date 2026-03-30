@@ -324,13 +324,11 @@ def register():
     email = data.get('email')
     username = data.get('username')
     password = data.get('password')
-    role = data.get('role', 'user')
 
     if not email or not username or not password:
         return jsonify({'error': 'Email, username, and password are required'}), 400
 
-    if role not in ('user', 'seller', 'admin'):
-        return jsonify({'error': 'Invalid role'}), 400
+    role = 'user'  # all new accounts are buyer/seller by default
 
     # Admins are auto-approved, buyers/sellers need admin approval
     status = 'approved' if role == 'admin' else 'pending'
@@ -978,7 +976,30 @@ def get_balance():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
+    
+@app.route('/api/notifications', methods=['GET'])
+@token_required
+def get_notifications():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('''
+            SELECT * FROM notifications
+            WHERE user_id = %s
+            ORDER BY created_at DESC
+            LIMIT 20
+        ''', (request.user_id,))
+        rows = cur.fetchall()
+        conn.close()
+        notifs = []
+        for row in rows:
+            d = dict(row)
+            if d.get('created_at'):
+                d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M')
+            notifs.append(d)
+        return jsonify({'notifications': notifs})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ============ TRANSACTION ROUTES ============
 
@@ -1086,7 +1107,8 @@ def checkout():
             transaction_ids.append(txn['id'])
 
             # Mark listing as SOLD
-            cur.execute("UPDATE listings SET status='SOLD', updated_at = CURRENT_TIMESTAMP WHERE id=%s", (item['listing_id'],))
+            cur.execute("UPDATE listings SET quantity = quantity - 1 WHERE id=%s", (item['listing_id'],))
+            cur.execute("UPDATE listings SET status='SOLD', updated_at = CURRENT_TIMESTAMP WHERE id=%s AND quantity <= 0", (item['listing_id'],))
 
             # Credit seller
             cur.execute(
@@ -1105,6 +1127,12 @@ def checkout():
                 INSERT INTO notifications (user_id, message, type)
                 VALUES (%s, %s, 'SALE')
             ''', (seller_id, 'Your item was purchased by ' + buyer_username + '! Order #' + str(order_id)))
+
+        # Notify buyer that order was confirmed
+        cur.execute('''
+            INSERT INTO notifications (user_id, message, type)
+            VALUES (%s, %s, 'PURCHASE')
+        ''', (request.user_id, 'Your order #' + str(order_id) + ' has been confirmed! Total paid: $' + str(total)))
 
         # Clear cart
         cur.execute("DELETE FROM cart WHERE user_id=%s", (request.user_id,))
