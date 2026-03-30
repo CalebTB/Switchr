@@ -29,7 +29,9 @@ def seed():
     cur.execute("DELETE FROM notifications")
     cur.execute("DELETE FROM order_items")
     cur.execute("DELETE FROM orders")
+    cur.execute("DELETE FROM transactions")
     cur.execute("DELETE FROM cart")
+    cur.execute("DELETE FROM trades")
     cur.execute("DELETE FROM listings")
     cur.execute("DELETE FROM users")
 
@@ -39,6 +41,8 @@ def seed():
     cur.execute("ALTER SEQUENCE orders_id_seq RESTART WITH 1")
     cur.execute("ALTER SEQUENCE order_items_id_seq RESTART WITH 1")
     cur.execute("ALTER SEQUENCE notifications_id_seq RESTART WITH 1")
+    cur.execute("ALTER SEQUENCE transactions_id_seq RESTART WITH 1")
+    cur.execute("ALTER SEQUENCE trades_id_seq RESTART WITH 1")
 
     print("Creating users...")
 
@@ -81,69 +85,78 @@ def seed():
         VALUES (%s, %s, %s, %s, %s) RETURNING id
     ''', ('pending@switchr.com', 'newuser', hash_password('User123!'), 'user', 'pending'))
 
-    print("Creating listings...")
-
     # Active listings - seller 1
     cur.execute('''
-        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
-    ''', (seller1_id, 'iPhone 14 Pro 256GB', 'Excellent condition, barely used. Space Black. Comes with original box and charger. No scratches or dents.', 'Phones', 750.00, 'LIKE_NEW', 'BOTH', 'ACTIVE', 1))
+        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity, photo_urls)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+    ''', (seller1_id, 'iPhone 14 Pro 256GB', 'Excellent condition, barely used. Space Black. Comes with original box and charger.', 'Phones', 750.00, 'LIKE_NEW', 'BOTH', 'ACTIVE', 1,
+        ['https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?w=400']))
     listing1_id = cur.fetchone()['id']
 
     cur.execute('''
-        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
-    ''', (seller1_id, 'MacBook Air M2 13"', '8GB RAM, 256GB SSD. Midnight color. Used for college, great condition. Charger included.', 'Laptops', 950.00, 'GOOD', 'SALE', 'ACTIVE', 1))
+        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity, photo_urls)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+    ''', (seller1_id, 'MacBook Air M2 13"', '8GB RAM, 256GB SSD. Midnight color. Used for college, great condition.', 'Laptops', 950.00, 'GOOD', 'SALE', 'ACTIVE', 1,
+        ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400']))
     listing2_id = cur.fetchone()['id']
 
     cur.execute('''
-        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
-    ''', (seller1_id, 'AirPods Pro 2nd Gen', 'Active Noise Cancellation, MagSafe charging case. Minor ear tip wear, works perfectly.', 'Headphones', 180.00, 'GOOD', 'SALE', 'ACTIVE', 1))
+        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity, photo_urls)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (seller1_id, 'AirPods Pro 2nd Gen', 'Active Noise Cancellation, MagSafe charging case. Minor ear tip wear, works perfectly.', 'Headphones', 180.00, 'GOOD', 'SALE', 'ACTIVE', 1,
+        ['https://images.unsplash.com/photo-1606841837239-c5a1a4a07af7?w=400']))
 
     cur.execute('''
-        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
-    ''', (seller1_id, 'iPad Air 5th Gen WiFi', '64GB, Blue. Used for drawing and note taking. Screen protector applied from day one.', 'Tablets', 420.00, 'LIKE_NEW', 'TRADE', 'ACTIVE', 1))
+        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity, photo_urls)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (seller1_id, 'iPad Air 5th Gen WiFi', '64GB, Blue. Used for drawing and note taking. Screen protector applied from day one.', 'Tablets', 420.00, 'LIKE_NEW', 'TRADE', 'ACTIVE', 1,
+        ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400']))
 
     # Active listings - seller 2
     cur.execute('''
-        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
-    ''', (seller2_id, 'Samsung Galaxy S23 Ultra', '256GB Phantom Black. S Pen included. Screen in perfect condition, no cracks.', 'Phones', 680.00, 'LIKE_NEW', 'BOTH', 'ACTIVE', 1))
+        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity, photo_urls)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+    ''', (seller2_id, 'Samsung Galaxy S23 Ultra', '256GB Phantom Black. S Pen included. Screen in perfect condition, no cracks.', 'Phones', 680.00, 'LIKE_NEW', 'BOTH', 'ACTIVE', 1,
+        ['https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=400']))
     listing5_id = cur.fetchone()['id']
 
     cur.execute('''
-        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
-    ''', (seller2_id, 'Dell XPS 15 Laptop', 'Intel i7, 16GB RAM, 512GB SSD. Some scuffs on lid but screen is pristine. Windows 11.', 'Laptops', 820.00, 'GOOD', 'SALE', 'ACTIVE', 1))
+        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity, photo_urls)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (seller2_id, 'Dell XPS 15 Laptop', 'Intel i7, 16GB RAM, 512GB SSD. Some scuffs on lid but screen is pristine.', 'Laptops', 820.00, 'GOOD', 'SALE', 'ACTIVE', 1,
+        ['https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=400']))
 
     cur.execute('''
-        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
-    ''', (seller2_id, 'Sony WH-1000XM5 Headphones', 'Industry-leading noise cancellation. Comes with carry case and all accessories.', 'Headphones', 220.00, 'LIKE_NEW', 'SALE', 'ACTIVE', 1))
+        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity, photo_urls)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (seller2_id, 'Sony WH-1000XM5 Headphones', 'Industry-leading noise cancellation. Comes with carry case and all accessories.', 'Headphones', 220.00, 'LIKE_NEW', 'SALE', 'ACTIVE', 1,
+        ['https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=400']))
 
     cur.execute('''
-        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
-    ''', (seller2_id, 'Apple 67W USB-C Charger', 'Original Apple charger, works perfectly. Cable has slight wear near connector.', 'Chargers', 35.00, 'GOOD', 'SALE', 'ACTIVE', 2))
+        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity, photo_urls)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (seller2_id, 'Apple 67W USB-C Charger', 'Original Apple charger, works perfectly. Cable has slight wear near connector.', 'Chargers', 35.00, 'GOOD', 'SALE', 'ACTIVE', 2,
+        ['https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400']))
 
     # Pending approval listings
     cur.execute('''
-        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-    ''', (seller1_id, 'Google Pixel 8 Pro', '128GB Obsidian. Amazing camera system. Selling because upgrading.', 'Phones', 600.00, 'LIKE_NEW', 'SALE', 'PENDING_APPROVAL', 1))
+        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity, photo_urls)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (seller1_id, 'Google Pixel 8 Pro', '128GB Obsidian. Amazing camera system. Selling because upgrading.', 'Phones', 600.00, 'LIKE_NEW', 'SALE', 'PENDING_APPROVAL', 1,
+        ['https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=400']))
 
     cur.execute('''
-        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-    ''', (seller2_id, 'Nintendo Switch OLED', 'White version, barely used. Comes with dock, joycons, and 3 games.', 'Other', 280.00, 'LIKE_NEW', 'BOTH', 'PENDING_APPROVAL', 1))
+        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity, photo_urls)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (seller2_id, 'Nintendo Switch OLED', 'White version, barely used. Comes with dock, joycons, and 3 games.', 'Other', 280.00, 'LIKE_NEW', 'BOTH', 'PENDING_APPROVAL', 1,
+        ['https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?w=400']))
 
     # Sold listing
     cur.execute('''
-        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
-    ''', (seller1_id, 'iPhone 13 Mini', '128GB, Blue. Screen has minor scratch but works great.', 'Phones', 380.00, 'GOOD', 'SALE', 'SOLD', 1))
+        INSERT INTO listings (seller_id, title, description, category, price, condition, listing_type, status, quantity, photo_urls)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
+    ''', (seller1_id, 'iPhone 13 Mini', '128GB, Blue. Screen has minor scratch but works great.', 'Phones', 380.00, 'GOOD', 'SALE', 'SOLD', 1,
+        ['https://images.unsplash.com/photo-1632661674596-df8be070a5c5?w=400']))
     sold_listing_id = cur.fetchone()['id']
 
     print("Creating sample order...")

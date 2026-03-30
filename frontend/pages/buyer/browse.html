@@ -394,7 +394,7 @@
       var typeLabel = l.listing_type === 'SALE' ? 'For Sale' : l.listing_type === 'TRADE' ? 'For Trade' : 'Sale or Trade';
 
       html += '<div class="listing-card">';
-      html += '<div class="listing-img">IMG</div>';
+      html += '<div class="listing-img"><img src="' + (l.photo_urls && l.photo_urls[0] ? l.photo_urls[0] : 'https://placehold.co/100x100?text=No+Image') + '" alt="' + l.title + '" style="width:100%;height:100%;object-fit:cover;border-radius:6px;"></div>';
       html += '<div class="listing-info">';
       html += '<h4>' + l.title + '</h4>';
       html += '<div class="listing-meta">';
