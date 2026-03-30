@@ -64,15 +64,15 @@ def seed():
 
     # Buyers
     cur.execute('''
-        INSERT INTO users (email, username, password_hash, role, status)
-        VALUES (%s, %s, %s, %s, %s) RETURNING id
-    ''', ('buyer1@switchr.com', 'techbuyer', hash_password('Buyer123!'), 'user', 'approved'))
+        INSERT INTO users (email, username, password_hash, role, status, balance)
+        VALUES (%s, %s, %s, %s, %s, %s) RETURNING id
+    ''', ('buyer1@switchr.com', 'techbuyer', hash_password('Buyer123!'), 'user', 'approved', 1000.00))
     buyer1_id = cur.fetchone()['id']
 
     cur.execute('''
-        INSERT INTO users (email, username, password_hash, role, status)
-        VALUES (%s, %s, %s, %s, %s) RETURNING id
-    ''', ('buyer2@switchr.com', 'gadgetfan', hash_password('Buyer123!'), 'user', 'approved'))
+        INSERT INTO users (email, username, password_hash, role, status, balance)
+        VALUES (%s, %s, %s, %s, %s, %s) RETURNING id
+    ''', ('buyer2@switchr.com', 'gadgetfan', hash_password('Buyer123!'), 'user', 'approved', 1000.00))
     buyer2_id = cur.fetchone()['id']
 
     # Pending user (waiting for admin approval)

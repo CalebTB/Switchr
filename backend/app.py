@@ -324,13 +324,11 @@ def register():
     email = data.get('email')
     username = data.get('username')
     password = data.get('password')
-    role = data.get('role', 'user')
 
     if not email or not username or not password:
         return jsonify({'error': 'Email, username, and password are required'}), 400
 
-    if role not in ('user', 'seller', 'admin'):
-        return jsonify({'error': 'Invalid role'}), 400
+    role = 'user'  # all new accounts are buyer/seller by default
 
     # Admins are auto-approved, buyers/sellers need admin approval
     status = 'approved' if role == 'admin' else 'pending'
@@ -1086,7 +1084,8 @@ def checkout():
             transaction_ids.append(txn['id'])
 
             # Mark listing as SOLD
-            cur.execute("UPDATE listings SET status='SOLD', updated_at = CURRENT_TIMESTAMP WHERE id=%s", (item['listing_id'],))
+            cur.execute("UPDATE listings SET quantity = quantity - 1 WHERE id=%s", (item['listing_id'],))
+            cur.execute("UPDATE listings SET status='SOLD', updated_at = CURRENT_TIMESTAMP WHERE id=%s AND quantity <= 0", (item['listing_id'],))
 
             # Credit seller
             cur.execute(
