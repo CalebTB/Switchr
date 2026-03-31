@@ -337,12 +337,10 @@
 
   var authLinks = document.getElementById('authLinks');
   var checkoutLinks = '';
-  if (user && user.role === 'seller') {
-    checkoutLinks += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
-  }
   if (user && user.role === 'admin') {
     checkoutLinks += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
   }
+  checkoutLinks += '<a href="/pages/seller/dashboard.html">My Listings</a>';
   checkoutLinks += '<a href="#" onclick="logout()">Logout</a>';
   authLinks.innerHTML = checkoutLinks;
 

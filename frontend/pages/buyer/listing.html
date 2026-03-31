@@ -195,12 +195,10 @@
   if (isLoggedIn()) {
     var user = getUser();
     var links = '';
-    if (user && user.role === 'seller') {
-      links += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
-    }
     if (user && user.role === 'admin') {
       links += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
     }
+    links += '<a href="/pages/seller/dashboard.html">My Listings</a>';
     links += '<a href="#" onclick="logout()">Logout</a>';
     authLinks.innerHTML = links;
   } else {
