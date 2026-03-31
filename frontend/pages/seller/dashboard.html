@@ -178,26 +178,34 @@
 <script>
   // check auth on page load
   var token = localStorage.getItem('token');
-  var user = JSON.parse(localStorage.getItem('user') || '{}');
 
   if (!token) {
     window.location.href = '/pages/auth/login.html';
   }
 
-  // show user info
-  document.getElementById('displayName').textContent = user.username || 'Seller';
-  document.getElementById('userEmail').textContent = user.email || '';
+  // fetch fresh user data from API so approval status is current
+  fetch('/api/auth/me', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (data.user) {
+      localStorage.setItem('user', JSON.stringify(data.user));
+      var user = data.user;
+      document.getElementById('displayName').textContent = user.username || 'User';
+      document.getElementById('userEmail').textContent = user.email || '';
 
-  // check account status
-  if (user.status === 'pending') {
-    var banner = document.getElementById('errorBanner');
-    banner.textContent = 'Your account is pending admin approval. You cannot create or manage listings yet.';
-    banner.style.display = 'block';
-  } else if (user.status === 'denied') {
-    var banner = document.getElementById('errorBanner');
-    banner.textContent = 'Your account has been denied.';
-    banner.style.display = 'block';
-  }
+      if (user.status === 'pending') {
+        var banner = document.getElementById('errorBanner');
+        banner.textContent = 'Your account is pending admin approval. You cannot create or manage listings yet.';
+        banner.style.display = 'block';
+      } else if (user.status === 'denied') {
+        var banner = document.getElementById('errorBanner');
+        banner.textContent = 'Your account has been denied.';
+        banner.style.display = 'block';
+      }
+    }
+  });
 
   // load listings from API
   fetch('/api/listings', {
