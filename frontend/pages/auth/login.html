@@ -199,8 +199,6 @@
         errorEl.classList.add('warning');
         errorEl.textContent = 'Your account is pending admin approval. You can browse listings but cannot buy, sell, or trade yet.';
         errorEl.style.display = 'block';
-      } else if (result.user.role === 'seller') {
-        window.location.href = '/pages/seller/dashboard.html';
       } else {
         window.location.href = '/pages/buyer/browse.html';
       }

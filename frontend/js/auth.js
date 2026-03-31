@@ -80,11 +80,11 @@ async function login(email, password) {
 }
 
 // Register
-async function register(email, username, password, role) {
+async function register(email, username, password) {
     const response = await fetch(API_URL + '/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username, password, role })
+        body: JSON.stringify({ email, username, password })
     });
 
     const data = await response.json();

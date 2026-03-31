@@ -328,10 +328,9 @@ def register():
     if not email or not username or not password:
         return jsonify({'error': 'Email, username, and password are required'}), 400
 
-    role = 'user'  # all new accounts are buyer/seller by default
+    role = 'user'  # unified role - all users can buy, sell, and trade
 
-    # Admins are auto-approved, buyers/sellers need admin approval
-    status = 'approved' if role == 'admin' else 'pending'
+    status = 'pending'  # new accounts require admin approval
 
     # Hash password
     password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
