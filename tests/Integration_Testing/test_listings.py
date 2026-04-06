@@ -80,14 +80,15 @@ def buyer_token(client, db_cleanup):
 @pytest.fixture
 def active_listing(client, seller_token):
     """Create and approve a test listing, return listing data."""
-    resp = client.post('/api/listings', json={
+    resp = client.post('/api/listings', data={
         'title': 'TEST_iPhone 13 Pro',
         'description': 'Test listing for pytest',
         'category': 'Phones',
         'price': 599.99,
         'condition': 'GOOD',
         'listingType': 'SALE'
-    }, headers={'Authorization': f'Bearer {seller_token}'})
+    }, headers={'Authorization': f'Bearer {seller_token}'},
+       content_type='multipart/form-data')
 
     listing = resp.get_json()['listing']
 
@@ -104,14 +105,15 @@ def active_listing(client, seller_token):
 
 def test_create_listing_success(client, seller_token, db_cleanup):
     """REQ-18, REQ-26, REQ-27: Seller can create a listing successfully."""
-    resp = client.post('/api/listings', json={
+    resp = client.post('/api/listings', data={
         'title': 'TEST_MacBook Air M2',
         'description': 'Barely used laptop',
         'category': 'Laptops',
         'price': 899.99,
         'condition': 'LIKE_NEW',
         'listingType': 'SALE'
-    }, headers={'Authorization': f'Bearer {seller_token}'})
+    }, headers={'Authorization': f'Bearer {seller_token}'},
+       content_type='multipart/form-data')
 
     assert resp.status_code == 201
     data = resp.get_json()
@@ -122,27 +124,28 @@ def test_create_listing_success(client, seller_token, db_cleanup):
 
 def test_create_listing_requires_auth(client, db_cleanup):
     """REQ-18: Cannot create listing without authentication."""
-    resp = client.post('/api/listings', json={
+    resp = client.post('/api/listings', data={
         'title': 'TEST_Unauthorized Listing',
         'description': 'Should fail',
         'category': 'Phones',
         'price': 100.00,
         'condition': 'GOOD',
         'listingType': 'SALE'
-    })
+    }, content_type='multipart/form-data')
     assert resp.status_code == 401
 
 
 def test_create_listing_title_too_long(client, seller_token, db_cleanup):
     """REQ-19: Title must be 100 characters or less."""
-    resp = client.post('/api/listings', json={
+    resp = client.post('/api/listings', data={
         'title': 'TEST_' + 'A' * 100,
         'description': 'Test description',
         'category': 'Phones',
         'price': 100.00,
         'condition': 'GOOD',
         'listingType': 'SALE'
-    }, headers={'Authorization': f'Bearer {seller_token}'})
+    }, headers={'Authorization': f'Bearer {seller_token}'},
+       content_type='multipart/form-data')
 
     assert resp.status_code == 400
     assert 'error' in resp.get_json()
@@ -150,24 +153,26 @@ def test_create_listing_title_too_long(client, seller_token, db_cleanup):
 
 def test_create_listing_missing_required_fields(client, seller_token, db_cleanup):
     """REQ-20, REQ-21, REQ-22, REQ-23, REQ-24: All fields are required."""
-    resp = client.post('/api/listings', json={
+    resp = client.post('/api/listings', data={
         'title': 'TEST_Incomplete Listing'
         # missing description, category, price, condition, listingType
-    }, headers={'Authorization': f'Bearer {seller_token}'})
+    }, headers={'Authorization': f'Bearer {seller_token}'},
+       content_type='multipart/form-data')
 
     assert resp.status_code == 400
 
 
 def test_create_listing_pending_approval(client, seller_token, db_cleanup):
     """REQ-27: New listing starts as PENDING_APPROVAL."""
-    resp = client.post('/api/listings', json={
+    resp = client.post('/api/listings', data={
         'title': 'TEST_Pending Listing',
         'description': 'Should be pending',
         'category': 'Tablets',
         'price': 300.00,
         'condition': 'NEW',
         'listingType': 'BOTH'
-    }, headers={'Authorization': f'Bearer {seller_token}'})
+    }, headers={'Authorization': f'Bearer {seller_token}'},
+       content_type='multipart/form-data')
 
     assert resp.status_code == 201
     assert resp.get_json()['listing']['status'] == 'PENDING_APPROVAL'
@@ -178,14 +183,15 @@ def test_create_listing_pending_approval(client, seller_token, db_cleanup):
 def test_get_seller_listings(client, seller_token, db_cleanup):
     """REQ-39: Seller can view their own listings."""
     # Create a listing first
-    client.post('/api/listings', json={
+    client.post('/api/listings', data={
         'title': 'TEST_My Listing',
         'description': 'Test',
         'category': 'Phones',
         'price': 200.00,
         'condition': 'GOOD',
         'listingType': 'SALE'
-    }, headers={'Authorization': f'Bearer {seller_token}'})
+    }, headers={'Authorization': f'Bearer {seller_token}'},
+       content_type='multipart/form-data')
 
     resp = client.get('/api/listings',
         headers={'Authorization': f'Bearer {seller_token}'})
