@@ -2,7 +2,7 @@
 test_auth.py
 Switchr - Sprint 3 Integration Test Cases
 Tests for user registration, login, and authentication.
-Covers: REQ-1 to REQ-17
+Covers.REQ-17
 """
 
 import pytest

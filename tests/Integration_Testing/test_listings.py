@@ -2,7 +2,7 @@
 test_listings.py
 Switchr - Sprint 3 Test Cases
 Tests for listing creation, editing, deletion, and browsing.
-Covers: REQ-18 to REQ-27, REQ-38 to REQ-58, REQ-59 to REQ-66
+Covers.REQ-27, REQ-38 to REQ-58, REQ-59 to REQ-66
 """
 
 import pytest

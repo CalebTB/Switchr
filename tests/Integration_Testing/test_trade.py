@@ -2,7 +2,7 @@
 test_trade.py
 Switchr - Sprint 3 Integration Test Cases
 Tests for trade offer creation, acceptance, rejection, and cancellation.
-Covers: REQ-92 to REQ-109
+Covers.REQ-109
 """
 
 import pytest

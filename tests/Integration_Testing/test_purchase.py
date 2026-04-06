@@ -2,7 +2,7 @@
 test_purchase.py
 Switchr - Sprint 3 Test Cases
 Tests for cart and checkout/purchase flow.
-Covers: REQ-82 to REQ-91
+Covers.REQ-91
 """
 
 import pytest
