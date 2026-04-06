@@ -42,5 +42,8 @@ jobs:
           pip install -r requirements.txt
           pip install pytest
 
+      - name: Initialize database tables
+        run: python -c "from backend.app import init_db; init_db()"
+
       - name: Run tests
         run: python -m pytest tests/Integration_Testing/ -v
