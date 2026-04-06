@@ -15,12 +15,18 @@ FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..', 'frontend')
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
+load_dotenv()
+
+# Configurable values - override via environment variables
+MAX_UPLOAD_MB = int(os.getenv('MAX_UPLOAD_MB', '16'))
+TAX_RATE = float(os.getenv('TAX_RATE', '0.08'))
+JWT_EXPIRY_HOURS = int(os.getenv('JWT_EXPIRY_HOURS', '24'))
+NOTIFICATIONS_PER_PAGE = int(os.getenv('NOTIFICATIONS_PER_PAGE', '20'))
+
 app = Flask(__name__, static_folder=FRONTEND_DIR)
 CORS(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
-
-load_dotenv()
+app.config['MAX_CONTENT_LENGTH'] = MAX_UPLOAD_MB * 1024 * 1024
 
 # Configuration
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-change-in-production')
@@ -298,7 +304,7 @@ def generate_token(user):
         'user_id': user['id'],
         'email': user['email'],
         'role': user['role'],
-        'exp': datetime.now(timezone.utc) + timedelta(hours=24)
+        'exp': datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRY_HOURS)
     }
     return jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
 
@@ -686,15 +692,18 @@ def approve_user(user_id):
 @app.route('/api/admin/users/<int:user_id>/deny', methods=['PUT'])
 @admin_required
 def deny_user(user_id):
+    data = request.get_json() or {}
+    reason = data.get('reason', '').strip()
+
     try:
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(
             '''UPDATE users
-               SET status = 'denied'
+               SET status = 'denied', denial_reason = %s
                WHERE id = %s
-               RETURNING id, email, username, role, status''',
-            (user_id,)
+               RETURNING id, email, username, role, status, denial_reason''',
+            (reason or None, user_id)
         )
         user = cur.fetchone()
         conn.close()
@@ -986,8 +995,8 @@ def get_notifications():
             SELECT * FROM notifications
             WHERE user_id = %s
             ORDER BY created_at DESC
-            LIMIT 20
-        ''', (request.user_id,))
+            LIMIT %s
+        ''', (request.user_id, NOTIFICATIONS_PER_PAGE))
         rows = cur.fetchall()
         conn.close()
         notifs = []
@@ -1029,8 +1038,7 @@ def checkout():
 
         # Calculate totals
         subtotal = sum(float(item['price']) for item in cart_items)
-        tax_rate = 0.08
-        tax_amount = round(subtotal * tax_rate, 2)
+        tax_amount = round(subtotal * TAX_RATE, 2)
         total = round(subtotal + tax_amount, 2)
 
         # Check buyer has enough balance
@@ -1069,7 +1077,7 @@ def checkout():
                 %s, %s, 'COMPLETED'
             ) RETURNING id
         ''', (
-            request.user_id, subtotal, tax_rate, tax_amount, total,
+            request.user_id, subtotal, TAX_RATE, tax_amount, total,
             data.get('firstName'), data.get('lastName'), data.get('address'),
             data.get('city'), data.get('state'), data.get('zip'),
             bill_same,
