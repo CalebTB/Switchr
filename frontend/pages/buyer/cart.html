@@ -168,12 +168,10 @@
 
   var authLinks = document.getElementById('authLinks');
   var cartLinks = '';
-  if (user && user.role === 'seller') {
-    cartLinks += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
-  }
   if (user && user.role === 'admin') {
     cartLinks += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
   }
+  cartLinks += '<a href="/pages/seller/dashboard.html">My Listings</a>';
   cartLinks += '<a href="#" onclick="logout()">Logout</a>';
   authLinks.innerHTML = cartLinks;
 

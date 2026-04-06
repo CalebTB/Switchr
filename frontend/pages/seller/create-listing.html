@@ -204,19 +204,28 @@
 <script>
   // check auth on load
   var token = localStorage.getItem('token');
-  var user = JSON.parse(localStorage.getItem('user') || '{}');
   if (!token) {
     window.location.href = '/pages/auth/login.html';
   }
 
-  // check account approval
-  if (user.status === 'pending') {
-    showError('Your account is pending admin approval. You cannot create listings yet.');
-    document.getElementById('submitBtn').disabled = true;
-  } else if (user.status === 'denied') {
-    showError('Your account has been denied. You cannot create listings.');
-    document.getElementById('submitBtn').disabled = true;
-  }
+  // fetch fresh user data so approval status is current
+  fetch('/api/auth/me', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (data.user) {
+      localStorage.setItem('user', JSON.stringify(data.user));
+      var user = data.user;
+      if (user.status === 'pending') {
+        showError('Your account is pending admin approval. You cannot create listings yet.');
+        document.getElementById('submitBtn').disabled = true;
+      } else if (user.status === 'denied') {
+        showError('Your account has been denied. You cannot create listings.');
+        document.getElementById('submitBtn').disabled = true;
+      }
+    }
+  });
 
   function updateCount(input, countId, max) {
     var len = input.value.length;

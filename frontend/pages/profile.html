@@ -248,21 +248,17 @@
   // Nav auth links
   var authLinks = document.getElementById('authLinks');
   var navLinks = '';
-  if (user && user.role === 'seller') {
-    navLinks += '<a href="/pages/seller/dashboard.html">Seller Dashboard</a>';
-  }
   if (user && user.role === 'admin') {
     navLinks += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
   }
+  navLinks += '<a href="/pages/seller/dashboard.html">My Listings</a>';
   navLinks += '<a href="#" onclick="logout()">Logout</a>';
   authLinks.innerHTML = navLinks;
 
-  // Seller quick links
-  if (user && user.role === 'seller') {
-    document.getElementById('sellerLinks').innerHTML =
-      '<a href="/pages/seller/dashboard.html" class="btn" style="margin-right:8px;">Seller Dashboard</a>' +
-      '<a href="/pages/seller/sales.html" class="btn">My Sales</a>';
-  }
+  // Quick links to listings and sales
+  document.getElementById('sellerLinks').innerHTML =
+    '<a href="/pages/seller/dashboard.html" class="btn" style="margin-right:8px;">My Listings</a>' +
+    '<a href="/pages/seller/sales.html" class="btn">My Sales</a>';
 
   // Load profile from API
   fetch('/api/auth/me', {
