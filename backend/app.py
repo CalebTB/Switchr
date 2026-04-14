@@ -154,6 +154,15 @@ def init_db():
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS wishlist (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            listing_id INTEGER REFERENCES listings(id),
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, listing_id)
+        )
+    ''')
     # Add columns if tables already exist without them
     cur.execute('''
         DO $$
