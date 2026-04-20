@@ -258,6 +258,7 @@
   });
 
   loadNotifications();
+  setInterval(loadNotifications, 30000);
 
   function logout() {
     localStorage.removeItem('token');
