@@ -3,6 +3,20 @@
 <head>
     <title>Switchr Admin Dashboard</title>
     <script src="../../js/auth.js"></script>
+    <script>
+        // Block page render immediately if not admin
+        (function() {
+            var token = localStorage.getItem('token');
+            var user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!token || !user || user.role !== 'admin') {
+                document.documentElement.style.visibility = 'hidden';
+                window.location.href = '/pages/auth/login.html';
+            }
+        })();
+    </script>
+    <style>
+        body { visibility: hidden; }
+    </style>
 </head>
 
 <body>
@@ -155,6 +169,7 @@
         if (!requireAdmin()) {
             // requireAdmin redirects away
         } else {
+            document.body.style.visibility = 'visible';
             var token = getToken();
             var user = getUser();
 

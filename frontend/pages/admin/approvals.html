@@ -3,6 +3,17 @@
 <head>
     <title>Switchr Admin - Pending Approvals</title>
     <script src="../../js/auth.js"></script>
+    <script>
+        (function() {
+            var token = localStorage.getItem('token');
+            var user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!token || !user || user.role !== 'admin') {
+                document.documentElement.style.visibility = 'hidden';
+                window.location.href = '/pages/auth/login.html';
+            }
+        })();
+    </script>
+    <style>body { visibility: hidden; }</style>
 </head>
 
 <body>
@@ -55,8 +66,9 @@
     <script>
         // Auth gate: admin only
         if (!requireAdmin()) {
-            // redirected away
+            // requireAdmin redirects away
         } else {
+            document.body.style.visibility = 'visible';
             var user = getUser();
 
             var authLinks = document.getElementById('authLinks');
