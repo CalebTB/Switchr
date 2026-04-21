@@ -71,6 +71,60 @@
     .notif-type-SALE { border-left-color: #2d7a3a; }
     .notif-type-TRADE { border-left-color: #1565c0; }
     .notif-type-RETURN { border-left-color: #c62828; }
+
+    .info-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 18px 22px;
+      margin-bottom: 16px;
+    }
+    .info-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    .rating-big { font-size: 24px; font-weight: 700; }
+    .rating-big .stars-glyph { color: #f0b840; letter-spacing: 2px; }
+    .review-list { margin-top: 12px; max-height: 260px; overflow-y: auto; }
+    .review-row {
+      padding: 10px 0;
+      border-top: 1px solid #f0f0f0;
+      font-size: 13px;
+    }
+    .review-row:first-child { border-top: none; }
+    .review-row .meta { color: #888; font-size: 11px; }
+    .feed-url {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: #fafaf8;
+      padding: 8px 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+    .feed-url input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: monospace;
+      font-size: 12px;
+      outline: none;
+    }
+    .feed-url button {
+      padding: 5px 10px;
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      font-size: 11px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .feed-url button:hover { background: #333; }
   </style>
 </head>
 <body>
@@ -125,6 +179,23 @@
       <h2>Notifications <span id="notifBadge" style="background:#f0e040;color:#1a1a1a;font-size:12px;padding:2px 8px;border-radius:10px;margin-left:8px;font-family:'DM Sans',sans-serif;"></span></h2>
     </div>
     <div id="notificationsList"></div>
+  </div>
+
+  <!-- Reviews received -->
+  <div class="info-card">
+    <h3>Reviews From Buyers</h3>
+    <div id="reviewsSummary" style="font-size:13px;color:#888;">Loading...</div>
+    <div id="reviewsList" class="review-list"></div>
+  </div>
+
+  <!-- Order Feed (RSS) -->
+  <div class="info-card">
+    <h3>Order Feed</h3>
+    <p style="font-size:13px;color:#666;margin-bottom:10px;">Paste this URL into your warehouse software to receive an RSS feed of your incoming orders (title, ship-to address, date).</p>
+    <div class="feed-url">
+      <input type="text" id="feedUrl" readonly placeholder="Loading...">
+      <button type="button" onclick="copyFeed()">Copy</button>
+    </div>
   </div>
 
   <div class="section-head">
@@ -256,6 +327,59 @@
     banner.textContent = 'Could not load listings. Please try again.';
     banner.style.display = 'block';
   });
+
+  // Reviews section
+  (function loadReviews() {
+    var me = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!me.id) {
+      // /api/auth/me above may not have resolved yet; retry shortly
+      setTimeout(loadReviews, 400);
+      return;
+    }
+    fetch('/api/reviews/' + me.id)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var summary = document.getElementById('reviewsSummary');
+        var list = document.getElementById('reviewsList');
+        if (!data || !data.count) {
+          summary.textContent = 'No reviews yet.';
+          return;
+        }
+        var stars = '&#9733;'.repeat(Math.round(data.avg_rating)) + '&#9734;'.repeat(5 - Math.round(data.avg_rating));
+        summary.innerHTML = '<span class="rating-big"><span class="stars-glyph">' + stars + '</span> ' + data.avg_rating.toFixed(1) + '</span> <span style="color:#888;font-size:13px;">(' + data.count + ' review' + (data.count === 1 ? '' : 's') + ')</span>';
+        var html = '';
+        data.reviews.forEach(function(r) {
+          var s = '&#9733;'.repeat(r.rating) + '&#9734;'.repeat(5 - r.rating);
+          html += '<div class="review-row">';
+          html += '<div><span style="color:#f0b840;">' + s + '</span> <strong>' + r.buyer_username + '</strong> <span class="meta">' + r.created_at + '</span></div>';
+          if (r.comment) html += '<div style="margin-top:4px;color:#333;">' + r.comment + '</div>';
+          html += '</div>';
+        });
+        list.innerHTML = html;
+      });
+  })();
+
+  // Order feed - fetch (or create) the feed token on load
+  fetch('/api/seller/feed-token', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.feed_url) {
+      document.getElementById('feedUrl').value = window.location.origin + data.feed_url;
+    }
+  })
+  .catch(function() {});
+
+  function copyFeed() {
+    var input = document.getElementById('feedUrl');
+    if (!input.value) return;
+    input.select();
+    document.execCommand('copy');
+    input.blur();
+    alert('Feed URL copied to clipboard.');
+  }
 
   loadNotifications();
   setInterval(loadNotifications, 30000);

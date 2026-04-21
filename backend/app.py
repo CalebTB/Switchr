@@ -163,6 +163,17 @@ def init_db():
             UNIQUE(user_id, listing_id)
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS reviews (
+            id SERIAL PRIMARY KEY,
+            transaction_id INTEGER REFERENCES transactions(id) UNIQUE,
+            buyer_id INTEGER REFERENCES users(id),
+            seller_id INTEGER REFERENCES users(id),
+            rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+            comment TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     # Add columns if tables already exist without them
     cur.execute('''
         DO $$
@@ -202,6 +213,12 @@ def init_db():
                 WHERE table_name = 'listings' AND column_name = 'quantity'
             ) THEN
                 ALTER TABLE listings ADD COLUMN quantity INTEGER DEFAULT 1;
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'users' AND column_name = 'feed_token'
+            ) THEN
+                ALTER TABLE users ADD COLUMN feed_token VARCHAR(64) UNIQUE;
             END IF;
         END $$;
     ''')
@@ -1246,7 +1263,8 @@ def get_purchases():
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(
-            '''SELECT t.*, u.username as seller_username
+            '''SELECT t.*, u.username as seller_username,
+                      EXISTS(SELECT 1 FROM reviews r WHERE r.transaction_id = t.id) AS reviewed
                FROM transactions t
                JOIN users u ON t.seller_id = u.id
                WHERE t.buyer_id = %s
@@ -1644,6 +1662,177 @@ def return_transaction(txn_id):
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
+
+# ============ REVIEW ROUTES ============
+
+@app.route('/api/reviews', methods=['POST'])
+@approved_required
+def create_review():
+    data = request.get_json() or {}
+    try:
+        transaction_id = int(data.get('transaction_id'))
+        rating = int(data.get('rating'))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'transaction_id and rating are required'}), 400
+
+    if rating < 1 or rating > 5:
+        return jsonify({'error': 'Rating must be between 1 and 5'}), 400
+
+    comment = (data.get('comment') or '').strip() or None
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cur.execute('SELECT * FROM transactions WHERE id = %s', (transaction_id,))
+        txn = cur.fetchone()
+        if not txn:
+            conn.close()
+            return jsonify({'error': 'Transaction not found'}), 404
+        if txn['buyer_id'] != request.user_id:
+            conn.close()
+            return jsonify({'error': 'You can only review your own purchases'}), 403
+        if txn['status'] != 'COMPLETED':
+            conn.close()
+            return jsonify({'error': 'Only completed transactions can be reviewed'}), 400
+
+        cur.execute('SELECT id FROM reviews WHERE transaction_id = %s', (transaction_id,))
+        if cur.fetchone():
+            conn.close()
+            return jsonify({'error': 'You have already reviewed this transaction'}), 409
+
+        cur.execute(
+            '''INSERT INTO reviews (transaction_id, buyer_id, seller_id, rating, comment)
+               VALUES (%s, %s, %s, %s, %s)
+               RETURNING id, rating, comment, created_at''',
+            (transaction_id, request.user_id, txn['seller_id'], rating, comment)
+        )
+        review = cur.fetchone()
+        conn.close()
+
+        result = dict(review)
+        if result.get('created_at'):
+            result['created_at'] = result['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+        return jsonify({'message': 'Review submitted', 'review': result}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/reviews/<int:seller_id>', methods=['GET'])
+def list_reviews(seller_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''SELECT r.rating, r.comment, r.created_at, u.username AS buyer_username
+               FROM reviews r JOIN users u ON u.id = r.buyer_id
+               WHERE r.seller_id = %s
+               ORDER BY r.created_at DESC''',
+            (seller_id,)
+        )
+        rows = cur.fetchall()
+        conn.close()
+
+        reviews = []
+        for r in rows:
+            d = dict(r)
+            if d.get('created_at'):
+                d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            reviews.append(d)
+
+        count = len(reviews)
+        avg = round(sum(r['rating'] for r in reviews) / count, 2) if count else None
+        return jsonify({'reviews': reviews, 'avg_rating': avg, 'count': count})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ============ SELLER ORDER FEED (RSS) ============
+
+@app.route('/api/seller/feed-token', methods=['POST'])
+@approved_required
+def ensure_feed_token():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('SELECT feed_token FROM users WHERE id = %s', (request.user_id,))
+        row = cur.fetchone()
+        token = row['feed_token'] if row else None
+        if not token:
+            token = uuid.uuid4().hex
+            cur.execute('UPDATE users SET feed_token = %s WHERE id = %s', (token, request.user_id))
+        conn.close()
+        return jsonify({'feed_token': token, 'feed_url': '/feed/' + token + '.xml'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+def _xml_escape(s):
+    if s is None:
+        return ''
+    return (str(s)
+            .replace('&', '&amp;')
+            .replace('<', '&lt;')
+            .replace('>', '&gt;')
+            .replace('"', '&quot;'))
+
+
+@app.route('/feed/<token>.xml', methods=['GET'])
+def seller_order_feed(token):
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('SELECT id, username FROM users WHERE feed_token = %s', (token,))
+        seller = cur.fetchone()
+        if not seller:
+            conn.close()
+            return ('<?xml version="1.0" encoding="UTF-8"?><error>Invalid feed token</error>',
+                    404, {'Content-Type': 'application/rss+xml; charset=utf-8'})
+
+        cur.execute(
+            '''SELECT oi.title, oi.price, o.created_at,
+                      o.ship_first_name, o.ship_last_name,
+                      o.ship_address, o.ship_city, o.ship_state, o.ship_zip
+               FROM order_items oi
+               JOIN orders o ON oi.order_id = o.id
+               WHERE oi.seller_id = %s
+               ORDER BY o.created_at DESC
+               LIMIT 50''',
+            (seller['id'],)
+        )
+        items = cur.fetchall()
+        conn.close()
+
+        host = request.host_url.rstrip('/')
+        parts = [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<rss version="2.0">',
+            '<channel>',
+            '<title>Switchr Orders - ' + _xml_escape(seller['username']) + '</title>',
+            '<link>' + _xml_escape(host) + '</link>',
+            '<description>Orders received by ' + _xml_escape(seller['username']) + '</description>',
+        ]
+        for it in items:
+            ship_to = ', '.join(filter(None, [
+                (it.get('ship_first_name') or '') + ' ' + (it.get('ship_last_name') or ''),
+                it.get('ship_address'),
+                ', '.join(filter(None, [it.get('ship_city'), it.get('ship_state'), it.get('ship_zip')]))
+            ])).strip()
+            pub_date = it['created_at'].strftime('%a, %d %b %Y %H:%M:%S GMT') if it.get('created_at') else ''
+            parts.append('<item>')
+            parts.append('<title>' + _xml_escape(it['title']) + '</title>')
+            parts.append('<description>Ship to: ' + _xml_escape(ship_to) + '</description>')
+            parts.append('<pubDate>' + pub_date + '</pubDate>')
+            parts.append('</item>')
+        parts.append('</channel></rss>')
+
+        return ('\n'.join(parts), 200, {'Content-Type': 'application/rss+xml; charset=utf-8'})
+    except Exception as e:
+        return (
+            '<?xml version="1.0" encoding="UTF-8"?><error>' + _xml_escape(str(e)) + '</error>',
+            500, {'Content-Type': 'application/rss+xml; charset=utf-8'}
+        )
 
 
 # ============ FRONTEND ROUTES ============
