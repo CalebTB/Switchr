@@ -139,6 +139,7 @@
   <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
   <div class="nav-center">
     <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/buyer/auctions.html">Auctions</a>
     <a href="/pages/offers/offers.html">Offers</a>
     <a href="/pages/buyer/cart.html">Cart <span class="cart-badge"></span></a>
     <a href="/pages/profile.html">Profile</a>
@@ -224,8 +225,12 @@
     }
 
     var l = data.listing;
+    window.currentListing = l;
     var typeClass = l.listing_type ? l.listing_type.toLowerCase() : 'sale';
-    var typeLabel = l.listing_type === 'SALE' ? 'For Sale' : l.listing_type === 'TRADE' ? 'For Trade' : 'Sale or Trade';
+    var typeLabel = l.listing_type === 'SALE' ? 'For Sale'
+                  : l.listing_type === 'TRADE' ? 'For Trade'
+                  : l.listing_type === 'AUCTION' ? 'Auction'
+                  : 'Sale or Trade';
 
     document.title = l.title + ' - Switchr';
 
@@ -258,6 +263,27 @@
 
     html += '<div class="listing-right">';
     html += '<div class="card">';
+
+    if (l.listing_type === 'AUCTION') {
+      html += '<p style="font-size:12px;color:#888;margin:0;">Current bid</p>';
+      html += '<p class="price-display" id="currentPrice">$' + parseFloat(l.price).toFixed(2) + '</p>';
+      html += '<p style="font-size:13px;color:#c62828;font-weight:600;" id="auctionCountdown" data-end="' + l.auction_end_time + '">Ends in ...</p>';
+      html += '<div style="margin-top:14px;">';
+      html += '<label style="font-size:12px;color:#888;">Your bid ($)</label>';
+      html += '<input type="number" id="bidAmount" min="0.01" step="0.01" style="width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:4px;margin:6px 0 10px;">';
+      html += '<button class="btn primary" id="placeBidBtn" onclick="placeBid(' + l.id + ')">Place Bid</button>';
+      html += '</div>';
+      html += '<div style="margin-top:18px;">';
+      html += '<h4 style="font-size:13px;margin-bottom:8px;">Bid History</h4>';
+      html += '<ul id="bidList" style="list-style:none;padding:0;margin:0;font-size:13px;max-height:200px;overflow-y:auto;"></ul>';
+      html += '</div>';
+      html += '</div></div>';
+      document.getElementById('listingContent').innerHTML = html;
+      loadBids(l.id);
+      startAuctionCountdown();
+      return;
+    }
+
     html += '<p class="price-display">$' + parseFloat(l.price).toFixed(2) + '</p>';
     var qty = l.quantity || 0;
     if (qty <= 0) {
@@ -397,6 +423,87 @@
     .catch(function() {
       alert('Could not send trade offer. Try again.');
     });
+  }
+
+  function fmtCountdown(ms) {
+    if (ms <= 0) return 'Ended';
+    var s = Math.floor(ms / 1000);
+    var d = Math.floor(s / 86400); s -= d * 86400;
+    var h = Math.floor(s / 3600);  s -= h * 3600;
+    var m = Math.floor(s / 60);    s -= m * 60;
+    if (d > 0) return d + 'd ' + h + 'h ' + m + 'm';
+    if (h > 0) return h + 'h ' + m + 'm ' + s + 's';
+    return m + 'm ' + s + 's';
+  }
+
+  function startAuctionCountdown() {
+    setInterval(function() {
+      var el = document.getElementById('auctionCountdown');
+      if (!el) return;
+      var end = new Date(el.getAttribute('data-end')).getTime();
+      var left = end - Date.now();
+      if (left <= 0) {
+        el.textContent = 'Auction ended';
+        var btn = document.getElementById('placeBidBtn');
+        var input = document.getElementById('bidAmount');
+        if (btn) btn.disabled = true;
+        if (input) input.disabled = true;
+      } else {
+        el.textContent = 'Ends in ' + fmtCountdown(left);
+      }
+    }, 1000);
+  }
+
+  function loadBids(listingId) {
+    fetch('/api/listings/' + listingId + '/bids')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var ul = document.getElementById('bidList');
+        if (!ul) return;
+        var bids = data.bids || [];
+        if (bids.length === 0) {
+          ul.innerHTML = '<li style="color:#888;">No bids yet. Be the first!</li>';
+          return;
+        }
+        ul.innerHTML = bids.map(function(b) {
+          return '<li style="padding:6px 0;border-bottom:1px solid #f0f0f0;">'
+               + '<strong>$' + b.amount.toFixed(2) + '</strong> '
+               + '<span style="color:#888;">by ' + b.username + ' &middot; ' + b.created_at + '</span>'
+               + '</li>';
+        }).join('');
+      });
+  }
+
+  function placeBid(listingId) {
+    var token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/pages/auth/login.html';
+      return;
+    }
+    var amount = parseFloat(document.getElementById('bidAmount').value);
+    if (!amount || amount <= 0) {
+      alert('Enter a valid bid amount.');
+      return;
+    }
+    fetch('/api/listings/' + listingId + '/bid', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({ amount: amount })
+    })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, body: d }; }); })
+    .then(function(res) {
+      if (!res.ok) {
+        alert(res.body.error || 'Bid failed.');
+        return;
+      }
+      document.getElementById('currentPrice').textContent = '$' + res.body.current_price.toFixed(2);
+      document.getElementById('bidAmount').value = '';
+      loadBids(listingId);
+    })
+    .catch(function() { alert('Network error. Try again.'); });
   }
 
   function logout() {
