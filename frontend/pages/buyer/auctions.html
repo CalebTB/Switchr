@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auctions - Switchr</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
+  <style>
+    .auction-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .auction-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.15s;
+    }
+    .auction-card:hover { border-color: #f0e040; }
+    .auction-card .thumb {
+      width: 100%;
+      height: 160px;
+      background: #fafaf8;
+      object-fit: cover;
+    }
+    .auction-card .body { padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .auction-card h4 { font-size: 15px; margin: 0; }
+    .auction-card .price { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+    .auction-card .countdown { font-size: 12px; color: #c62828; font-weight: 600; }
+    .auction-card .meta { font-size: 12px; color: #888; }
+    .auction-card a.btn-view {
+      display: block;
+      margin-top: 8px;
+      padding: 8px;
+      background: #1a1a1a;
+      color: white;
+      text-align: center;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .auction-card a.btn-view:hover { background: #333; }
+  </style>
+</head>
+<body>
+
+<div id="nav-root"></div>
+<script src="/js/nav.js"></script>
+
+<div class="header-bar">
+  <h1>Live Auctions</h1>
+  <p class="breadcrumb">Place a bid before time runs out.</p>
+</div>
+
+<div class="main">
+  <p class="results-header">Results: <span id="resultCount">0</span></p>
+  <div id="auctionsContainer" class="auction-grid">
+    <p class="empty-msg">Loading auctions...</p>
+  </div>
+</div>
+
+<footer>
+  <a href="/pages/terms.html">Terms</a>
+  <a href="/pages/privacy.html">Privacy</a>
+  <p style="margin-top:8px;">Switchr &mdash; Sprint 3 &mdash; CSE 4214</p>
+</footer>
+
+<script>
+  var authLinks = document.getElementById('authLinks');
+  if (typeof isLoggedIn === 'function' && isLoggedIn()) {
+    var user = getUser();
+    var links = '';
+    if (user && user.role === 'admin') {
+      links += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
+    }
+    links += '<a href="/pages/seller/dashboard.html">My Listings</a>';
+    links += '<a href="#" onclick="logout()">Logout</a>';
+    authLinks.innerHTML = links;
+  } else {
+    authLinks.innerHTML = '<a href="/pages/auth/login.html">Login</a>';
+  }
+
+  var auctions = [];
+
+  function fmtCountdown(ms) {
+    if (ms <= 0) return 'Ended';
+    var s = Math.floor(ms / 1000);
+    var d = Math.floor(s / 86400); s -= d * 86400;
+    var h = Math.floor(s / 3600);  s -= h * 3600;
+    var m = Math.floor(s / 60);    s -= m * 60;
+    if (d > 0) return d + 'd ' + h + 'h ' + m + 'm';
+    if (h > 0) return h + 'h ' + m + 'm ' + s + 's';
+    return m + 'm ' + s + 's';
+  }
+
+  function render() {
+    var container = document.getElementById('auctionsContainer');
+    document.getElementById('resultCount').textContent = auctions.length;
+    if (auctions.length === 0) {
+      container.innerHTML = '<p class="empty-msg">No active auctions right now.</p>';
+      return;
+    }
+    var html = '';
+    auctions.forEach(function(a) {
+      var img = a.photo_urls && a.photo_urls[0] ? a.photo_urls[0] : 'https://placehold.co/260x160?text=No+Image';
+      html += '<div class="auction-card">';
+      html += '<img class="thumb" src="' + img + '" alt="' + a.title + '">';
+      html += '<div class="body">';
+      html += '<h4>' + a.title + '</h4>';
+      html += '<div class="meta">Seller: ' + a.seller_username + ' &middot; ' + a.condition + '</div>';
+      html += '<div class="price">$' + parseFloat(a.price).toFixed(2) + '</div>';
+      html += '<div class="countdown" data-end="' + a.auction_end_time + '">Ends in ...</div>';
+      html += '<a class="btn-view" href="/pages/buyer/listing.html?id=' + a.id + '">View & Bid</a>';
+      html += '</div></div>';
+    });
+    container.innerHTML = html;
+    tick();
+  }
+
+  function tick() {
+    var els = document.querySelectorAll('.countdown');
+    var now = Date.now();
+    els.forEach(function(el) {
+      var end = new Date(el.getAttribute('data-end')).getTime();
+      var left = end - now;
+      el.textContent = left > 0 ? 'Ends in ' + fmtCountdown(left) : 'Ended';
+    });
+  }
+
+  fetch('/api/auctions')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      auctions = data.auctions || [];
+      render();
+    })
+    .catch(function() {
+      document.getElementById('auctionsContainer').innerHTML = '<p class="empty-msg">Could not load auctions.</p>';
+    });
+
+  setInterval(tick, 1000);
+</script>
+
+</body>
+</html>
