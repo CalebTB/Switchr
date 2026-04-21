@@ -167,13 +167,13 @@ def seed():
         INSERT INTO orders (
             buyer_id, subtotal, tax_rate, tax_amount, total,
             ship_first_name, ship_last_name, ship_address, ship_city, ship_state, ship_zip,
-            bill_same_as_ship, card_last_four, card_name, status
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            bill_same_as_ship, card_last_four, status
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
     ''', (
         buyer1_id, 380.00, 0.08, 30.40, 410.40,
         'John', 'Doe', '123 Tech Street', 'Starkville', 'MS', '39759',
-        True, '4242', 'John Doe', 'COMPLETED'
+        True, '4242', 'COMPLETED'
     ))
     order_id = cur.fetchone()['id']
 

@@ -115,7 +115,6 @@ def init_db():
             bill_state VARCHAR(50),
             bill_zip VARCHAR(20),
             card_last_four VARCHAR(4),
-            card_name VARCHAR(100),
             status VARCHAR(20) DEFAULT 'COMPLETED',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -220,6 +219,19 @@ def init_db():
                 WHERE table_name = 'listings' AND column_name = 'auction_end_time'
             ) THEN
                 ALTER TABLE listings ADD COLUMN auction_end_time TIMESTAMP;
+            END IF;
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'orders' AND column_name = 'card_name'
+            ) THEN
+                ALTER TABLE orders DROP COLUMN card_name;
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.table_constraints
+                WHERE table_name = 'users' AND constraint_name = 'users_balance_non_negative'
+            ) THEN
+                UPDATE users SET balance = 0 WHERE balance < 0;
+                ALTER TABLE users ADD CONSTRAINT users_balance_non_negative CHECK (balance >= 0);
             END IF;
         END $$;
     ''')
@@ -1215,13 +1227,13 @@ def checkout():
                 bill_same_as_ship,
                 bill_first_name, bill_last_name, bill_address,
                 bill_city, bill_state, bill_zip,
-                card_last_four, card_name, status
+                card_last_four, status
             ) VALUES (
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s,
                 %s,
                 %s, %s, %s, %s, %s, %s,
-                %s, %s, 'COMPLETED'
+                %s, 'COMPLETED'
             ) RETURNING id
         ''', (
             request.user_id, subtotal, TAX_RATE, tax_amount, total,
@@ -1234,7 +1246,7 @@ def checkout():
             data.get('city') if bill_same else data.get('billCity'),
             data.get('state') if bill_same else data.get('billState'),
             data.get('zip') if bill_same else data.get('billZip'),
-            card_last_four, data.get('cardName')
+            card_last_four
         ))
         order = cur.fetchone()
         order_id = order['id']
@@ -1683,6 +1695,14 @@ def return_transaction(txn_id):
             return jsonify({'error': 'This item has already been returned'}), 400
 
         price = float(txn['price'])
+
+        # Seller must have enough balance to cover the refund
+        cur.execute('SELECT balance FROM users WHERE id = %s', (txn['seller_id'],))
+        seller = cur.fetchone()
+        if not seller or float(seller['balance']) < price:
+            return jsonify({
+                'error': 'Seller has insufficient funds to process this return. Please contact support.'
+            }), 400
 
         # Refund buyer
         cur.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (price, txn['buyer_id']))
