@@ -631,6 +631,8 @@ def browse_listings():
                FROM listings l
                JOIN users u ON l.seller_id = u.id
                WHERE l.status = 'ACTIVE'
+                 AND COALESCE(l.quantity, 1) > 0
+                 AND l.listing_type <> 'AUCTION'
                ORDER BY l.created_at DESC'''
         )
         rows = cur.fetchall()
@@ -865,10 +867,16 @@ def deny_listing(listing_id):
             (reason, listing_id)
         )
         listing = cur.fetchone()
-        conn.close()
 
         if not listing:
+            conn.close()
             return jsonify({'error': 'Listing not found'}), 404
+
+        cur.execute(
+            "INSERT INTO notifications (user_id, message, type) VALUES (%s, %s, 'INFO')",
+            (listing['seller_id'], 'Your listing "' + listing['title'] + '" was denied. Reason: ' + reason)
+        )
+        conn.close()
 
         return jsonify({'message': 'Listing denied', 'listing': format_listing(listing)})
 
@@ -1702,6 +1710,45 @@ def return_transaction(txn_id):
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
+
+@app.route('/api/nav-counts', methods=['GET'])
+@token_required
+def nav_counts():
+    """Aggregated action-required counts for the nav dropdown."""
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cur.execute(
+            "SELECT COUNT(*) AS n FROM trades WHERE receiver_id = %s AND status = 'PENDING'",
+            (request.user_id,)
+        )
+        offers_pending = cur.fetchone()['n']
+
+        cur.execute(
+            'SELECT COUNT(*) AS n FROM notifications WHERE user_id = %s AND is_read = FALSE',
+            (request.user_id,)
+        )
+        notifications_unread = cur.fetchone()['n']
+
+        cur.execute('SELECT role FROM users WHERE id = %s', (request.user_id,))
+        me = cur.fetchone()
+        admin_pending = 0
+        if me and me['role'] == 'admin':
+            cur.execute("SELECT COUNT(*) AS n FROM listings WHERE status = 'PENDING_APPROVAL'")
+            admin_pending += cur.fetchone()['n']
+            cur.execute("SELECT COUNT(*) AS n FROM users WHERE status = 'pending'")
+            admin_pending += cur.fetchone()['n']
+
+        conn.close()
+        return jsonify({
+            'offers_pending': offers_pending,
+            'notifications_unread': notifications_unread,
+            'admin_pending': admin_pending
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # ============ AUCTION ROUTES ============
