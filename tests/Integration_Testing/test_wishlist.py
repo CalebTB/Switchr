@@ -30,6 +30,7 @@ def db_cleanup():
     cur = conn.cursor()
     cur.execute("DELETE FROM wishlist WHERE user_id IN (SELECT id FROM users WHERE email LIKE 'test_%@switchr.test')")
     cur.execute("DELETE FROM listings WHERE title LIKE 'TEST_%'")
+    cur.execute("DELETE FROM notifications WHERE user_id IN (SELECT id FROM users WHERE email LIKE 'test_%@switchr.test')")
     cur.execute("DELETE FROM users WHERE email LIKE 'test_%@switchr.test'")
     conn.close()
 
