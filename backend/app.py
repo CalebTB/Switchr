@@ -154,6 +154,15 @@ def init_db():
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS wishlist (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id),
+            listing_id INTEGER REFERENCES listings(id),
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, listing_id)
+        )
+    ''')
     # Add columns if tables already exist without them
     cur.execute('''
         DO $$
@@ -996,6 +1005,78 @@ def remove_from_cart(listing_id):
         )
         conn.close()
         return jsonify({'message': 'Removed from cart'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ============ WISHLIST ROUTES ============
+
+@app.route('/api/wishlist', methods=['GET'])
+@token_required
+def get_wishlist():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('''
+            SELECT w.id, w.added_at, l.id as listing_id, l.title, l.price,
+                   l.condition, l.listing_type, l.status, l.photo_urls,
+                   u.username as seller_username
+            FROM wishlist w
+            JOIN listings l ON w.listing_id = l.id
+            JOIN users u ON l.seller_id = u.id
+            WHERE w.user_id = %s
+            ORDER BY w.added_at DESC
+        ''', (request.user_id,))
+        items = cur.fetchall()
+        conn.close()
+        result = []
+        for item in items:
+            d = dict(item)
+            d['price'] = str(d['price'])
+            if d.get('added_at'):
+                d['added_at'] = d['added_at'].strftime('%Y-%m-%d %H:%M')
+            result.append(d)
+        return jsonify({'wishlist': result})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/wishlist', methods=['POST'])
+@token_required
+def add_to_wishlist():
+    data = request.get_json()
+    listing_id = data.get('listing_id')
+    if not listing_id:
+        return jsonify({'error': 'listing_id is required'}), 400
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('SELECT * FROM listings WHERE id = %s AND status = %s',
+                    (listing_id, 'ACTIVE'))
+        listing = cur.fetchone()
+        if not listing:
+            return jsonify({'error': 'Listing not found or not available'}), 404
+        cur.execute(
+            'INSERT INTO wishlist (user_id, listing_id) VALUES (%s, %s) ON CONFLICT DO NOTHING RETURNING *',
+            (request.user_id, listing_id)
+        )
+        conn.close()
+        return jsonify({'message': 'Added to wishlist'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/wishlist/<int:listing_id>', methods=['DELETE'])
+@token_required
+def remove_from_wishlist(listing_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            'DELETE FROM wishlist WHERE user_id = %s AND listing_id = %s',
+            (request.user_id, listing_id)
+        )
+        conn.close()
+        return jsonify({'message': 'Removed from wishlist'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

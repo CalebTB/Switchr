@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Wishlist - Switchr</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../css/shared.css">
+  <script src="../../js/auth.js"></script>
+  <style>
+    .main { max-width: 900px; }
+    .header-bar h1 { font-size: 22px; }
+
+    .wishlist-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .wishlist-item:last-child { border-bottom: none; }
+
+    .item-img {
+      width: 60px;
+      height: 60px;
+      border-radius: 4px;
+      object-fit: cover;
+      background: #f0f0f0;
+      margin-right: 14px;
+      flex-shrink: 0;
+    }
+
+    .item-left {
+      display: flex;
+      align-items: center;
+      flex: 1;
+    }
+
+    .item-info h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .item-info p {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 2px;
+    }
+
+    .item-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .item-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .btn-remove {
+      font-size: 11px;
+      color: #c62828;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .btn-add-cart {
+      font-size: 11px;
+      color: white;
+      background: #1a1a1a;
+      border: none;
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-add-cart:hover { background: #333; }
+
+    .empty-wishlist {
+      text-align: center;
+      padding: 48px 24px;
+      color: #aaa;
+    }
+
+    .empty-wishlist p { margin-bottom: 16px; font-size: 15px; }
+
+    .btn-browse {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #1a1a1a;
+      color: white;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .sold-badge {
+      font-size: 10px;
+      background: #ffebee;
+      color: #c62828;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-left: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
+  <div class="nav-center">
+    <a href="/pages/buyer/browse.html">Browse</a>
+    <a href="/pages/offers/offers.html">Offers</a>
+    <a href="/pages/buyer/cart.html">Cart <span class="cart-badge"></span></a>
+    <a href="/pages/buyer/wishlist.html">Wishlist</a>
+    <a href="/pages/profile.html">Profile</a>
+  </div>
+  <div class="nav-right" id="authLinks"></div>
+</nav>
+
+<div class="header-bar">
+  <h1>My Wishlist</h1>
+  <p class="breadcrumb">
+    <a href="/pages/buyer/browse.html">&larr; Back to Browse</a>
+  </p>
+</div>
+
+<div class="main">
+
+  <div class="error-banner" id="errorBanner"></div>
+  <div class="success-banner" id="successBanner"></div>
+
+  <div id="wishlistContent">
+    <p style="color:#aaa; text-align:center; padding:40px;">Loading wishlist...</p>
+  </div>
+
+</div>
+
+<footer>Switchr &mdash; Sprint 4 &mdash; CSE 4214</footer>
+
+<script>
+  var token = localStorage.getItem('token');
+  var user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (!token) {
+    window.location.href = '/pages/auth/login.html';
+  }
+
+  var authLinks = document.getElementById('authLinks');
+  var navHtml = '';
+  if (user && user.role === 'admin') {
+    navHtml += '<a href="/pages/admin/dashboard.html">Admin Dashboard</a>';
+  }
+  navHtml += '<a href="/pages/seller/dashboard.html">My Listings</a>';
+  navHtml += '<a href="#" onclick="logout()">Logout</a>';
+  authLinks.innerHTML = navHtml;
+
+  var wishlistItems = [];
+
+  function loadWishlist() {
+    fetch('/api/wishlist', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(res) {
+      if (res.status === 401) {
+        window.location.href = '/pages/auth/login.html';
+        return;
+      }
+      return res.json();
+    })
+    .then(function(data) {
+      wishlistItems = data.wishlist || [];
+      renderWishlist();
+    })
+    .catch(function() {
+      document.getElementById('errorBanner').textContent = 'Could not load wishlist.';
+      document.getElementById('errorBanner').style.display = 'block';
+    });
+  }
+
+  function renderWishlist() {
+    var container = document.getElementById('wishlistContent');
+
+    if (wishlistItems.length === 0) {
+      container.innerHTML = '<div class="card"><div class="empty-wishlist"><p>Your wishlist is empty.</p><a href="/pages/buyer/browse.html" class="btn-browse">Browse Listings</a></div></div>';
+      return;
+    }
+
+    var html = '<div class="card">';
+    wishlistItems.forEach(function(item) {
+      var isAvailable = item.status === 'ACTIVE';
+      var imgSrc = (item.photo_urls && item.photo_urls[0]) ? item.photo_urls[0] : '';
+      var imgHtml = imgSrc
+        ? '<img class="item-img" src="' + imgSrc + '" alt="' + item.title + '">'
+        : '<div class="item-img" style="display:flex;align-items:center;justify-content:center;font-size:10px;color:#aaa;">No Image</div>';
+
+      html += '<div class="wishlist-item">';
+      html += '<div class="item-left">';
+      html += imgHtml;
+      html += '<div class="item-info">';
+      html += '<h4>' + item.title + (isAvailable ? '' : '<span class="sold-badge">No longer available</span>') + '</h4>';
+      html += '<p>' + item.condition + ' &middot; Seller: ' + item.seller_username + '</p>';
+      html += '<p>Added: ' + item.added_at + '</p>';
+      html += '</div>';
+      html += '</div>';
+      html += '<div class="item-actions">';
+      html += '<span class="item-price">$' + parseFloat(item.price).toFixed(2) + '</span>';
+      html += '<a href="/pages/buyer/listing.html?id=' + item.listing_id + '" style="font-size:11px; color:#666;">View</a>';
+      if (isAvailable) {
+        html += '<button class="btn-add-cart" onclick="moveToCart(' + item.listing_id + ')">Add to Cart</button>';
+      }
+      html += '<button class="btn-remove" onclick="removeFromWishlist(' + item.listing_id + ')">Remove</button>';
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+
+    container.innerHTML = html;
+  }
+
+  function removeFromWishlist(listingId) {
+    fetch('/api/wishlist/' + listingId, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        wishlistItems = wishlistItems.filter(function(item) { return item.listing_id !== listingId; });
+        renderWishlist();
+        showSuccess('Removed from wishlist.');
+      } else {
+        showError(data.error || 'Could not remove item.');
+      }
+    })
+    .catch(function() { showError('Network error. Try again.'); });
+  }
+
+  function moveToCart(listingId) {
+    fetch('/api/cart', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ listing_id: listingId })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.message) {
+        showSuccess('Added to cart!');
+      } else {
+        showError(data.error || 'Could not add to cart.');
+      }
+    })
+    .catch(function() { showError('Network error. Try again.'); });
+  }
+
+  function showSuccess(msg) {
+    var banner = document.getElementById('successBanner');
+    banner.textContent = msg;
+    banner.style.display = 'block';
+    setTimeout(function() { banner.style.display = 'none'; }, 3000);
+  }
+
+  function showError(msg) {
+    var banner = document.getElementById('errorBanner');
+    banner.textContent = msg;
+    banner.style.display = 'block';
+    setTimeout(function() { banner.style.display = 'none'; }, 3000);
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/pages/auth/login.html';
+  }
+
+  loadWishlist();
+</script>
+
+</body>
+</html>
