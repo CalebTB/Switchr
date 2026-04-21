@@ -1,360 +1,459 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Switchr Admin Dashboard</title>
+    <title>Admin Dashboard - Switchr</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/shared.css">
     <script src="../../js/auth.js"></script>
-</head>
+    <script>
+        (function() {
+            var token = localStorage.getItem('token');
+            var user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!token || !user || user.role !== 'admin') {
+                document.documentElement.style.visibility = 'hidden';
+                window.location.href = '/pages/auth/login.html';
+            }
+        })();
+    </script>
+    <style>
+        body { visibility: hidden; }
+        .main { max-width: 1100px; }
 
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid #e8e8e8;
+        }
+
+        .stat-card .stat-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .admin-table th {
+            background: #1a1a1a;
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .admin-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .admin-table tr:last-child td { border-bottom: none; }
+        .admin-table tr:hover td { background: #fafafa; }
+
+        .btn-approve {
+            background: #2d7a3a;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .btn-deny {
+            background: #c62828;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'DM Sans', sans-serif;
+            margin-left: 4px;
+        }
+
+        .btn-approve:hover { background: #1b5e20; }
+        .btn-deny:hover { background: #b71c1c; }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-pending { background: #fff3e0; color: #e65100; }
+        .status-approved, .status-active { background: #e8f5e9; color: #2d7a3a; }
+        .status-denied { background: #ffebee; color: #c62828; }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .filter-row select {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+        }
+
+        .status-msg {
+            display: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+    </style>
+</head>
 <body>
 
-    <!-- Header / Navigation -->
-    <header>
-        <h2>Switchr Admin</h2>
+<nav>
+  <a class="brand" href="/pages/admin/dashboard.html">Switchr</a>
+  <div class="nav-center">
+    <a href="/pages/admin/dashboard.html">Dashboard</a>
+    <a href="/pages/admin/approvals.html">Pending Listings</a>
+    <a href="/pages/buyer/browse.html">Browse</a>
+  </div>
+  <div class="nav-right" id="authLinks"></div>
+</nav>
 
-        <nav>
-            <a href="dashboard.html">Dashboard</a> |
-            <a href="approvals.html">Pending Listings</a>
-        </nav>
+<div class="header-bar">
+  <h1>Admin Dashboard</h1>
+</div>
 
-        <div id="authLinks">
-            <span>Logged in as: admin</span> |
-            <a href="#" onclick="logout()">Logout</a>
-        </div>
+<div class="main">
 
-        <hr>
-    </header>
+  <div class="error-banner" id="errorBanner"></div>
+  <div class="status-msg" id="userStatusMessage"></div>
 
-    <!-- Main Content -->
-    <main>
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" id="statUsers">--</div>
+      <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statPendingUsers">--</div>
+      <div class="stat-label">Pending Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statActive">--</div>
+      <div class="stat-label">Active Listings</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statPending">--</div>
+      <div class="stat-label">Pending Approvals</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statTotal">--</div>
+      <div class="stat-label">Total Listings</div>
+    </div>
+  </div>
 
-        <h1>Admin Dashboard</h1>
+  <!-- Two column -->
+  <div class="two-col">
 
-        <!-- Platform Stats -->
-        <section style="border: 1px solid black; padding: 10px; margin-bottom: 20px;">
-            <h3>Platform Overview</h3>
+    <!-- Pending Users -->
+    <div class="card">
+      <h3 style="font-family:'Syne',sans-serif; font-size:16px; margin-bottom:16px;">Pending User Approvals</h3>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="pendingUsersBody">
+          <tr><td colspan="4" style="color:#aaa;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-            <p>Total Users: <strong id="statUsers">--</strong></p>
-            <p>Pending Users: <strong id="statPendingUsers">--</strong></p>
-            <p>Active Listings: <strong id="statActive">--</strong></p>
-            <p>Total Listings: <strong id="statTotal">--</strong></p>
-            <p>Pending Listing Approvals: <strong id="statPending">--</strong></p>
-        </section>
+    <!-- Pending Listings Preview -->
+    <div class="card">
+      <h3 style="font-family:'Syne',sans-serif; font-size:16px; margin-bottom:16px;">Pending Listing Approvals</h3>
+      <div id="pendingPreview"><p style="color:#aaa;">Loading...</p></div>
+      <a href="/pages/admin/approvals.html" style="display:inline-block; margin-top:12px; font-size:13px; color:#1a1a1a; font-weight:600;">View All &rarr;</a>
+    </div>
 
-        <!-- Pending Users Section -->
-        <section style="border: 1px solid black; padding: 10px; margin-bottom: 20px;">
-            <h3>Pending User Approvals</h3>
+  </div>
 
-            <p id="userStatusMessage" style="display: none; padding: 8px; margin-bottom: 10px;"></p>
+  <!-- All Users -->
+  <div class="card" style="margin-bottom:24px;">
+    <h3 style="font-family:'Syne',sans-serif; font-size:16px; margin-bottom:16px;">All Users</h3>
+    <div class="filter-row">
+      <label style="font-size:13px;">Filter:</label>
+      <select id="userStatusFilter" onchange="loadAllUsers()">
+        <option value="">All</option>
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="denied">Denied</option>
+      </select>
+    </div>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Joined</th>
+        </tr>
+      </thead>
+      <tbody id="usersBody">
+        <tr><td colspan="6" style="color:#aaa;">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
 
-            <table border="1" cellpadding="5" cellspacing="0" style="width: 100%;">
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Joined</th>
-                    <th>Actions</th>
-                </tr>
-                <tbody id="pendingUsersBody">
-                    <tr><td colspan="6">Loading...</td></tr>
-                </tbody>
-            </table>
-        </section>
+  <!-- All Listings -->
+  <div class="card">
+    <h3 style="font-family:'Syne',sans-serif; font-size:16px; margin-bottom:16px;">All Listings</h3>
+    <div class="filter-row">
+      <label style="font-size:13px;">Filter by status:</label>
+      <select id="statusFilter" onchange="loadAllListings()">
+        <option value="">All</option>
+        <option value="PENDING_APPROVAL">Pending Approval</option>
+        <option value="ACTIVE">Active</option>
+        <option value="DENIED">Denied</option>
+        <option value="SOLD">Sold</option>
+      </select>
+    </div>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Seller</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody id="allListingsBody">
+        <tr><td colspan="7" style="color:#aaa;">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
 
-        <!-- Two-column layout -->
-        <div style="display: flex; gap: 20px;">
+</div>
 
-            <!-- Pending Listing Approvals Preview -->
-            <section style="flex: 1; border: 1px solid black; padding: 10px;">
-                <h3>Pending Listing Approvals</h3>
-                <p><a href="approvals.html">View All</a></p>
+<footer>Switchr &mdash; Sprint 4 &mdash; CSE 4214</footer>
 
-                <div id="pendingPreview">
-                    <p>Loading...</p>
-                </div>
-            </section>
+<script>
+    if (!requireAdmin()) {
+        // redirected
+    } else {
+        document.body.style.visibility = 'visible';
+        var token = getToken();
+        var user = getUser();
 
-            <!-- All Users Overview -->
-            <section style="flex: 1; border: 1px solid black; padding: 10px;">
-                <h3>All Users</h3>
+        var authLinks = document.getElementById('authLinks');
+        authLinks.innerHTML = '<span style="color:#ccc; font-size:13px;">Admin: ' + user.email + '</span> <a href="#" onclick="logout()" style="color:#ccc; font-size:13px; margin-left:12px;">Logout</a>';
 
-                <label>Filter: </label>
-                <select id="userStatusFilter" onchange="loadAllUsers()">
-                    <option value="">All</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="denied">Denied</option>
-                </select>
+        authFetch('/admin/stats').then(function(res) {
+            if (!res) return;
+            return res.json();
+        }).then(function(data) {
+            if (!data) return;
+            document.getElementById('statUsers').textContent = data.total_users;
+            document.getElementById('statPendingUsers').textContent = data.pending_users;
+            document.getElementById('statActive').textContent = data.active_listings;
+            document.getElementById('statTotal').textContent = data.total_listings;
+            document.getElementById('statPending').textContent = data.pending_approvals;
+        });
 
-                <br><br>
+        loadPendingUsers();
 
-                <table border="1" cellpadding="5" cellspacing="0" style="width: 100%;">
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Joined</th>
-                    </tr>
-                    <tbody id="usersBody">
-                        <tr><td colspan="6">Loading...</td></tr>
-                    </tbody>
-                </table>
-            </section>
-
-        </div>
-
-        <br>
-
-        <!-- All Listings Overview -->
-        <section style="border: 1px solid black; padding: 10px;">
-            <h3>All Listings</h3>
-
-            <label>Filter by status: </label>
-            <select id="statusFilter" onchange="loadAllListings()">
-                <option value="">All</option>
-                <option value="PENDING_APPROVAL">PENDING_APPROVAL</option>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="DENIED">DENIED</option>
-            </select>
-
-            <br><br>
-
-            <table border="1" cellpadding="5" cellspacing="0" style="width: 100%;">
-                <tr>
-                    <th>ID</th>
-                    <th>Title</th>
-                    <th>Seller</th>
-                    <th>Category</th>
-                    <th>Price</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                </tr>
-                <tbody id="allListingsBody">
-                    <tr><td colspan="7">Loading...</td></tr>
-                </tbody>
-            </table>
-        </section>
-
-    </main>
-
-    <footer style="margin-top: 20px; border-top: 1px solid black; padding: 10px;">
-        <p>
-            <a href="#">Terms</a> |
-            <a href="#">Privacy</a> |
-            <a href="#">Help</a>
-        </p>
-        <p style="font-size: 12px;">
-            Switchr Admin Panel - Skeleton Version
-        </p>
-    </footer>
-
-    <script>
-        // Auth gate: admin only
-        if (!requireAdmin()) {
-            // requireAdmin redirects away
-        } else {
-            var token = getToken();
-            var user = getUser();
-
-            var authLinks = document.getElementById('authLinks');
-            authLinks.innerHTML = '<span>Logged in as: ' + user.email + '</span> | <a href="#" onclick="logout()">Logout</a>';
-
-            // Load stats
-            authFetch('/admin/stats').then(function(res) {
-                if (!res) return;
-                return res.json();
-            }).then(function(data) {
-                if (!data) return;
-                document.getElementById('statUsers').textContent = data.total_users;
-                document.getElementById('statPendingUsers').textContent = data.pending_users;
-                document.getElementById('statActive').textContent = data.active_listings;
-                document.getElementById('statTotal').textContent = data.total_listings;
-                document.getElementById('statPending').textContent = data.pending_approvals;
+        authFetch('/admin/listings?status=PENDING_APPROVAL').then(function(res) {
+            if (!res) return;
+            return res.json();
+        }).then(function(data) {
+            if (!data) return;
+            var container = document.getElementById('pendingPreview');
+            var listings = data.listings || [];
+            if (listings.length === 0) {
+                container.innerHTML = '<p style="color:#aaa; font-size:13px;">No pending listing approvals.</p>';
+                return;
+            }
+            var html = '';
+            listings.slice(0, 5).forEach(function(l) {
+                html += '<div style="padding:10px 0; border-bottom:1px solid #f0f0f0;">';
+                html += '<div style="font-weight:600; font-size:14px;">' + l.title + '</div>';
+                html += '<div style="font-size:12px; color:#888; margin-top:2px;">Seller: ' + l.seller_username + ' &middot; ' + l.created_at + '</div>';
+                html += '</div>';
             });
+            container.innerHTML = html;
+        });
 
-            // Load pending users
-            loadPendingUsers();
+        loadAllUsers();
+        loadAllListings();
+    }
 
-            // Load pending listing preview (first 5)
-            authFetch('/admin/listings?status=PENDING_APPROVAL').then(function(res) {
-                if (!res) return;
-                return res.json();
-            }).then(function(data) {
-                if (!data) return;
-                var container = document.getElementById('pendingPreview');
-                var listings = data.listings || [];
+    function showUserStatus(msg, isError) {
+        var el = document.getElementById('userStatusMessage');
+        el.textContent = msg;
+        el.style.display = 'block';
+        el.style.background = isError ? '#fce4ec' : '#e6f4ea';
+        el.style.color = isError ? '#c62828' : '#2d7a3a';
+        el.style.border = '1px solid ' + (isError ? '#ef9a9a' : '#a5d6a7');
+        setTimeout(function() { el.style.display = 'none'; }, 3000);
+    }
 
-                if (listings.length === 0) {
-                    container.innerHTML = '<p>No pending listing approvals.</p>';
-                    return;
-                }
-
-                var html = '';
-                listings.slice(0, 5).forEach(function(l) {
-                    html += '<article style="border: 1px solid gray; padding: 10px; margin-bottom: 10px;">';
-                    html += '<h4 style="margin: 0;">' + l.title + '</h4>';
-                    html += '<p style="margin: 5px 0;">Seller: ' + l.seller_username + '</p>';
-                    html += '<p style="margin: 5px 0;">Created: ' + l.created_at + '</p>';
-                    html += '<a href="approvals.html">Review</a>';
-                    html += '</article>';
-                });
-
-                container.innerHTML = html;
+    function loadPendingUsers() {
+        authFetch('/admin/users?status=pending').then(function(res) {
+            if (!res) return;
+            return res.json();
+        }).then(function(data) {
+            if (!data) return;
+            var tbody = document.getElementById('pendingUsersBody');
+            var users = data.users || [];
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="color:#aaa;">No pending users.</td></tr>';
+                return;
+            }
+            var html = '';
+            users.forEach(function(u) {
+                html += '<tr id="pending-user-' + u.id + '">';
+                html += '<td>' + u.username + '</td>';
+                html += '<td>' + u.email + '</td>';
+                html += '<td>' + u.created_at + '</td>';
+                html += '<td>';
+                html += '<button class="btn-approve" onclick="approveUser(' + u.id + ')">Approve</button>';
+                html += '<button class="btn-deny" onclick="denyUser(' + u.id + ')">Deny</button>';
+                html += '</td>';
+                html += '</tr>';
             });
+            tbody.innerHTML = html;
+        });
+    }
 
-            // Load all users table
-            loadAllUsers();
+    function approveUser(id) {
+        authFetch('/admin/users/' + id + '/approve', { method: 'PUT' })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.error) { showUserStatus(data.error, true); }
+            else {
+                showUserStatus('User approved!', false);
+                var el = document.getElementById('pending-user-' + id);
+                if (el) el.remove();
+            }
+        });
+    }
 
-            // Load all listings
-            loadAllListings();
-        }
+    function denyUser(id) {
+        authFetch('/admin/users/' + id + '/deny', { method: 'PUT' })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.error) { showUserStatus(data.error, true); }
+            else {
+                showUserStatus('User denied.', false);
+                var el = document.getElementById('pending-user-' + id);
+                if (el) el.remove();
+            }
+        });
+    }
 
-        function showUserStatus(msg, isError) {
-            var el = document.getElementById('userStatusMessage');
-            el.textContent = msg;
-            el.style.display = 'block';
-            el.style.background = isError ? '#fce4ec' : '#e6f4ea';
-            el.style.color = isError ? '#c62828' : '#2d7a3a';
-            el.style.border = '1px solid ' + (isError ? '#ef9a9a' : '#a5d6a7');
-        }
-
-        function loadPendingUsers() {
-            authFetch('/admin/users?status=pending').then(function(res) {
-                if (!res) return;
-                return res.json();
-            }).then(function(data) {
-                if (!data) return;
-                var tbody = document.getElementById('pendingUsersBody');
-                var users = data.users || [];
-
-                if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6">No pending users.</td></tr>';
-                    return;
-                }
-
-                var html = '';
-                users.forEach(function(u) {
-                    html += '<tr id="pending-user-' + u.id + '">';
-                    html += '<td>' + u.id + '</td>';
-                    html += '<td>' + u.username + '</td>';
-                    html += '<td>' + u.email + '</td>';
-                    html += '<td>' + u.role + '</td>';
-                    html += '<td>' + u.created_at + '</td>';
-                    html += '<td>';
-                    html += '<button onclick="approveUser(' + u.id + ')">Approve</button> ';
-                    html += '<button onclick="denyUser(' + u.id + ')">Deny</button>';
-                    html += '</td>';
-                    html += '</tr>';
-                });
-
-                tbody.innerHTML = html;
+    function loadAllUsers() {
+        var status = document.getElementById('userStatusFilter').value;
+        var url = '/admin/users';
+        if (status) url += '?status=' + status;
+        authFetch(url).then(function(res) {
+            if (!res) return;
+            return res.json();
+        }).then(function(data) {
+            if (!data) return;
+            var tbody = document.getElementById('usersBody');
+            var users = data.users || [];
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="color:#aaa;">No users found.</td></tr>';
+                return;
+            }
+            var html = '';
+            users.forEach(function(u) {
+                var badgeClass = u.status === 'approved' ? 'status-approved' : u.status === 'pending' ? 'status-pending' : 'status-denied';
+                html += '<tr>';
+                html += '<td>' + u.id + '</td>';
+                html += '<td>' + u.username + '</td>';
+                html += '<td>' + u.email + '</td>';
+                html += '<td>' + u.role + '</td>';
+                html += '<td><span class="status-badge ' + badgeClass + '">' + u.status + '</span></td>';
+                html += '<td>' + u.created_at + '</td>';
+                html += '</tr>';
             });
-        }
+            tbody.innerHTML = html;
+        });
+    }
 
-        function approveUser(id) {
-            authFetch('/admin/users/' + id + '/approve', {
-                method: 'PUT'
-            }).then(function(res) {
-                return res.json();
-            }).then(function(data) {
-                if (data.error) {
-                    showUserStatus(data.error, true);
-                } else {
-                    showUserStatus('User #' + id + ' approved!', false);
-                    var el = document.getElementById('pending-user-' + id);
-                    if (el) el.remove();
-                }
+    function loadAllListings() {
+        var status = document.getElementById('statusFilter').value;
+        var url = '/admin/listings';
+        if (status) url += '?status=' + status;
+        authFetch(url).then(function(res) {
+            if (!res) return;
+            return res.json();
+        }).then(function(data) {
+            if (!data) return;
+            var tbody = document.getElementById('allListingsBody');
+            var listings = data.listings || [];
+            if (listings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="color:#aaa;">No listings found.</td></tr>';
+                return;
+            }
+            var html = '';
+            listings.forEach(function(l) {
+                var badgeClass = l.status === 'ACTIVE' ? 'status-active' : l.status === 'PENDING_APPROVAL' ? 'status-pending' : 'status-denied';
+                html += '<tr>';
+                html += '<td>' + l.id + '</td>';
+                html += '<td>' + l.title + '</td>';
+                html += '<td>' + l.seller_username + '</td>';
+                html += '<td>' + l.category + '</td>';
+                html += '<td>$' + parseFloat(l.price).toFixed(2) + '</td>';
+                html += '<td><span class="status-badge ' + badgeClass + '">' + l.status + '</span></td>';
+                html += '<td>' + l.created_at + '</td>';
+                html += '</tr>';
             });
-        }
-
-        function denyUser(id) {
-            authFetch('/admin/users/' + id + '/deny', {
-                method: 'PUT'
-            }).then(function(res) {
-                return res.json();
-            }).then(function(data) {
-                if (data.error) {
-                    showUserStatus(data.error, true);
-                } else {
-                    showUserStatus('User #' + id + ' denied.', false);
-                    var el = document.getElementById('pending-user-' + id);
-                    if (el) el.remove();
-                }
-            });
-        }
-
-        function loadAllUsers() {
-            var status = document.getElementById('userStatusFilter').value;
-            var url = '/admin/users';
-            if (status) url += '?status=' + status;
-
-            authFetch(url).then(function(res) {
-                if (!res) return;
-                return res.json();
-            }).then(function(data) {
-                if (!data) return;
-                var tbody = document.getElementById('usersBody');
-                var users = data.users || [];
-
-                if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6">No users found.</td></tr>';
-                    return;
-                }
-
-                var html = '';
-                users.forEach(function(u) {
-                    html += '<tr>';
-                    html += '<td>' + u.id + '</td>';
-                    html += '<td>' + u.username + '</td>';
-                    html += '<td>' + u.email + '</td>';
-                    html += '<td>' + u.role + '</td>';
-                    html += '<td>' + u.status + '</td>';
-                    html += '<td>' + u.created_at + '</td>';
-                    html += '</tr>';
-                });
-
-                tbody.innerHTML = html;
-            });
-        }
-
-        function loadAllListings() {
-            var status = document.getElementById('statusFilter').value;
-            var url = '/admin/listings';
-            if (status) url += '?status=' + status;
-
-            authFetch(url).then(function(res) {
-                if (!res) return;
-                return res.json();
-            }).then(function(data) {
-                if (!data) return;
-                var tbody = document.getElementById('allListingsBody');
-                var listings = data.listings || [];
-
-                if (listings.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7">No listings found.</td></tr>';
-                    return;
-                }
-
-                var html = '';
-                listings.forEach(function(l) {
-                    html += '<tr>';
-                    html += '<td>' + l.id + '</td>';
-                    html += '<td>' + l.title + '</td>';
-                    html += '<td>' + l.seller_username + '</td>';
-                    html += '<td>' + l.category + '</td>';
-                    html += '<td>$' + parseFloat(l.price).toFixed(2) + '</td>';
-                    html += '<td>' + l.status + '</td>';
-                    html += '<td>' + l.created_at + '</td>';
-                    html += '</tr>';
-                });
-
-                tbody.innerHTML = html;
-            });
-        }
-    </script>
+            tbody.innerHTML = html;
+        });
+    }
+</script>
 
 </body>
-
 </html>
