@@ -89,17 +89,8 @@
 </head>
 <body>
 
-<nav>
-  <a class="brand" href="/pages/seller/dashboard.html">Switchr</a>
-  <div class="nav-center">
-    <a href="/pages/buyer/browse.html">Browse</a>
-    <a href="/pages/seller/dashboard.html">My Listings</a>
-    <a href="/pages/profile.html">Profile</a>
-  </div>
-  <div class="nav-right">
-    <a href="#" onclick="logout()">Logout</a>
-  </div>
-</nav>
+<div id="nav-root"></div>
+<script src="/js/nav.js"></script>
 
 <div class="header-bar">
   <h1>Create a New Listing</h1>
@@ -171,11 +162,27 @@
 
       <div class="form-group">
         <label for="listingType">Listing Type <span class="required">*</span></label>
-        <select id="listingType" name="listingType">
+        <select id="listingType" name="listingType" onchange="toggleAuctionFields()">
           <option value="">-- Select --</option>
           <option value="SALE">SALE - selling for cash</option>
           <option value="TRADE">TRADE - swap only</option>
           <option value="BOTH">BOTH - open to either</option>
+          <option value="AUCTION">AUCTION - bidding</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row" id="auctionFields" style="display:none;">
+      <div class="form-group">
+        <label for="starting_price">Starting Price ($) <span class="required">*</span></label>
+        <input type="number" id="starting_price" name="starting_price" min="0.01" step="0.01" placeholder="e.g., 50">
+      </div>
+      <div class="form-group">
+        <label for="auction_duration_days">Auction Duration <span class="required">*</span></label>
+        <select id="auction_duration_days" name="auction_duration_days">
+          <option value="1">1 day</option>
+          <option value="3" selected>3 days</option>
+          <option value="7">7 days</option>
         </select>
       </div>
     </div>
@@ -267,15 +274,31 @@
     document.getElementById('errorBanner').style.display = 'none';
   }
 
+  function toggleAuctionFields() {
+    var type = document.getElementById('listingType').value;
+    var isAuction = type === 'AUCTION';
+    document.getElementById('auctionFields').style.display = isAuction ? 'flex' : 'none';
+    document.getElementById('price').disabled = isAuction;
+    if (isAuction) document.getElementById('price').value = '';
+  }
+
   function submitListing() {
     var formData = new FormData();
+    var listingType = document.getElementById('listingType').value;
     formData.append('title', document.getElementById('title').value.trim());
     formData.append('description', document.getElementById('description').value.trim());
     formData.append('category', document.getElementById('category').value);
-    formData.append('price', document.getElementById('price').value);
+    if (listingType === 'AUCTION') {
+      var sp = document.getElementById('starting_price').value;
+      formData.append('price', sp);
+      formData.append('starting_price', sp);
+      formData.append('auction_duration_days', document.getElementById('auction_duration_days').value);
+    } else {
+      formData.append('price', document.getElementById('price').value);
+    }
     formData.append('quantity', document.getElementById('quantity').value);
     formData.append('condition', document.getElementById('condition').value);
-    formData.append('listingType', document.getElementById('listingType').value);
+    formData.append('listingType', listingType);
 
     var photos = document.getElementById('photos').files;
     for (var i = 0; i < photos.length; i++) {

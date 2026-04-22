@@ -67,20 +67,52 @@
       font-style: italic;
       padding: 28px;
     }
+
+    .review-btn {
+      color: #1a1a1a;
+      background: #f0e040;
+      padding: 3px 8px;
+      border: none;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 4px;
+    }
+    .review-btn:hover { background: #e0d030; }
+    .reviewed-tag { color: #888; font-size: 11px; margin-left: 6px; }
+
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: white; border-radius: 8px; padding: 28px;
+      width: 90%; max-width: 460px;
+    }
+    .modal h3 { font-family: 'Syne', sans-serif; font-size: 18px; margin-bottom: 14px; }
+    .stars { display: flex; gap: 4px; font-size: 28px; cursor: pointer; margin: 10px 0 16px; }
+    .stars span { color: #ddd; transition: color 0.1s; }
+    .stars span.on { color: #f0b840; }
+    .modal textarea {
+      width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; resize: vertical;
+    }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+    .modal-actions button {
+      padding: 8px 16px; border-radius: 4px; border: none;
+      font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 13px;
+    }
+    .modal-actions .cancel { background: #eee; }
+    .modal-actions .submit { background: #1a1a1a; color: white; }
   </style>
 </head>
 <body>
 
-<nav>
-  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
-  <div class="nav-center">
-    <a href="/pages/buyer/browse.html">Browse</a>
-    <a href="/pages/buyer/purchases.html">My Purchases</a>
-    <a href="/pages/buyer/cart.html">Cart <span class="cart-badge"></span></a>
-    <a href="/pages/profile.html">Profile</a>
-  </div>
-  <div class="nav-right" id="authLinks"></div>
-</nav>
+<div id="nav-root"></div>
+<script src="/js/nav.js"></script>
 
 <div class="header-bar">
   <h1>My Purchases</h1>
@@ -105,6 +137,27 @@
         <tr><td colspan="8" class="empty-msg">Loading...</td></tr>
       </tbody>
     </table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal">
+    <h3>Review seller <span id="reviewSellerName"></span></h3>
+    <p style="font-size:13px;color:#888;">For your purchase of <strong id="reviewItemTitle"></strong></p>
+    <label style="font-size:12px;color:#888;text-transform:uppercase;margin-top:8px;display:block;">Rating</label>
+    <div class="stars" id="starPicker">
+      <span data-val="1">&#9733;</span>
+      <span data-val="2">&#9733;</span>
+      <span data-val="3">&#9733;</span>
+      <span data-val="4">&#9733;</span>
+      <span data-val="5">&#9733;</span>
+    </div>
+    <label style="font-size:12px;color:#888;text-transform:uppercase;">Comment (optional)</label>
+    <textarea id="reviewComment" rows="3" maxlength="500" placeholder="How was your experience?"></textarea>
+    <div class="modal-actions">
+      <button type="button" class="cancel" onclick="closeReviewModal()">Cancel</button>
+      <button type="button" class="submit" onclick="submitReview()">Submit Review</button>
+    </div>
   </div>
 </div>
 
@@ -155,6 +208,11 @@
       html += '<a href="/pages/buyer/invoice.html?id=' + t.id + '">Invoice</a>';
       if (t.status === 'COMPLETED') {
         html += '<a class="del" onclick="returnItem(' + t.id + ')">Return</a>';
+        if (t.reviewed) {
+          html += '<span class="reviewed-tag">Reviewed</span>';
+        } else {
+          html += '<button class="review-btn" onclick="openReviewModal(' + t.id + ', \'' + (t.seller_username || '').replace(/\'/g, "\\'") + '\', \'' + (t.title || '').replace(/\'/g, "\\'") + '\')">Leave Review</button>';
+        }
       }
       html += '</td>';
       html += '</tr>';
@@ -179,6 +237,61 @@
         window.location.reload();
       }
     });
+  }
+
+  var reviewTxnId = null;
+  var reviewRating = 0;
+
+  document.querySelectorAll('#starPicker span').forEach(function(star) {
+    star.addEventListener('click', function() {
+      reviewRating = parseInt(star.getAttribute('data-val'));
+      paintStars(reviewRating);
+    });
+  });
+
+  function paintStars(n) {
+    document.querySelectorAll('#starPicker span').forEach(function(s) {
+      s.classList.toggle('on', parseInt(s.getAttribute('data-val')) <= n);
+    });
+  }
+
+  function openReviewModal(txnId, sellerName, title) {
+    reviewTxnId = txnId;
+    reviewRating = 0;
+    paintStars(0);
+    document.getElementById('reviewSellerName').textContent = sellerName;
+    document.getElementById('reviewItemTitle').textContent = title;
+    document.getElementById('reviewComment').value = '';
+    document.getElementById('reviewModal').classList.add('active');
+  }
+
+  function closeReviewModal() {
+    document.getElementById('reviewModal').classList.remove('active');
+    reviewTxnId = null;
+  }
+
+  function submitReview() {
+    if (!reviewRating) { alert('Please select a rating (1-5 stars).'); return; }
+    var comment = document.getElementById('reviewComment').value.trim();
+    fetch('/api/reviews', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify({
+        transaction_id: reviewTxnId,
+        rating: reviewRating,
+        comment: comment
+      })
+    })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, body: d }; }); })
+    .then(function(res) {
+      if (!res.ok) { alert(res.body.error || 'Could not submit review.'); return; }
+      closeReviewModal();
+      window.location.reload();
+    })
+    .catch(function() { alert('Network error.'); });
   }
 
   function logout() {

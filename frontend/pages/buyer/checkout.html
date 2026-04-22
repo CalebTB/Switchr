@@ -153,16 +153,8 @@
 </head>
 <body>
 
-<nav>
-  <a class="brand" href="/pages/buyer/browse.html">Switchr</a>
-  <div class="nav-center">
-    <a href="/pages/buyer/browse.html">Browse</a>
-    <a href="/pages/offers/offers.html">Offers</a>
-    <a href="/pages/buyer/cart.html">Cart <span class="cart-badge"></span></a>
-    <a href="/pages/profile.html">Profile</a>
-  </div>
-  <div class="nav-right" id="authLinks"></div>
-</nav>
+<div id="nav-root"></div>
+<script src="/js/nav.js"></script>
 
 <div class="header-bar">
   <h1>Checkout</h1>
@@ -234,10 +226,6 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <label>Name on Card</label>
-            <input type="text" id="cardName" placeholder="John Doe">
-          </div>
         </div>
 
         <!-- Billing Address -->
@@ -384,19 +372,18 @@
     var state = document.getElementById('state').value.trim();
     var zip = document.getElementById('zip').value.trim();
     var cardNumber = document.getElementById('cardNumber').value.trim();
-    var cardName = document.getElementById('cardName').value.trim();
     var expiry = document.getElementById('expiry').value.trim();
     var cvv = document.getElementById('cvv').value.trim();
     var billSame = document.getElementById('billSameAsShip').checked;
 
-    if (!firstName || !lastName || !address || !city || !state || !zip || !cardNumber || !cardName || !expiry || !cvv) {
+    if (!firstName || !lastName || !address || !city || !state || !zip || !cardNumber || !expiry || !cvv) {
       alert('Please fill in all required fields.');
       return;
     }
 
     var payload = {
       firstName: firstName, lastName: lastName, address: address, city: city, state: state, zip: zip,
-      cardNumber: cardNumber, cardName: cardName, billSameAsShip: billSame
+      cardNumber: cardNumber, billSameAsShip: billSame
     };
 
     if (!billSame) {

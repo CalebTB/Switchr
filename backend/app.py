@@ -115,7 +115,6 @@ def init_db():
             bill_state VARCHAR(50),
             bill_zip VARCHAR(20),
             card_last_four VARCHAR(4),
-            card_name VARCHAR(100),
             status VARCHAR(20) DEFAULT 'COMPLETED',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -163,6 +162,17 @@ def init_db():
             UNIQUE(user_id, listing_id)
         )
     ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS reviews (
+            id SERIAL PRIMARY KEY,
+            transaction_id INTEGER REFERENCES transactions(id) UNIQUE,
+            buyer_id INTEGER REFERENCES users(id),
+            seller_id INTEGER REFERENCES users(id),
+            rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+            comment TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
     # Add columns if tables already exist without them
     cur.execute('''
         DO $$
@@ -203,7 +213,53 @@ def init_db():
             ) THEN
                 ALTER TABLE listings ADD COLUMN quantity INTEGER DEFAULT 1;
             END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'listings' AND column_name = 'starting_price'
+            ) THEN
+                ALTER TABLE listings ADD COLUMN starting_price NUMERIC(10,2);
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'listings' AND column_name = 'auction_duration_days'
+            ) THEN
+                ALTER TABLE listings ADD COLUMN auction_duration_days INTEGER;
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'listings' AND column_name = 'auction_end_time'
+            ) THEN
+                ALTER TABLE listings ADD COLUMN auction_end_time TIMESTAMP;
+            END IF;
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'orders' AND column_name = 'card_name'
+            ) THEN
+                ALTER TABLE orders DROP COLUMN card_name;
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.table_constraints
+                WHERE table_name = 'users' AND constraint_name = 'users_balance_non_negative'
+            ) THEN
+                UPDATE users SET balance = 0 WHERE balance < 0;
+                ALTER TABLE users ADD CONSTRAINT users_balance_non_negative CHECK (balance >= 0);
+            END IF;
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'users' AND column_name = 'feed_token'
+            ) THEN
+                ALTER TABLE users ADD COLUMN feed_token VARCHAR(64) UNIQUE;
+            END IF;
         END $$;
+    ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS bids (
+            id SERIAL PRIMARY KEY,
+            listing_id INTEGER REFERENCES listings(id),
+            bidder_id INTEGER REFERENCES users(id),
+            amount NUMERIC(10, 2) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
     ''')
     cur.execute('''
         ALTER TABLE listings ALTER COLUMN status SET DEFAULT 'PENDING_APPROVAL'
@@ -324,6 +380,8 @@ def format_listing(row):
         d['created_at'] = d['created_at'].strftime('%Y-%m-%d')
     if d.get('updated_at'):
         d['updated_at'] = d['updated_at'].strftime('%Y-%m-%d')
+    if d.get('auction_end_time'):
+        d['auction_end_time'] = d['auction_end_time'].strftime('%Y-%m-%dT%H:%M:%SZ')
     return d
 def allowed_file(filename):
     return '.' in filename and \
@@ -441,6 +499,20 @@ def create_listing():
     listing_type = request.form.get('listingType', '')
     quantity = request.form.get('quantity', 1)
 
+    starting_price = None
+    auction_duration_days = None
+    if listing_type == 'AUCTION':
+        try:
+            starting_price = float(request.form.get('starting_price', 0))
+            auction_duration_days = int(request.form.get('auction_duration_days', 3))
+        except (TypeError, ValueError):
+            return jsonify({'error': 'Invalid auction fields'}), 400
+        if starting_price <= 0:
+            return jsonify({'error': 'Starting price must be positive'}), 400
+        if auction_duration_days not in (1, 3, 7):
+            return jsonify({'error': 'Auction duration must be 1, 3, or 7 days'}), 400
+        price = starting_price
+
     if not title or not description or not category or not price or not condition or not listing_type:
         return jsonify({'error': 'All fields are required'}), 400
 
@@ -462,11 +534,11 @@ def create_listing():
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(
             '''INSERT INTO listings
-            (seller_id, title, description, category, price, condition, listing_type, status, photo_urls, quantity)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, 'PENDING_APPROVAL', %s, %s)
+            (seller_id, title, description, category, price, condition, listing_type, status, photo_urls, quantity, starting_price, auction_duration_days)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 'PENDING_APPROVAL', %s, %s, %s, %s)
             RETURNING *''',
             (request.user_id, title, description, category, float(price),
-            condition, listing_type, photo_urls, int(quantity))
+            condition, listing_type, photo_urls, int(quantity), starting_price, auction_duration_days)
         )
         listing = cur.fetchone()
         conn.close()
@@ -588,6 +660,8 @@ def browse_listings():
                FROM listings l
                JOIN users u ON l.seller_id = u.id
                WHERE l.status = 'ACTIVE'
+                 AND COALESCE(l.quantity, 1) > 0
+                 AND l.listing_type <> 'AUCTION'
                ORDER BY l.created_at DESC'''
         )
         rows = cur.fetchall()
@@ -768,18 +842,32 @@ def approve_listing(listing_id):
     try:
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        cur.execute(
-            '''UPDATE listings
-               SET status = 'ACTIVE', denial_reason = NULL, updated_at = CURRENT_TIMESTAMP
-               WHERE id = %s
-               RETURNING *''',
-            (listing_id,)
-        )
+        cur.execute('SELECT * FROM listings WHERE id = %s', (listing_id,))
+        existing = cur.fetchone()
+        if not existing:
+            conn.close()
+            return jsonify({'error': 'Listing not found'}), 404
+
+        if existing['listing_type'] == 'AUCTION' and not existing.get('auction_end_time'):
+            duration_days = existing.get('auction_duration_days') or 3
+            duration_hours = duration_days * 24
+            cur.execute(
+                '''UPDATE listings
+                   SET status = 'ACTIVE', denial_reason = NULL,
+                       auction_end_time = CURRENT_TIMESTAMP + (%s || ' hours')::INTERVAL,
+                       updated_at = CURRENT_TIMESTAMP
+                   WHERE id = %s RETURNING *''',
+                (str(duration_hours), listing_id)
+            )
+        else:
+            cur.execute(
+                '''UPDATE listings
+                   SET status = 'ACTIVE', denial_reason = NULL, updated_at = CURRENT_TIMESTAMP
+                   WHERE id = %s RETURNING *''',
+                (listing_id,)
+            )
         listing = cur.fetchone()
         conn.close()
-
-        if not listing:
-            return jsonify({'error': 'Listing not found'}), 404
 
         return jsonify({'message': 'Listing approved', 'listing': format_listing(listing)})
 
@@ -808,10 +896,16 @@ def deny_listing(listing_id):
             (reason, listing_id)
         )
         listing = cur.fetchone()
-        conn.close()
 
         if not listing:
+            conn.close()
             return jsonify({'error': 'Listing not found'}), 404
+
+        cur.execute(
+            "INSERT INTO notifications (user_id, message, type) VALUES (%s, %s, 'INFO')",
+            (listing['seller_id'], 'Your listing "' + listing['title'] + '" was denied. Reason: ' + reason)
+        )
+        conn.close()
 
         return jsonify({'message': 'Listing denied', 'listing': format_listing(listing)})
 
@@ -849,6 +943,7 @@ def get_browse_listing(listing_id):
     try:
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        settle_auction(cur, listing_id)
         cur.execute(
             '''SELECT l.*, u.username as seller_username
                FROM listings l
@@ -1149,13 +1244,13 @@ def checkout():
                 bill_same_as_ship,
                 bill_first_name, bill_last_name, bill_address,
                 bill_city, bill_state, bill_zip,
-                card_last_four, card_name, status
+                card_last_four, status
             ) VALUES (
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s,
                 %s,
                 %s, %s, %s, %s, %s, %s,
-                %s, %s, 'COMPLETED'
+                %s, 'COMPLETED'
             ) RETURNING id
         ''', (
             request.user_id, subtotal, TAX_RATE, tax_amount, total,
@@ -1168,7 +1263,7 @@ def checkout():
             data.get('city') if bill_same else data.get('billCity'),
             data.get('state') if bill_same else data.get('billState'),
             data.get('zip') if bill_same else data.get('billZip'),
-            card_last_four, data.get('cardName')
+            card_last_four
         ))
         order = cur.fetchone()
         order_id = order['id']
@@ -1246,7 +1341,8 @@ def get_purchases():
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute(
-            '''SELECT t.*, u.username as seller_username
+            '''SELECT t.*, u.username as seller_username,
+                      EXISTS(SELECT 1 FROM reviews r WHERE r.transaction_id = t.id) AS reviewed
                FROM transactions t
                JOIN users u ON t.seller_id = u.id
                WHERE t.buyer_id = %s
@@ -1618,6 +1714,14 @@ def return_transaction(txn_id):
 
         price = float(txn['price'])
 
+        # Seller must have enough balance to cover the refund
+        cur.execute('SELECT balance FROM users WHERE id = %s', (txn['seller_id'],))
+        seller = cur.fetchone()
+        if not seller or float(seller['balance']) < price:
+            return jsonify({
+                'error': 'Seller has insufficient funds to process this return. Please contact support.'
+            }), 400
+
         # Refund buyer
         cur.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (price, txn['buyer_id']))
 
@@ -1644,6 +1748,370 @@ def return_transaction(txn_id):
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
+
+@app.route('/api/nav-counts', methods=['GET'])
+@token_required
+def nav_counts():
+    """Aggregated action-required counts for the nav dropdown."""
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cur.execute(
+            "SELECT COUNT(*) AS n FROM trades WHERE receiver_id = %s AND status = 'PENDING'",
+            (request.user_id,)
+        )
+        offers_pending = cur.fetchone()['n']
+
+        cur.execute(
+            'SELECT COUNT(*) AS n FROM notifications WHERE user_id = %s AND is_read = FALSE',
+            (request.user_id,)
+        )
+        notifications_unread = cur.fetchone()['n']
+
+        cur.execute('SELECT role FROM users WHERE id = %s', (request.user_id,))
+        me = cur.fetchone()
+        admin_pending = 0
+        if me and me['role'] == 'admin':
+            cur.execute("SELECT COUNT(*) AS n FROM listings WHERE status = 'PENDING_APPROVAL'")
+            admin_pending += cur.fetchone()['n']
+            cur.execute("SELECT COUNT(*) AS n FROM users WHERE status = 'pending'")
+            admin_pending += cur.fetchone()['n']
+
+        conn.close()
+        return jsonify({
+            'offers_pending': offers_pending,
+            'notifications_unread': notifications_unread,
+            'admin_pending': admin_pending
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ============ REVIEW ROUTES ============
+
+@app.route('/api/reviews', methods=['POST'])
+@approved_required
+def create_review():
+    data = request.get_json() or {}
+    try:
+        transaction_id = int(data.get('transaction_id'))
+        rating = int(data.get('rating'))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'transaction_id and rating are required'}), 400
+
+    if rating < 1 or rating > 5:
+        return jsonify({'error': 'Rating must be between 1 and 5'}), 400
+
+    comment = (data.get('comment') or '').strip() or None
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cur.execute('SELECT * FROM transactions WHERE id = %s', (transaction_id,))
+        txn = cur.fetchone()
+        if not txn:
+            conn.close()
+            return jsonify({'error': 'Transaction not found'}), 404
+        if txn['buyer_id'] != request.user_id:
+            conn.close()
+            return jsonify({'error': 'You can only review your own purchases'}), 403
+        if txn['status'] != 'COMPLETED':
+            conn.close()
+            return jsonify({'error': 'Only completed transactions can be reviewed'}), 400
+
+        cur.execute('SELECT id FROM reviews WHERE transaction_id = %s', (transaction_id,))
+        if cur.fetchone():
+            conn.close()
+            return jsonify({'error': 'You have already reviewed this transaction'}), 409
+
+        cur.execute(
+            '''INSERT INTO reviews (transaction_id, buyer_id, seller_id, rating, comment)
+               VALUES (%s, %s, %s, %s, %s)
+               RETURNING id, rating, comment, created_at''',
+            (transaction_id, request.user_id, txn['seller_id'], rating, comment)
+        )
+        review = cur.fetchone()
+        conn.close()
+
+        result = dict(review)
+        if result.get('created_at'):
+            result['created_at'] = result['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+        return jsonify({'message': 'Review submitted', 'review': result}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/reviews/<int:seller_id>', methods=['GET'])
+def list_reviews(seller_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''SELECT r.rating, r.comment, r.created_at, u.username AS buyer_username
+               FROM reviews r JOIN users u ON u.id = r.buyer_id
+               WHERE r.seller_id = %s
+               ORDER BY r.created_at DESC''',
+            (seller_id,)
+        )
+        rows = cur.fetchall()
+        conn.close()
+
+        reviews = []
+        for r in rows:
+            d = dict(r)
+            if d.get('created_at'):
+                d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            reviews.append(d)
+
+        count = len(reviews)
+        avg = round(sum(r['rating'] for r in reviews) / count, 2) if count else None
+        return jsonify({'reviews': reviews, 'avg_rating': avg, 'count': count})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ============ SELLER ORDER FEED (RSS) ============
+
+@app.route('/api/seller/feed-token', methods=['POST'])
+@approved_required
+def ensure_feed_token():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('SELECT feed_token FROM users WHERE id = %s', (request.user_id,))
+        row = cur.fetchone()
+        token = row['feed_token'] if row else None
+        if not token:
+            token = uuid.uuid4().hex
+            cur.execute('UPDATE users SET feed_token = %s WHERE id = %s', (token, request.user_id))
+        conn.close()
+        return jsonify({'feed_token': token, 'feed_url': '/feed/' + token + '.xml'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+def _xml_escape(s):
+    if s is None:
+        return ''
+    return (str(s)
+            .replace('&', '&amp;')
+            .replace('<', '&lt;')
+            .replace('>', '&gt;')
+            .replace('"', '&quot;'))
+
+
+@app.route('/feed/<token>.xml', methods=['GET'])
+def seller_order_feed(token):
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute('SELECT id, username FROM users WHERE feed_token = %s', (token,))
+        seller = cur.fetchone()
+        if not seller:
+            conn.close()
+            return ('<?xml version="1.0" encoding="UTF-8"?><error>Invalid feed token</error>',
+                    404, {'Content-Type': 'application/rss+xml; charset=utf-8'})
+
+        cur.execute(
+            '''SELECT oi.title, oi.price, o.created_at,
+                      o.ship_first_name, o.ship_last_name,
+                      o.ship_address, o.ship_city, o.ship_state, o.ship_zip
+               FROM order_items oi
+               JOIN orders o ON oi.order_id = o.id
+               WHERE oi.seller_id = %s
+               ORDER BY o.created_at DESC
+               LIMIT 50''',
+            (seller['id'],)
+        )
+        items = cur.fetchall()
+        conn.close()
+
+        host = request.host_url.rstrip('/')
+        parts = [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<rss version="2.0">',
+            '<channel>',
+            '<title>Switchr Orders - ' + _xml_escape(seller['username']) + '</title>',
+            '<link>' + _xml_escape(host) + '</link>',
+            '<description>Orders received by ' + _xml_escape(seller['username']) + '</description>',
+        ]
+        for it in items:
+            ship_to = ', '.join(filter(None, [
+                (it.get('ship_first_name') or '') + ' ' + (it.get('ship_last_name') or ''),
+                it.get('ship_address'),
+                ', '.join(filter(None, [it.get('ship_city'), it.get('ship_state'), it.get('ship_zip')]))
+            ])).strip()
+            pub_date = it['created_at'].strftime('%a, %d %b %Y %H:%M:%S GMT') if it.get('created_at') else ''
+            parts.append('<item>')
+            parts.append('<title>' + _xml_escape(it['title']) + '</title>')
+            parts.append('<description>Ship to: ' + _xml_escape(ship_to) + '</description>')
+            parts.append('<pubDate>' + pub_date + '</pubDate>')
+            parts.append('</item>')
+        parts.append('</channel></rss>')
+
+        return ('\n'.join(parts), 200, {'Content-Type': 'application/rss+xml; charset=utf-8'})
+    except Exception as e:
+        return (
+            '<?xml version="1.0" encoding="UTF-8"?><error>' + _xml_escape(str(e)) + '</error>',
+            500, {'Content-Type': 'application/rss+xml; charset=utf-8'}
+        )
+
+
+# ============ AUCTION ROUTES ============
+
+def settle_auction(cur, listing_id):
+    """Settle an auction if it has ended. Idempotent. Caller manages connection."""
+    cur.execute('SELECT * FROM listings WHERE id = %s', (listing_id,))
+    listing = cur.fetchone()
+    if not listing or listing['listing_type'] != 'AUCTION':
+        return
+    if listing['status'] != 'ACTIVE':
+        return
+    if not listing['auction_end_time'] or datetime.utcnow() < listing['auction_end_time']:
+        return
+
+    cur.execute(
+        '''SELECT b.bidder_id, b.amount, u.username
+           FROM bids b JOIN users u ON u.id = b.bidder_id
+           WHERE b.listing_id = %s
+           ORDER BY b.amount DESC, b.created_at ASC LIMIT 1''',
+        (listing_id,)
+    )
+    winner = cur.fetchone()
+
+    if winner:
+        cur.execute("UPDATE listings SET status = 'SOLD', updated_at = CURRENT_TIMESTAMP WHERE id = %s", (listing_id,))
+        cur.execute(
+            '''INSERT INTO transactions (buyer_id, seller_id, listing_id, title, price, status)
+               VALUES (%s, %s, %s, %s, %s, 'COMPLETED')''',
+            (winner['bidder_id'], listing['seller_id'], listing_id, listing['title'], float(winner['amount']))
+        )
+        win_msg = 'You won the auction for "' + listing['title'] + '" at $' + '{:.2f}'.format(float(winner['amount']))
+        sell_msg = 'Your auction "' + listing['title'] + '" sold to ' + winner['username'] + ' for $' + '{:.2f}'.format(float(winner['amount']))
+        cur.execute("INSERT INTO notifications (user_id, message, type) VALUES (%s, %s, 'INFO')", (winner['bidder_id'], win_msg))
+        cur.execute("INSERT INTO notifications (user_id, message, type) VALUES (%s, %s, 'INFO')", (listing['seller_id'], sell_msg))
+    else:
+        cur.execute("UPDATE listings SET status = 'ENDED', updated_at = CURRENT_TIMESTAMP WHERE id = %s", (listing_id,))
+        cur.execute(
+            "INSERT INTO notifications (user_id, message, type) VALUES (%s, %s, 'INFO')",
+            (listing['seller_id'], 'Your auction "' + listing['title'] + '" ended with no bids')
+        )
+
+
+@app.route('/api/auctions', methods=['GET'])
+def list_auctions():
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        # Lazy settle any expired auctions
+        cur.execute(
+            '''SELECT id FROM listings
+               WHERE listing_type = 'AUCTION' AND status = 'ACTIVE'
+                 AND auction_end_time IS NOT NULL AND auction_end_time <= CURRENT_TIMESTAMP'''
+        )
+        for row in cur.fetchall():
+            settle_auction(cur, row['id'])
+
+        cur.execute(
+            '''SELECT l.*, u.username as seller_username
+               FROM listings l JOIN users u ON l.seller_id = u.id
+               WHERE l.listing_type = 'AUCTION' AND l.status = 'ACTIVE'
+                 AND l.auction_end_time > CURRENT_TIMESTAMP
+               ORDER BY l.auction_end_time ASC'''
+        )
+        rows = cur.fetchall()
+        conn.close()
+        return jsonify({'auctions': [format_listing(r) for r in rows]})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/listings/<int:listing_id>/bid', methods=['POST'])
+@approved_required
+def place_bid(listing_id):
+    data = request.get_json() or {}
+    try:
+        amount = float(data.get('amount', 0))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid amount'}), 400
+
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        cur.execute('SELECT * FROM listings WHERE id = %s', (listing_id,))
+        listing = cur.fetchone()
+        if not listing:
+            conn.close()
+            return jsonify({'error': 'Listing not found'}), 404
+        if listing['listing_type'] != 'AUCTION':
+            conn.close()
+            return jsonify({'error': 'Not an auction'}), 400
+        if listing['status'] != 'ACTIVE':
+            conn.close()
+            return jsonify({'error': 'Auction not active'}), 400
+        if listing['seller_id'] == request.user_id:
+            conn.close()
+            return jsonify({'error': 'Cannot bid on your own listing'}), 400
+        if not listing['auction_end_time'] or datetime.utcnow() >= listing['auction_end_time']:
+            settle_auction(cur, listing_id)
+            conn.close()
+            return jsonify({'error': 'Auction has ended'}), 400
+        if amount <= float(listing['price']):
+            conn.close()
+            return jsonify({'error': 'Bid must exceed current price of $' + '{:.2f}'.format(float(listing['price']))}), 400
+
+        cur.execute(
+            'SELECT bidder_id FROM bids WHERE listing_id = %s ORDER BY amount DESC LIMIT 1',
+            (listing_id,)
+        )
+        prev = cur.fetchone()
+
+        cur.execute(
+            'INSERT INTO bids (listing_id, bidder_id, amount) VALUES (%s, %s, %s)',
+            (listing_id, request.user_id, amount)
+        )
+        cur.execute('UPDATE listings SET price = %s WHERE id = %s', (amount, listing_id))
+
+        if prev and prev['bidder_id'] != request.user_id:
+            cur.execute(
+                "INSERT INTO notifications (user_id, message, type) VALUES (%s, %s, 'INFO')",
+                (prev['bidder_id'], 'You were outbid on "' + listing['title'] + '"')
+            )
+
+        conn.close()
+        return jsonify({'message': 'Bid placed', 'current_price': amount}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/listings/<int:listing_id>/bids', methods=['GET'])
+def get_bids(listing_id):
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(
+            '''SELECT b.amount, b.created_at, u.username
+               FROM bids b JOIN users u ON u.id = b.bidder_id
+               WHERE b.listing_id = %s
+               ORDER BY b.created_at DESC''',
+            (listing_id,)
+        )
+        rows = cur.fetchall()
+        conn.close()
+        bids = []
+        for r in rows:
+            d = dict(r)
+            if d.get('created_at'):
+                d['created_at'] = d['created_at'].strftime('%Y-%m-%d %H:%M:%S')
+            d['amount'] = float(d['amount'])
+            bids.append(d)
+        return jsonify({'bids': bids})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # ============ FRONTEND ROUTES ============
