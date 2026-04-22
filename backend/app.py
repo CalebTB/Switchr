@@ -1913,7 +1913,7 @@ def seller_order_feed(token):
         if not seller:
             conn.close()
             return ('<?xml version="1.0" encoding="UTF-8"?><error>Invalid feed token</error>',
-                    404, {'Content-Type': 'application/rss+xml; charset=utf-8'})
+                    404, {'Content-Type': 'application/xml; charset=utf-8'})
 
         cur.execute(
             '''SELECT oi.title, oi.price, o.created_at,
@@ -1952,11 +1952,11 @@ def seller_order_feed(token):
             parts.append('</item>')
         parts.append('</channel></rss>')
 
-        return ('\n'.join(parts), 200, {'Content-Type': 'application/rss+xml; charset=utf-8'})
+        return ('\n'.join(parts), 200, {'Content-Type': 'application/xml; charset=utf-8'})
     except Exception as e:
         return (
             '<?xml version="1.0" encoding="UTF-8"?><error>' + _xml_escape(str(e)) + '</error>',
-            500, {'Content-Type': 'application/rss+xml; charset=utf-8'}
+            500, {'Content-Type': 'application/xml; charset=utf-8'}
         )
 
 
