@@ -90,8 +90,13 @@ async function register(email, username, password) {
     const data = await response.json();
 
     if (response.ok) {
-        setToken(data.token);
-        setUser(data.user);
+        // New accounts are pending admin approval. The backend deliberately
+        // does NOT return a token here, so we don't store one — the user has
+        // to log in after they've been approved.
+        if (data.token) {
+            setToken(data.token);
+            setUser(data.user);
+        }
         return { success: true, user: data.user };
     } else {
         return { success: false, error: data.error };
