@@ -20,11 +20,16 @@ import psycopg2
 import psycopg2.extras
 import bcrypt
 import os
+import sys
 from dotenv import load_dotenv
 
 load_dotenv()
 
 DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://admin@localhost:5432/switchr')
+
+# Make sure we can import init_db from app.py regardless of cwd
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from app import init_db
 
 
 def get_db():
@@ -38,6 +43,9 @@ def hash_password(password):
 
 
 def seed():
+    print("Ensuring schema exists (init_db)...")
+    init_db()
+
     conn = get_db()
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
