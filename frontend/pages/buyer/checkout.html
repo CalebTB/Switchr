@@ -290,7 +290,7 @@
             <span>Total</span>
             <span id="total">$0.00</span>
           </div>
-          <button class="btn-confirm" onclick="confirmTransaction()">Confirm Transaction</button>
+          <button class="btn-confirm" id="confirmBtn" onclick="confirmTransaction()">Confirm Transaction</button>
           <p class="notice">This is a simulated transaction. No real payment is processed. (REQ-87)</p>
         </div>
       </div>
@@ -381,6 +381,10 @@
       return;
     }
 
+    var btn = document.getElementById('confirmBtn');
+    btn.disabled = true;
+    btn.textContent = 'Processing...';
+
     var payload = {
       firstName: firstName, lastName: lastName, address: address, city: city, state: state, zip: zip,
       cardNumber: cardNumber, billSameAsShip: billSame
@@ -412,9 +416,15 @@
           '<p style="color:#555;margin-top:8px;">Order #' + data.order_id + ' | Total: $' + data.total + '</p>';
       } else {
         alert(data.error || 'Something went wrong.');
+        btn.disabled = false;
+        btn.textContent = 'Confirm Transaction';
       }
     })
-    .catch(function() { alert('Could not complete purchase. Try again.'); });
+    .catch(function() {
+      alert('Could not complete purchase. Try again.');
+      btn.disabled = false;
+      btn.textContent = 'Confirm Transaction';
+    });
   }
 
   function logout() {

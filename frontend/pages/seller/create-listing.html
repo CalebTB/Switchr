@@ -283,6 +283,10 @@
   }
 
   function submitListing() {
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+
     var formData = new FormData();
     var listingType = document.getElementById('listingType').value;
     formData.append('title', document.getElementById('title').value.trim());
@@ -318,6 +322,8 @@
             window.location.href = '/pages/seller/dashboard.html';
         } else {
             alert(data.error || 'Something went wrong.');
+            btn.disabled = false;
+            btn.textContent = 'Submit Listing';
         }
     })
     .catch(function() {
