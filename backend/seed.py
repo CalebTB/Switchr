@@ -396,8 +396,4 @@ def seed():
 
 
 if __name__ == '__main__':
-    confirm = input("This will DELETE all existing data. Type 'yes' to continue: ")
-    if confirm.lower() == 'yes':
-        seed()
-    else:
-        print("Cancelled.")
+    seed()
