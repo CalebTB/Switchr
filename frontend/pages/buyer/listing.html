@@ -19,22 +19,91 @@
     .listing-left { flex: 1; }
     .listing-right { width: 320px; }
 
-    .photo-placeholder {
-      display: flex;
-      gap: 10px;
-    }
+    .gallery { display: block; }
 
-    .photo-box {
-      width: 150px;
-      height: 120px;
-      border: 1px dashed #ccc;
-      border-radius: 4px;
+    .gallery-main {
+      width: 100%;
+      height: 440px;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      background: #fafaf8;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
+      overflow: hidden;
+      cursor: zoom-in;
+    }
+
+    .gallery-main img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .gallery-main .no-image {
+      font-size: 13px;
       color: #aaa;
+    }
+
+    .gallery-thumbs {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .gallery-thumb {
+      width: 72px;
+      height: 72px;
+      border: 1px solid #e8e8e8;
+      border-radius: 4px;
       background: #fafaf8;
+      overflow: hidden;
+      cursor: pointer;
+      padding: 0;
+      transition: border-color 0.12s;
+    }
+
+    .gallery-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .gallery-thumb:hover { border-color: #888; }
+    .gallery-thumb.active { border-color: #1a1a1a; border-width: 2px; }
+
+    .lightbox-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+    }
+
+    .lightbox-overlay.active { display: flex; }
+
+    .lightbox-overlay img {
+      max-width: 92vw;
+      max-height: 92vh;
+      object-fit: contain;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      color: white;
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      line-height: 1;
     }
 
     .listing-title {
@@ -179,9 +248,43 @@
   </div>
 </div>
 
+<!-- Lightbox for fullsize gallery image -->
+<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox(event)">
+  <button type="button" class="lightbox-close" onclick="closeLightbox(event)">&times;</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
 <footer>Switchr &mdash; Sprint 3 &mdash; CSE 4214</footer>
 
 <script>
+  // gallery interaction
+  function setGalleryImage(index) {
+    var photos = window.__galleryPhotos || [];
+    if (!photos[index]) return;
+    var mainImg = document.getElementById('galleryMainImg');
+    if (mainImg) mainImg.src = photos[index];
+    document.querySelectorAll('#galleryThumbs .gallery-thumb').forEach(function(t) {
+      t.classList.toggle('active', parseInt(t.getAttribute('data-index')) === index);
+    });
+  }
+
+  function openLightbox() {
+    var mainImg = document.getElementById('galleryMainImg');
+    if (!mainImg) return;
+    document.getElementById('lightboxImg').src = mainImg.src;
+    document.getElementById('lightboxOverlay').classList.add('active');
+  }
+
+  function closeLightbox(event) {
+    // ignore clicks that bubbled up from the image itself
+    if (event && event.target.tagName === 'IMG') return;
+    document.getElementById('lightboxOverlay').classList.remove('active');
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
   // auth header
   var authLinks = document.getElementById('authLinks');
   if (isLoggedIn()) {
@@ -227,28 +330,45 @@
 
     var html = '<div class="listing-left">';
 
+    var photos = (l.photo_urls && l.photo_urls.length) ? l.photo_urls : [];
+
     html += '<div class="card">';
-    html += '<div class="photo-placeholder">';
-    html += '<div class="photo-box">' + (l.photo_urls && l.photo_urls[0] ? '<img src="' + l.photo_urls[0] + '" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">' : 'No Image') + '</div>';
-    html += '<div class="photo-box">' + (l.photo_urls && l.photo_urls[1] ? '<img src="' + l.photo_urls[1] + '" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">' : '') + '</div>';
-    html += '<div class="photo-box">' + (l.photo_urls && l.photo_urls[2] ? '<img src="' + l.photo_urls[2] + '" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">' : '') + '</div>';
+    html += '<div class="gallery">';
+    if (photos.length === 0) {
+      html += '<div class="gallery-main"><span class="no-image">No Image</span></div>';
+    } else {
+      html += '<div class="gallery-main" id="galleryMain" onclick="openLightbox()">';
+      html += '<img id="galleryMainImg" src="' + photos[0] + '" alt="' + (l.title || 'Listing photo') + '">';
+      html += '</div>';
+      if (photos.length > 1) {
+        html += '<div class="gallery-thumbs" id="galleryThumbs">';
+        photos.forEach(function(url, i) {
+          html += '<button type="button" class="gallery-thumb' + (i === 0 ? ' active' : '') + '" '
+               +  'data-index="' + i + '" onclick="setGalleryImage(' + i + ')">'
+               +  '<img src="' + url + '" alt="">'
+               +  '</button>';
+        });
+        html += '</div>';
+      }
+    }
     html += '</div>';
     html += '</div>';
 
     html += '<div class="card">';
     html += '<h1 class="listing-title">' + l.title + '</h1>';
     html += '<p class="seller-info">Listed by <strong>' + l.seller_username + '</strong> &middot; ' + (l.created_at || '') + '</p>';
+    html += '<h3 style="margin-bottom:8px;">Description</h3>';
+    html += '<p style="font-size:14px; line-height:1.6; color:#444; margin-bottom:0;">' + l.description + '</p>';
+    html += '</div>';
 
+    html += '<div class="card">';
     html += '<div class="detail-row"><span class="detail-label">Category</span><span class="detail-value">' + l.category + '</span></div>';
     html += '<div class="detail-row"><span class="detail-label">Condition</span><span class="detail-value">' + l.condition + '</span></div>';
     html += '<div class="detail-row"><span class="detail-label">Listing Type</span><span class="detail-value"><span class="badge ' + typeClass + '">' + typeLabel + '</span></span></div>';
     html += '<div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">' + l.status + '</span></div>';
     html += '</div>';
 
-    html += '<div class="card">';
-    html += '<h3>Description</h3>';
-    html += '<p style="font-size:14px; line-height:1.6; color:#444;">' + l.description + '</p>';
-    html += '</div>';
+    window.__galleryPhotos = photos;
 
     html += '</div>'; // end listing-left
 
@@ -299,8 +419,6 @@
       }
     }
 
-    html += '<button class="btn" onclick="alert(\'Messaging coming soon!\')">Message Seller</button>';
-    html += '<button class="btn danger" onclick="alert(\'Report flow coming soon!\')">Report Listing</button>';
     html += '</div>';
     html += '</div>';
 
