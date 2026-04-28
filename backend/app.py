@@ -856,8 +856,8 @@ def approve_user(user_id):
 @app.route('/api/admin/users/<int:user_id>/deny', methods=['PUT'])
 @admin_required
 def deny_user(user_id):
-    data = request.get_json() or {}
-    reason = data.get('reason', '').strip()
+    data = request.get_json(silent=True) or {}
+    reason = (data.get('reason') or '').strip()
 
     try:
         conn = get_db()
