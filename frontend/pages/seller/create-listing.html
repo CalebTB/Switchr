@@ -284,11 +284,38 @@
 
   function submitListing() {
     var btn = document.getElementById('submitBtn');
+
+    var title = document.getElementById('title').value.trim();
+    var description = document.getElementById('description').value.trim();
+    var category = document.getElementById('category').value;
+    var condition = document.getElementById('condition').value;
+    var listingType = document.getElementById('listingType').value;
+    var quantity = document.getElementById('quantity').value;
+
+    var missing = [];
+    if (!title) missing.push('Title');
+    if (!description) missing.push('Description');
+    if (!category) missing.push('Category');
+    if (!condition) missing.push('Condition');
+    if (!listingType) missing.push('Listing Type');
+    if (!quantity) missing.push('Quantity');
+
+    if (listingType === 'AUCTION') {
+      if (!document.getElementById('starting_price').value) missing.push('Starting Price');
+      if (!document.getElementById('auction_duration_days').value) missing.push('Auction Duration');
+    } else if (listingType && listingType !== 'TRADE') {
+      if (!document.getElementById('price').value) missing.push('Price');
+    }
+
+    if (missing.length) {
+      showError('Please fill in: ' + missing.join(', '));
+      return;
+    }
+
     btn.disabled = true;
     btn.textContent = 'Submitting...';
 
     var formData = new FormData();
-    var listingType = document.getElementById('listingType').value;
     formData.append('title', document.getElementById('title').value.trim());
     formData.append('description', document.getElementById('description').value.trim());
     formData.append('category', document.getElementById('category').value);
