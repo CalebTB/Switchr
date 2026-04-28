@@ -430,9 +430,10 @@ def register():
         user = cur.fetchone()
         conn.close()
 
-        token = generate_token(user)
+        # Do NOT issue a JWT here. New accounts are 'pending' and must wait for
+        # admin approval before they can sign in. Returning a token would let
+        # them bypass the pending gate just by refreshing the page.
         return jsonify({
-            'token': token,
             'user': {
                 'id': user['id'],
                 'email': user['email'],
