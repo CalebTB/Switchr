@@ -250,6 +250,12 @@
     html += '<p style="font-size:14px; line-height:1.6; color:#444;">' + l.description + '</p>';
     html += '</div>';
 
+    // Reviews section
+    html += '<div class="card" id="reviewsSection">';
+    html += '<h3>Seller Reviews</h3>';
+    html += '<div id="reviewsList"><p style="color:#aaa;font-size:13px;">Loading reviews...</p></div>';
+    html += '</div>';
+
     html += '</div>'; // end listing-left
 
     html += '<div class="listing-right">';
@@ -305,12 +311,61 @@
     html += '</div>';
 
     document.getElementById('listingContent').innerHTML = html;
+    loadSellerReviews(l.seller_id, l.id);
   })
   .catch(function() {
     var banner = document.getElementById('errorBanner');
     banner.textContent = 'Could not load listing. Please try again.';
     banner.style.display = 'block';
   });
+  
+  function loadSellerReviews(sellerId, listingId) {
+    fetch('/api/reviews/' + sellerId)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var container = document.getElementById('reviewsList');
+      if (!container) return;
+      var reviews = data.reviews || [];
+      var avg = data.avg_rating;
+      var html = '';
+
+      if (avg) {
+        html += '<p style="font-size:14px;font-weight:600;margin-bottom:12px;">Average Rating: ';
+        html += '<span style="color:#f0b840;">';
+        for (var i = 1; i <= 5; i++) {
+          html += i <= Math.round(avg) ? '★' : '☆';
+        }
+        html += '</span> ' + avg + '/5 (' + data.count + ' review' + (data.count !== 1 ? 's' : '') + ')</p>';
+      }
+
+      if (reviews.length === 0) {
+        html += '<p style="color:#aaa;font-size:13px;">No reviews yet for this seller.</p>';
+      } else {
+        reviews.forEach(function(r) {
+          html += '<div style="padding:10px 0;border-bottom:1px solid #f0f0f0;">';
+          html += '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">';
+          html += '<strong style="font-size:13px;">' + r.buyer_username + '</strong>';
+          html += '<span style="color:#f0b840;font-size:14px;">';
+          for (var i = 1; i <= 5; i++) {
+            html += i <= r.rating ? '★' : '☆';
+          }
+          html += '</span></div>';
+          if (r.comment) {
+            html += '<p style="font-size:13px;color:#444;margin:0;">' + r.comment + '</p>';
+          }
+          html += '<p style="font-size:11px;color:#aaa;margin-top:4px;">' + r.created_at + '</p>';
+          html += '</div>';
+        });
+      }
+      html += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid #f0f0f0;">';
+      html += '<p style="font-size:13px;color:#888;">Want to rate this seller? ';
+      html += '<a href="/pages/buyer/purchases.html" style="color:#1a1a1a;font-weight:600;text-decoration:underline;">Go to My Purchases</a> ';
+      html += 'to leave a review after a completed purchase.</p>';
+      html += '</div>';
+      container.innerHTML = html;
+    })
+    .catch(function() {});
+  }
 
   function addToCart(listingId) {
     var token = localStorage.getItem('token');
