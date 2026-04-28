@@ -9,9 +9,12 @@
         (function() {
             var token = localStorage.getItem('token');
             var user = JSON.parse(localStorage.getItem('user') || '{}');
-            if (!token || !user || user.role !== 'admin') {
+            if (!token) {
                 document.documentElement.style.visibility = 'hidden';
                 window.location.href = '/pages/auth/login.html';
+            } else if (!user || user.role !== 'admin') {
+                document.documentElement.style.visibility = 'hidden';
+                window.location.href = '/pages/buyer/browse.html';
             }
         })();
     </script>
