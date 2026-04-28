@@ -262,6 +262,16 @@ def init_db():
         )
     ''')
     cur.execute('''
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            token VARCHAR(64) UNIQUE NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            used_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    cur.execute('''
         ALTER TABLE listings ALTER COLUMN status SET DEFAULT 'PENDING_APPROVAL'
     ''')
     conn.close()
@@ -468,6 +478,75 @@ def login():
             'denial_reason': user.get('denial_reason')
         }
     })
+
+
+@app.route('/api/auth/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.get_json() or {}
+    email = (data.get('email') or '').strip().lower()
+
+    response = {'ok': True, 'message': 'If that email is registered, a reset link has been generated.'}
+
+    if not email:
+        return jsonify(response)
+
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute('SELECT id FROM users WHERE LOWER(email) = %s', (email,))
+    user = cur.fetchone()
+
+    if user:
+        token = uuid.uuid4().hex
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+        cur.execute(
+            'INSERT INTO password_resets (user_id, token, expires_at) VALUES (%s, %s, %s)',
+            (user['id'], token, expires_at)
+        )
+        # In dev/coursework mode, surface the link directly so the demo works without SMTP.
+        if os.getenv('FLASK_ENV', 'development') != 'production':
+            response['reset_link'] = '/pages/auth/reset-password.html?token=' + token
+            response['token'] = token
+
+    conn.close()
+    return jsonify(response)
+
+
+@app.route('/api/auth/reset-password', methods=['POST'])
+def reset_password():
+    data = request.get_json() or {}
+    token = (data.get('token') or '').strip()
+    new_password = data.get('new_password') or ''
+
+    if not token or not new_password:
+        return jsonify({'error': 'Token and new password are required'}), 400
+    if len(new_password) < 6:
+        return jsonify({'error': 'Password must be at least 6 characters'}), 400
+
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute(
+        'SELECT id, user_id, expires_at, used_at FROM password_resets WHERE token = %s',
+        (token,)
+    )
+    reset = cur.fetchone()
+
+    if not reset or reset['used_at'] is not None:
+        conn.close()
+        return jsonify({'error': 'Invalid or expired reset link'}), 400
+
+    expires_at = reset['expires_at']
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < datetime.now(timezone.utc):
+        conn.close()
+        return jsonify({'error': 'Invalid or expired reset link'}), 400
+
+    password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    cur.execute('UPDATE users SET password_hash = %s WHERE id = %s', (password_hash, reset['user_id']))
+    cur.execute('UPDATE password_resets SET used_at = CURRENT_TIMESTAMP WHERE id = %s', (reset['id'],))
+    conn.close()
+
+    return jsonify({'ok': True, 'message': 'Password updated. You can now log in.'})
 
 
 @app.route('/api/auth/me', methods=['GET'])
